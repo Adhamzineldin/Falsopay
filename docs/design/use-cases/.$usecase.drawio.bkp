@@ -1,0 +1,94 @@
+<mxGraphModel>
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+
+    <!-- Main System Boundary -->
+    <mxCell id="system" value="FalsoPay Digital Payment System" style="swimlane;fontStyle=1;align=center;strokeWidth=2;" vertex="1" parent="1">
+      <mxGeometry x="50" y="50" width="1300" height="800" as="geometry"/>
+    </mxCell>
+
+    <!-- Primary Actor -->
+    <mxCell id="actor" value="User" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;strokeColor=#000000;" vertex="1" parent="1">
+      <mxGeometry x="100" y="300" width="30" height="60" as="geometry"/>
+    </mxCell>
+
+    <!-- ================== USER REQUIREMENTS ================== -->
+
+    <!-- Authentication Module -->
+    <mxCell id="auth_module" value="🔐 Authentication &amp; Security" style="swimlane;fontStyle=1;align=center;fillColor=#E6F3FF;" vertex="1" parent="system">
+      <mxGeometry x="200" y="100" width="300" height="300" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc1" value="1. Register/Login via Email (✅)" style="ellipse;fillColor=#DAF7A6;" vertex="1" parent="auth_module">
+      <mxGeometry x="20" y="30" width="260" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc2" value="2. Google Login (✅)" style="ellipse;fillColor=#DAF7A6;" vertex="1" parent="auth_module">
+      <mxGeometry x="20" y="70" width="260" height="30" as="geometry"/>
+    </mxCell>
+
+    <!-- Transaction Module -->
+    <mxCell id="txn_module" value="💸 Transaction Management" style="swimlane;fontStyle=1;align=center;fillColor=#FFE6E6;" vertex="1" parent="system">
+      <mxGeometry x="550" y="100" width="300" height="400" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc3" value="3. Send Money via Phone (✅)" style="ellipse;fillColor=#DAF7A6;" vertex="1" parent="txn_module">
+      <mxGeometry x="20" y="30" width="260" height="30" as="geometry"/>
+    </mxCell>
+
+    <!-- Account Module -->
+    <mxCell id="acc_module" value="👤 Account Management" style="swimlane;fontStyle=1;align=center;fillColor=#E6FFE6;" vertex="1" parent="system">
+      <mxGeometry x="200" y="450" width="300" height="300" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc6" value="6. Link Debit Card (✅)" style="ellipse;fillColor=#DAF7A6;" vertex="1" parent="acc_module">
+      <mxGeometry x="20" y="30" width="260" height="30" as="geometry"/>
+    </mxCell>
+
+    <!-- Financial Tools Module -->
+    <mxCell id="fin_module" value="📊 Financial Tools" style="swimlane;fontStyle=1;align=center;fillColor=#F5E6FF;" vertex="1" parent="system">
+      <mxGeometry x="550" y="550" width="300" height="250" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc4" value="4. Transaction History (✅)" style="ellipse;fillColor=#DAF7A6;" vertex="1" parent="fin_module">
+      <mxGeometry x="20" y="30" width="260" height="30" as="geometry"/>
+    </mxCell>
+
+    <!-- ================== SYSTEM REQUIREMENTS ================== -->
+
+    <mxCell id="sys_req" value="⚙️ System Infrastructure" style="swimlane;fontStyle=1;align=center;fillColor=#FFF2E6;strokeWidth=2;" vertex="1" parent="system">
+      <mxGeometry x="900" y="100" width="350" height="650" as="geometry"/>
+    </mxCell>
+
+    <!-- Performance Requirements -->
+    <mxCell id="perf" value="🚀 Performance" style="rounded=1;whiteSpace=wrap;fillColor=#FFFFFF;" vertex="1" parent="sys_req">
+      <mxGeometry x="20" y="30" width="310" height="120" as="geometry"/>
+    </mxCell>
+    <mxCell id="sr31" value="31. &lt;1s Transfers (✅)" style="ellipse;fillColor=#DAF7A6;" vertex="1" parent="perf">
+      <mxGeometry x="10" y="10" width="290" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="sr35" value="35. High Concurrency (✅)" style="ellipse;fillColor=#DAF7A6;" vertex="1" parent="perf">
+      <mxGeometry x="10" y="50" width="290" height="30" as="geometry"/>
+    </mxCell>
+
+    <!-- Security Requirements -->
+    <mxCell id="sec" value="🔒 Security" style="rounded=1;whiteSpace=wrap;fillColor=#FFFFFF;" vertex="1" parent="sys_req">
+      <mxGeometry x="20" y="180" width="310" height="160" as="geometry"/>
+    </mxCell>
+    <mxCell id="sr32" value="32. Password Hashing (✅)" style="ellipse;fillColor=#DAF7A6;" vertex="1" parent="sec">
+      <mxGeometry x="10" y="10" width="290" height="30" as="geometry"/>
+    </mxCell>
+
+    <!-- Data Management -->
+    <mxCell id="data" value="💾 Data Management" style="rounded=1;whiteSpace=wrap;fillColor=#FFFFFF;" vertex="1" parent="sys_req">
+      <mxGeometry x="20" y="370" width="310" height="120" as="geometry"/>
+    </mxCell>
+    <mxCell id="sr33" value="33. Audit Trail (✅)" style="ellipse;fillColor=#DAF7A6;" vertex="1" parent="data">
+      <mxGeometry x="10" y="10" width="290" height="30" as="geometry"/>
+    </mxCell>
+
+    <!-- ================== CONNECTIONS ================== -->
+    <mxCell id="conn1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;entryX=0;entryY=0.5;exitX=1;exitY=0.5;" edge="1" parent="system" source="actor" target="auth_module">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="conn2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="system" source="actor" target="txn_module">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

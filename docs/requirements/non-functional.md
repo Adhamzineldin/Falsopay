@@ -17,7 +17,7 @@
 | System must have 99.9% uptime                        | Availability  |
 
 ## Fit Criteria (Testable)
-- **Performance**: Benchmark tests show 95% of API responses are < 000ms.
+- **Performance**: Benchmark tests show 95% of API responses are < 5000ms.
 - **Security**: Manual tests confirm no sensitive data is stored in plaintext.
 - **Usability**: User feedback scores average 8+/10 in internal testing.
 - **Maintainability**: 80%+ code coverage with unit tests.

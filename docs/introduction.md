@@ -5,9 +5,9 @@ FalsoPay is a university-level fintech web application designed to allow instant
 
 ## Project Scope
 The system will:
-- Provide user authentication via email, Google, or Facebook.
+- Provide user authentication via email or Google.
 - Support balance inquiries, transaction history, and fund transfers.
 - Allow onboarding of debit/prepaid cards.
 - Offer real-time money transfers between registered users.
-- Be accessible via a responsive web interface (React).
-- Feature an admin dashboard for managing users and reporting.
+- Be accessible via a responsive web interface.
+

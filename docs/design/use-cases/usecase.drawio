@@ -1,0 +1,102 @@
+<mxGraphModel>
+  <root>
+    <!-- Base Elements -->
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+
+    <!-- Actor -->
+    <mxCell id="actor" value="User" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="400" y="400" width="30" height="60" as="geometry"/>
+    </mxCell>
+
+    <!-- Group: Authentication -->
+    <mxCell id="group_auth" value="Authentication" style="swimlane;fontStyle=1;align=center;" vertex="1" parent="1">
+      <mxGeometry x="100" y="100" width="250" height="200" as="geometry"/>
+    </mxCell>
+    
+    <!-- Authentication Use Cases -->
+    <mxCell id="uc1" value="Register/Login via Email" style="ellipse" vertex="1" parent="group_auth">
+      <mxGeometry x="20" y="30" width="210" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc2" value="Login via Google" style="ellipse" vertex="1" parent="group_auth">
+      <mxGeometry x="20" y="70" width="210" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc10" value="Reset Password" style="ellipse" vertex="1" parent="group_auth">
+      <mxGeometry x="20" y="110" width="210" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc22" value="Set Transfer PIN" style="ellipse" vertex="1" parent="group_auth">
+      <mxGeometry x="20" y="150" width="210" height="30" as="geometry"/>
+    </mxCell>
+
+    <!-- Group: Transactions -->
+    <mxCell id="group_txn" value="Transactions" style="swimlane;fontStyle=1;align=center;" vertex="1" parent="1">
+      <mxGeometry x="400" y="100" width="250" height="160" as="geometry"/>
+    </mxCell>
+    
+    <!-- Transaction Use Cases -->
+    <mxCell id="uc3" value="Send Money by Phone" style="ellipse" vertex="1" parent="group_txn">
+      <mxGeometry x="20" y="30" width="210" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc13" value="Scan QR Code to Pay" style="ellipse" vertex="1" parent="group_txn">
+      <mxGeometry x="20" y="70" width="210" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc30" value="Create Payment Links" style="ellipse" vertex="1" parent="group_txn">
+      <mxGeometry x="20" y="110" width="210" height="30" as="geometry"/>
+    </mxCell>
+
+    <!-- Group: Account Management -->
+    <mxCell id="group_acc" value="Account Management" style="swimlane;fontStyle=1;align=center;" vertex="1" parent="1">
+      <mxGeometry x="100" y="350" width="250" height="220" as="geometry"/>
+    </mxCell>
+    
+    <!-- Account Management Use Cases -->
+    <mxCell id="uc6" value="Link Debit Card" style="ellipse" vertex="1" parent="group_acc">
+      <mxGeometry x="20" y="30" width="210" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc7" value="Link Prepaid Card" style="ellipse" vertex="1" parent="group_acc">
+      <mxGeometry x="20" y="70" width="210" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc9" value="Edit Profile" style="ellipse" vertex="1" parent="group_acc">
+      <mxGeometry x="20" y="110" width="210" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc11" value="Block/Unblock Card" style="ellipse" vertex="1" parent="group_acc">
+      <mxGeometry x="20" y="150" width="210" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc21" value="Add Favorite Recipients" style="ellipse" vertex="1" parent="group_acc">
+      <mxGeometry x="20" y="190" width="210" height="30" as="geometry"/>
+    </mxCell>
+
+    <!-- Group: Financial Tools -->
+    <mxCell id="group_fin" value="Financial Tools" style="swimlane;fontStyle=1;align=center;" vertex="1" parent="1">
+      <mxGeometry x="400" y="300" width="250" height="220" as="geometry"/>
+    </mxCell>
+    
+    <!-- Financial Use Cases -->
+    <mxCell id="uc4" value="View Transaction History" style="ellipse" vertex="1" parent="group_fin">
+      <mxGeometry x="20" y="30" width="210" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc5" value="Check Balance" style="ellipse" vertex="1" parent="group_fin">
+      <mxGeometry x="20" y="70" width="210" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc14" value="View/Download Statements" style="ellipse" vertex="1" parent="group_fin">
+      <mxGeometry x="20" y="110" width="210" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc28" value="Search Transactions" style="ellipse" vertex="1" parent="group_fin">
+      <mxGeometry x="20" y="150" width="210" height="30" as="geometry"/>
+    </mxCell>
+
+    <!-- Connections -->
+    <mxCell id="conn1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="actor" target="group_auth">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="conn2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="actor" target="group_txn">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="conn3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="actor" target="group_acc">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="conn4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="actor" target="group_fin">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

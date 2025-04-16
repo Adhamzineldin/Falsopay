@@ -1,7 +1,7 @@
 # System Evolution
 
 ## Anticipated Changes
-- Addition of new payment methods (e.g., crypto wallets or QR payments).
+- Addition of new payment methods (e.g., crypto wallets).
 - Integration with external bank APIs for real-time bank account access.
 - Scalability to support thousands of concurrent users.
 - Multilingual support for wider accessibility.

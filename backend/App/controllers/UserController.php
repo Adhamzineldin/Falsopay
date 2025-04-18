@@ -1,51 +1,104 @@
 <?php
 
-
 namespace App\controllers;
 
-use App\database\Database;
-use App\models\BankUser;
+use App\models\User;
 
 class UserController
 {
-    /**
-     * @throws \Exception
-     */
-    public static function getAllUsers()
+
+    public static function createUser(array $data): void
     {
-        // Create an instance of the BankUser model
-        $userModel = new BankUser(Database::getInstance()->getConnection());
+        $userModel = new User();
 
-        // Fetch all users from the model
-        $users = $userModel->getAll();
+        if (!self::validateCreate($data)) {
+            self::json(['error' => 'Missing or invalid fields'], 400);
+        }
 
-        // Return the result as JSON
-        header('Content-Type: application/json'); // Set the content type to JSON
-        echo json_encode($users); // Encode the result as JSON and echo it
+        $success = $userModel->create(
+            $data['first_name'],
+            $data['last_name'],
+            $data['email'],
+            $data['phone_number'],
+            $data['default_account']
+        );
+
+        self::json(['success' => $success]);
     }
 
-
-    public static function getUser($id)
+    public static function getAllUsers(): void
     {
-        // Logic to retrieve a single user by ID
-        echo json_encode(["message" => "User with ID {$id}"]);
+        $userModel = new User();
+        $users = $userModel->getAllUsers();
+        self::json($users);
     }
 
-    public static function createUser()
+    public static function getUserById(int $id): void
     {
-        // Logic to create a new user
-        echo json_encode(["message" => "User created successfully"]);
+        $userModel = new User();
+        $user = $userModel->getById($id);
+        $user ? self::json($user) : self::json(['error' => 'User not found'], 404);
     }
 
-    public static function updateUser($id)
+    public static function getUserByEmail(string $email): void
     {
-        // Logic to update a user's information
-        echo json_encode(["message" => "User with ID {$id} updated"]);
+        $userModel = new User();
+        $user = $userModel->getByEmail($email);
+        $user ? self::json($user) : self::json(['error' => 'User not found'], 404);
     }
 
-    public static function deleteUser($id)
+    public static function updateUser(int $id, array $data): void
     {
-        // Logic to delete a user
-        echo json_encode(["message" => "User with ID {$id} deleted"]);
+        $userModel = new User();
+        $success = $userModel->update($id, $data);
+        self::json(['success' => $success]);
+    }
+
+    public static function deleteUser(int $id): void
+    {
+        $userModel = new User();
+        $success = $userModel->delete($id);
+        self::json(['success' => $success]);
+    }
+
+    public static function checkUserExistsByEmail(string $email): void
+    {
+        $userModel = new User();
+        $exists = $userModel->existsByEmail($email);
+        self::json(['exists' => $exists]);
+    }
+
+    public static function setDefaultAccount(int $userId, int $accountId): void
+    {
+        $userModel = new User();
+        $success = $userModel->setDefaultAccount($userId, $accountId);
+        self::json(['success' => $success]);
+    }
+
+    public static function getDefaultAccount(int $userId): void
+    {
+        $userModel = new User();
+        $accountId = $userModel->getDefaultAccount($userId);
+        $accountId !== null
+            ? self::json(['default_account' => $accountId])
+            : self::json(['error' => 'User not found or no default account'], 404);
+    }
+
+    private static function validateCreate(array $data): bool
+    {
+        return isset($data['first_name'], $data['last_name'], $data['email'], $data['phone_number'], $data['default_account']) &&
+            is_string($data['first_name']) &&
+            is_string($data['last_name']) &&
+            filter_var($data['email'], FILTER_VALIDATE_EMAIL) &&
+            is_numeric($data['phone_number']) &&
+            is_numeric($data['default_account']);
+    }
+
+    private static function json($data, int $code = 200): void
+    {
+        http_response_code($code);
+        header('Content-Type: application/json');
+        echo json_encode($data);
+        exit;
     }
 }

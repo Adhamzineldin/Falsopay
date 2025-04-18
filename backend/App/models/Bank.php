@@ -17,6 +17,13 @@ $stmt = $this->pdo->prepare($sql);
 $stmt->execute(['bank_name' => $bank_name, 'bank_code' => $bank_code, 'swift_code' => $swift_code]);
 }
 
+
+public function getBankById(int $bank_id) {
+    $sql = "SELECT * FROM banks WHERE bank_id = :id";
+    $stmt = $this->pdo->prepare($sql);
+    $stmt->execute(['$bank_id' => $bank_id]);
+}
+
 public function getAll() {
 $sql = "SELECT * FROM banks";
 return $this->pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);

@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\routes\api;
 
 use App\controllers\UserController;
@@ -11,9 +10,17 @@ class UsersRoute
     {
         // Define all the user-related routes
         $router->add('GET', '/api/users', [UserController::class, 'getAllUsers']);
-        $router->add('GET', '/api/users/{id}', [UserController::class, 'getUser']);
+        $router->add('GET', '/api/users/{id}', [UserController::class, 'getUserById']);
         $router->add('POST', '/api/users', [UserController::class, 'createUser']);
         $router->add('PUT', '/api/users/{id}', [UserController::class, 'updateUser']);
         $router->add('DELETE', '/api/users/{id}', [UserController::class, 'deleteUser']);
+
+        // Additional routes for user email 
+        $router->add('GET', '/api/users/email/{email}', [UserController::class, 'getUserByEmail']);
+        $router->add('GET', '/api/users/exists/{email}', [UserController::class, 'checkUserExistsByEmail']);
+        
+        // Route for getting and setting the default account for a user
+        $router->add('GET', '/api/users/{id}/default-account', [UserController::class, 'getDefaultAccount']);
+        $router->add('PUT', '/api/users/{id}/default-account', [UserController::class, 'setDefaultAccount']);
     }
 }

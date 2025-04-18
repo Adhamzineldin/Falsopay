@@ -1,6 +1,6 @@
 <?php
 
-namespace App\routes\Auth;
+namespace App\routes\auth;
 
 class RegisterRoute
 {

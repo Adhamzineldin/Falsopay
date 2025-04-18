@@ -1,7 +1,7 @@
 <?php
 
 
-namespace App\Routes\Api;
+namespace App\routes\api;
 
 use App\controllers\UserController;
 

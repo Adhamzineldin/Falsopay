@@ -15,3 +15,6 @@ php -S 0.0.0.0:4000 -t . server.php  # Specify server.php as the entry point
 
 # Wait for both processes to run
 wait
+
+
+#mysql -h app3306.maayn.me -u Falsopay -p

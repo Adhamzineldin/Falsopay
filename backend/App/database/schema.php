@@ -7,14 +7,15 @@ use PDO;
 
 require_once 'Database.php';  // If both files are in the same folder
 
-
 try {
     // Get the singleton instance of the Database
     $database = Database::getInstance();
     $pdo = $database->getConnection();
 
     // Create the tables
-    $sql = "
+
+    $sql =  /* language=SQL */ "
+
     -- 1. Banks Table
     CREATE TABLE IF NOT EXISTS banks (
         bank_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -45,8 +46,8 @@ try {
         balance DECIMAL(10, 2) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         PRIMARY KEY (bank_id, account_number),
-        FOREIGN KEY (bank_id) REFERENCES banks(bank_id),
-        FOREIGN KEY (bank_user_id) REFERENCES bank_users(bank_user_id)
+        FOREIGN KEY (bank_id) REFERENCES banks(bank_id) ON DELETE CASCADE ON UPDATE CASCADE,
+        FOREIGN KEY (bank_user_id) REFERENCES bank_users(bank_user_id) ON DELETE CASCADE ON UPDATE CASCADE
     );
 
     -- 4. Instant_Payment_Addresses Table (Ensure the account_id matches account_number type)
@@ -56,7 +57,7 @@ try {
         account_id VARCHAR(30),  -- This must match the type of account_number
         ipa_address VARCHAR(255) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (bank_id, account_id) REFERENCES bank_accounts(bank_id, account_number)
+        FOREIGN KEY (bank_id, account_id) REFERENCES bank_accounts(bank_id, account_number) ON DELETE CASCADE ON UPDATE CASCADE
     );
 
     -- 5. Users Table
@@ -68,7 +69,7 @@ try {
         phone_number VARCHAR(15) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         Default_Account INT,
-        FOREIGN KEY (Default_Account) REFERENCES instant_payment_addresses(ipa_id)
+        FOREIGN KEY (Default_Account) REFERENCES instant_payment_addresses(ipa_id) ON DELETE SET NULL ON UPDATE CASCADE
     );
 
     -- 6. Cards Table
@@ -81,8 +82,8 @@ try {
         cvv VARCHAR(4) NOT NULL,
         card_type ENUM('debit', 'prepaid') NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (bank_user_id) REFERENCES bank_users(bank_user_id),
-        FOREIGN KEY (bank_id) REFERENCES banks(bank_id)
+        FOREIGN KEY (bank_user_id) REFERENCES bank_users(bank_user_id) ON DELETE CASCADE ON UPDATE CASCADE,
+        FOREIGN KEY (bank_id) REFERENCES banks(bank_id) ON DELETE CASCADE ON UPDATE CASCADE
     );
 
     -- 7. Transactions Table
@@ -98,12 +99,11 @@ try {
         ipa_used BOOLEAN NOT NULL DEFAULT FALSE,  -- This will store whether IPA was used or not
         ipa_id INT,  -- This will be a nullable foreign key initially
         status ENUM('pending', 'completed', 'failed') NOT NULL,
-        FOREIGN KEY (sender_user_id) REFERENCES users(user_id),
-        FOREIGN KEY (receiver_user_id) REFERENCES users(user_id),
-        FOREIGN KEY (sender_bank_id) REFERENCES banks(bank_id),
-        FOREIGN KEY (receiver_bank_id) REFERENCES banks(bank_id),
-        FOREIGN KEY (ipa_id) REFERENCES instant_payment_addresses(ipa_id)
-        ON DELETE SET NULL  -- In case the IPA is deleted, IPA in the transaction will be set to NULL
+        FOREIGN KEY (sender_user_id) REFERENCES users(user_id) ON DELETE CASCADE ON UPDATE CASCADE,
+        FOREIGN KEY (receiver_user_id) REFERENCES users(user_id) ON DELETE CASCADE ON UPDATE CASCADE,
+        FOREIGN KEY (sender_bank_id) REFERENCES banks(bank_id) ON DELETE CASCADE ON UPDATE CASCADE,
+        FOREIGN KEY (receiver_bank_id) REFERENCES banks(bank_id) ON DELETE CASCADE ON UPDATE CASCADE,
+        FOREIGN KEY (ipa_id) REFERENCES instant_payment_addresses(ipa_id) ON DELETE SET NULL ON UPDATE CASCADE
     );
     ";
 

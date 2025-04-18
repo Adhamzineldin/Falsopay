@@ -60,11 +60,16 @@ class Database {
             $username = $_ENV['DB_USER'] ?? '';
             $password = $_ENV['DB_PASS'] ?? '';
 
-            if (!$host || !$dbName || !$username || !$password || !$port) {
+            if (!$host || !$dbName || !$username || !$password) {
                 throw new Exception('Database credentials not found in .env');
             }
-
-            $dsn = "mysql:host={$host};port={$port};dbname={$dbName}";
+            if ($port){
+                $dsn = "mysql:host={$host};port={$port};dbname={$dbName}";
+            }
+            else{
+                $dsn = "mysql:host={$host};dbname={$dbName}";
+            }
+           
             $this->conn = new PDO($dsn, $username, $password);
             $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         } catch (PDOException $e) {

@@ -1,37 +1,59 @@
 <?php
 
+// Autoload dependencies
+require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/app/Routes/Api/UsersRoute.php';
+require_once __DIR__ . '/app/Routes/Auth/LoginRoute.php';
+require_once __DIR__ . '/app/Routes/Auth/RegisterRoute.php';
 
-// Enable CORS (for React frontend access)
+use App\Database\Database;
+use App\Routes\Router;
+use App\Routes\Api\UsersRoute;
+use App\Routes\Auth\LoginRoute;
+use App\Routes\Auth\RegisterRoute;
+
+// Enable CORS
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
 
-
-
-if (php_sapi_name() === 'cli') {
-    echo "Run this with: php -S localhost:4000 server.php\n";
-    exit;
-}
-
+// Handle pre-flight requests (OPTIONS)
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit();
 }
 
-// Autoload your app
-require_once __DIR__ . '/config/database/db.php';
-require_once __DIR__ . '/app/routes/api.php'; // Or api.php
-
-// Simple router based on request URI
-$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-$method = $_SERVER['REQUEST_METHOD'];
-
-// Very basic example route handler
-if ($uri === '/api' && $method === 'GET') {
-    echo "Welcome to falsopay Backend API";
-    exit;
+// Database connection
+$database = null;
+try {
+    $database = Database::getInstance();
+    $dbConnection = $database->getConnection();
+    $dbStatus = 'Connected to Database';
+    $dbStatusClass = 'green';
+    $dbReconnectionMessage = '';
+} catch (\Exception $e) {
+    $dbConnection = false;
+    $dbStatus = 'Failed to connect to Database';
+    $dbStatusClass = 'red';
+    $dbReconnectionMessage = 'Reconnecting...';
+    error_log("Database connection error: " . $e->getMessage());
 }
 
-// If no route matched
-http_response_code(404);
-echo "Route not found";
+// Set up the router
+$router = new Router();
+
+UsersRoute::define($router);
+
+// Fallback API route example
+$router->add('GET', '/api', function () use ($dbStatus, $dbStatusClass, $dbReconnectionMessage) {
+    // Serve dynamic HTML with database status
+    $htmlContent = file_get_contents(__DIR__ . '/public/index.html');
+    $htmlContent = str_replace('{{db_status}}', $dbStatus, $htmlContent);
+    $htmlContent = str_replace('{{db_class}}', $dbStatusClass, $htmlContent);
+    $htmlContent = str_replace('{{reconnect_message}}', $dbReconnectionMessage, $htmlContent);
+    echo $htmlContent;
+    exit();
+});
+
+// Handle all requests
+$router->handleRequest();

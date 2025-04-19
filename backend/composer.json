@@ -7,9 +7,12 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "ext-pdo": "*",
+        "cboden/ratchet": "^0.4.4",
         "firebase/php-jwt": "^6.10",
+        "react/http": "^1.11",
         "vlucas/phpdotenv": "^5.6",
-      "ext-pdo": "*"
+      "ext-curl": "*"
     },
     "autoload": {
         "psr-4": {

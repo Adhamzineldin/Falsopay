@@ -8,8 +8,8 @@ class DatabaseSeeder {
         BankSeeder::run();
         BankUserSeeder::run();
         BankAccountSeeder::run();
-        InstantPaymentAddressSeeder::run();
         UserSeeder::run();
+        InstantPaymentAddressSeeder::run();
         CardSeeder::run();
         TransactionSeeder::run();
     }

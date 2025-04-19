@@ -6,6 +6,12 @@ require_once __DIR__ . '/App/routes/api/UsersRoute.php';
 
 use App\database\Database;
 use App\middleware\AuthMiddleware;
+use App\routes\api\BankAccountsRoute;
+use App\routes\api\BanksRoute;
+use App\routes\api\BankUsersRoute;
+use App\routes\api\CardsRoute;
+use App\routes\api\InstantPaymentAddressesRoute;
+use App\routes\api\TransactionRoutes;
 use App\routes\api\UsersRoute;
 use App\routes\Router;
 
@@ -43,7 +49,12 @@ $router = new Router();
 //UsersRoute::define($router, [[AuthMiddleware::class, 'ensureAuthenticated']]);
 
 UsersRoute::define($router);
-
+BanksRoute::define($router);
+BankAccountsRoute::define($router);
+BankUsersRoute::define($router);
+CardsRoute::define($router);
+InstantPaymentAddressesRoute::define($router);
+TransactionRoutes::define($router);
 
 
 // Fallback API route example

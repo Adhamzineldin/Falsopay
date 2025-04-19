@@ -68,7 +68,7 @@ try {
         email VARCHAR(255) NOT NULL UNIQUE,
         phone_number VARCHAR(15) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        Default_Account INT,
+        Default_Account INT DEFAULT NULL,
         FOREIGN KEY (Default_Account) REFERENCES instant_payment_addresses(ipa_id) ON DELETE SET NULL ON UPDATE CASCADE
     );
 

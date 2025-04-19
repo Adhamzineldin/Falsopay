@@ -3,10 +3,9 @@
 // Autoload dependencies
 require_once __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/App/routes/api/UsersRoute.php';
-require_once __DIR__ . '/App/routes/auth/LoginRoute.php';
-require_once __DIR__ . '/App/routes/auth/RegisterRoute.php';
 
 use App\database\Database;
+use App\middleware\AuthMiddleware;
 use App\routes\api\UsersRoute;
 use App\routes\Router;
 
@@ -40,7 +39,12 @@ try {
 // Set up the router
 $router = new Router();
 
+//Routes
+//UsersRoute::define($router, [[AuthMiddleware::class, 'ensureAuthenticated']]);
+
 UsersRoute::define($router);
+
+
 
 // Fallback API route example
 $router->add('GET', '/api', function () use ($dbStatus, $dbStatusClass, $dbReconnectionMessage) {

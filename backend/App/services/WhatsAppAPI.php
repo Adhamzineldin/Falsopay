@@ -27,8 +27,8 @@ class WhatsAppAPI
         $bearerToken = $_ENV['BEARER_TOKEN'];
 
         // Debug: Check if the variables are loaded properly
-        echo 'API URL: ' . $apiUrl . PHP_EOL;
-        echo 'Bearer Token: ' . $bearerToken . PHP_EOL;
+//        echo 'API URL: ' . $apiUrl . PHP_EOL;
+//        echo 'Bearer Token: ' . $bearerToken . PHP_EOL;
 
         // Prepare the message data
         $data = [

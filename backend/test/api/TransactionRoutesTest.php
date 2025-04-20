@@ -24,12 +24,11 @@ $data = [
     'sender_bank_id' => 2,
     'sender_account_number' => '9876543210987654',
     'amount' => 500.00,
-    'receiver_mobile_number' => '01157000509',
     'pin' => '000000',
     'ipa_used' => 0,
     'ipa_id' => null,
-    'iban_used' => 0,
-    'iban' => null
+    'iban_used' => 1,
+    'iban' => "EG110000600188000012345180000"
 ];
 
 

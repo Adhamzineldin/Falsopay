@@ -49,6 +49,9 @@
       <path value="$PROJECT_DIR$/backend/vendor/cboden/ratchet" />
       <path value="$PROJECT_DIR$/backend/vendor/fig/http-message-util" />
       <path value="$PROJECT_DIR$/backend/vendor/react/http" />
+      <path value="$PROJECT_DIR$/backend/vendor/psr/http-client" />
+      <path value="$PROJECT_DIR$/backend/vendor/guzzlehttp/guzzle" />
+      <path value="$PROJECT_DIR$/backend/vendor/guzzlehttp/promises" />
     </include_path>
   </component>
   <component name="PhpInterpreters">

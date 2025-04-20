@@ -8,6 +8,7 @@ use App\models\InstantPaymentAddress;
 use App\models\Transaction;
 use App\models\User;
 use App\services\SocketService;
+use App\services\WhatsAppAPI;
 use Exception;
 use JetBrains\PhpStorm\NoReturn;
 use function Symfony\Component\String\b;
@@ -166,7 +167,10 @@ class TransactionController
             // Balance update
             $bankAccountModel->subtractBalance($senderAccount['bank_id'], $senderAccount['account_number'], $data['amount']);
             $bankAccountModel->addBalance($receiverAccount['bank_id'], $receiverAccount['account_number'], $data['amount']);
-
+            
+            // Get new balances
+            $senderNewBalance = $bankAccountModel->getBalance($senderAccount['bank_id'], $senderAccount['account_number']);
+            $receiverNewBalance = $bankAccountModel->getBalance($receiverAccount['bank_id'], $receiverAccount['account_number']);
 
             $receiverUser = $ipaModel->getByBankAndAccount($receiverAccount['bank_id'], $receiverAccount['account_number']) ?? null;
             $receiverUserId = $receiverUser['user_id'] ?? null;
@@ -187,6 +191,13 @@ class TransactionController
                 transactionId: $transactionId
             );
 
+            
+            self::sendTransactionNotification($transactionData, $senderUser, $receiverUser, $transactionId, $senderNewBalance, $receiverNewBalance);
+            
+
+
+
+
             // Response
             self::json(['success' => true, 'transaction_id' => $transactionId]);
 
@@ -194,6 +205,77 @@ class TransactionController
             self::json(['error' => 'Transaction creation failed: ' . $e->getMessage()], 500);
         }
     }
+
+    static function sendTransactionNotification($transactionData, $senderUser, $receiverUser, $transactionId, $senderNewBalance, $receiverNewBalance) {
+        // Helper function to determine the method of transaction
+        function getMethodDetails($transactionData, $isSender = true) {
+            if ($isSender) {
+                if ($transactionData['phone_number_used']) {
+                    return "to phone number {$transactionData['phone_number']}.";
+                } elseif ($transactionData['card_number_used']) {
+                    return "to card number ending in " . substr($transactionData['card_number'], -4) . ".";
+                } elseif ($transactionData['iban_used']) {
+                    return "to IBAN {$transactionData['iban']}.";
+                } elseif ($transactionData['sender_account_number']) {
+                    return "to account number {$transactionData['sender_account_number']}.";
+                }
+            } else {
+                if ($transactionData['phone_number_used']) {
+                    return "to your phone number {$transactionData['phone_number']}.";
+                } elseif ($transactionData['card_number_used']) {
+                    return "to your card number ending in " . substr($transactionData['card_number'], -4) . ".";
+                } elseif ($transactionData['iban_used']) {
+                    return "to your IBAN {$transactionData['iban']}.";
+                } elseif ($transactionData['receiver_account_number']) {
+                    return "to your account number {$transactionData['receiver_account_number']}.";
+                }
+            }
+            return ''; // Default return if no method is matched
+        }
+
+        
+
+        // Sender WhatsApp notification
+        try {
+            $senderPhone = $senderUser['phone_number'] ?? null;
+            if ($senderPhone) {
+                $methodDetails = getMethodDetails($transactionData, true); // Get sender's method details
+                $message = "🔹 **Transaction Summary**\n\n";
+                $message .= "You have successfully sent *EGP {$transactionData['amount']}* to *{$receiverUser['first_name']} {$receiverUser['last_name']}*.\n";
+                $message .= "*Transaction ID*: {$transactionId}\n";
+                $message .= "*Payment Method*: {$methodDetails}\n\n";
+                $message .= "🔸 **Balance Update**\n\n";
+                $message .= "Your new balance is *EGP {$senderNewBalance}*.\n";
+                $whatsAppAPI = new WhatsAppAPI();
+                $whatsAppAPI->sendMessage($senderPhone, $message);
+            }
+        } catch (Exception $e) {
+            // Log error silently or ignore – don't block transaction for WhatsApp failures
+            error_log("WhatsApp send failed (sender): " . $e->getMessage());
+        }
+
+        // Receiver WhatsApp notification
+        try {
+            $receiverPhone = $receiverUser['phone_number'] ?? null;
+            if ($receiverPhone) {
+                $methodDetails = getMethodDetails($transactionData, false); // Get receiver's method details
+                $message = "🔹 **Transaction Summary**\n\n";
+                $message .= "You have received *EGP {$transactionData['amount']}* from *{$senderUser['first_name']} {$senderUser['last_name']}*.\n";
+                $message .= "*Transaction ID*: {$transactionId}\n";
+                $message .= "*Received Method*: {$methodDetails}\n\n";
+                $message .= "🔸 **Balance Update**\n\n";
+                $message .= "Your new balance is *EGP {$receiverNewBalance}*.\n";
+                $whatsAppAPI = new WhatsAppAPI();
+                $whatsAppAPI->sendMessage($receiverPhone, $message);
+            }
+        } catch (Exception $e) {
+            // Log error silently or ignore – don't block transaction for WhatsApp failures
+            error_log("WhatsApp send failed (receiver): " . $e->getMessage());
+        }
+
+    }
+
+
 
 
 

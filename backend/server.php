@@ -13,6 +13,7 @@ use App\routes\api\CardsRoute;
 use App\routes\api\InstantPaymentAddressesRoute;
 use App\routes\api\TransactionRoutes;
 use App\routes\api\UsersRoute;
+use App\routes\auth\AuthRoutes;
 use App\routes\Router;
 
 // Enable CORS
@@ -55,6 +56,7 @@ BankUsersRoute::define($router);
 CardsRoute::define($router);
 InstantPaymentAddressesRoute::define($router);
 TransactionRoutes::define($router);
+AuthRoutes::define($router);
 
 
 // Fallback API route example

@@ -14,9 +14,9 @@ class UserSeeder {
             $sql = "
                 INSERT INTO users (first_name, last_name, email, phone_number)
                 VALUES
-                    ('Adham', 'Zineldin', 'Mohalya3@gmail.com', '01157000509'),
-                    ('Eyad', 'Smith', 'eyadgamal18@gmail.com', '01099139550'),
-                    ('David', 'Davis', 'david.davis@example.com', '01011223344');
+                    ('Adham', 'Zineldin', 'Mohalya3@gmail.com', '201157000509'),
+                    ('Eyad', 'Smith', 'eyadgamal18@gmail.com', '201099139550'),
+                    ('David', 'Davis', 'david.davis@example.com', '201011223344');
             ";
             $pdo->exec($sql);
             echo "Users table initially seeded without Default_Account.\n";

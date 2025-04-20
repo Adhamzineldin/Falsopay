@@ -3,7 +3,8 @@
 namespace App\services;
 
 // Load the .env file to get environment variables
-require_once '../../vendor/autoload.php';
+require_once __DIR__ . '/../../vendor/autoload.php';
+
 use Dotenv\Dotenv;
 use GuzzleHttp\Client;
 
@@ -58,6 +59,7 @@ class WhatsAppAPI
             echo "Request Error: " . $e->getMessage();
         }
     }
+    
 }
 
 

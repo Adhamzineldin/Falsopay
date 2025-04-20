@@ -14,9 +14,9 @@ class BankUserSeeder {
             $sql = "
                 INSERT INTO bank_users (first_name, last_name, email, phone_number, date_of_birth)
                 VALUES
-                    ('Adham', 'Zineldin', 'Mohalya3@gmail.com', '01157000509', '2006-01-25'),
-                    ('Eyad', 'Smith', 'eyadgamal18@gmail.com', '01099139550', '2006-01-26'),
-                    ('Alex', 'Johnson', 'alex.johnson@example.com', '01011223344', '1982-03-15');
+                    ('Adham', 'Zineldin', 'Mohalya3@gmail.com', '201157000509', '2006-01-25'),
+                    ('Eyad', 'Smith', 'eyadgamal18@gmail.com', '201099139550', '2006-01-26'),
+                    ('Alex', 'Johnson', 'alex.johnson@example.com', '201011223344', '1982-03-15');
             ";
 
             $pdo->exec($sql);

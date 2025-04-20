@@ -2,33 +2,28 @@
 
 $url = 'http://localhost:4000/api/transactions/send-money'; // Adjust path to match your routing
 
-//$data = [
-//    'sender_user_id' => 1,
-//    'receiver_user_id' => 2,
-//    'amount' => 500.00,
-//    'sender_bank_id' => 1,
-//    'receiver_bank_id' => 2,
-//    'sender_account_number' => '1234567890123456',
-//    'receiver_account_number' => '9876543210987654',
-//    "receiver_mobile_number" => null,
-//    'pin' => '000000',
-//    'ipa_used' => 0,
-//    'ipa_id' => null,
-//    'iban_used' => 0,
-//    'iban' => null
-//];
-
-
 $data = [
-    'sender_user_id' => 2,
-    'sender_bank_id' => 2,
-    'sender_account_number' => '9876543210987654',
+    'sender_user_id' => 1,
+    'receiver_user_id' => 2,
     'amount' => 500.00,
-    'pin' => '000000',
-    'card_number_used' => 1,
-    'receiver_bank_id' => 1,
-    'receiver_card_number' => '1234567812345678',
+    'sender_bank_id' => 1,
+    'receiver_bank_id' => 2,
+    'sender_account_number' => '1234567890123456',
+    'receiver_account_number' => '9876543210987654',
+    'pin' => '000000'
 ];
+
+
+//$data = [
+//    'sender_user_id' => 2,
+//    'sender_bank_id' => 2,
+//    'sender_account_number' => '9876543210987654',
+//    'amount' => 500.00,
+//    'pin' => '000000',
+//    'card_number_used' => 1,
+//    'receiver_bank_id' => 1,
+//    'receiver_card_number' => '1234567812345678',
+//];
 
 
 

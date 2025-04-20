@@ -45,7 +45,7 @@ try {
         email VARCHAR(255) NOT NULL UNIQUE,
         phone_number VARCHAR(15) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        Default_Account INT DEFAULT NULL  -- Add the Default_Account column here (no FK yet)
+        default_account INT DEFAULT NULL  -- Add the Default_Account column here (no FK yet)
     );
 
     -- 4. Bank_Accounts Table
@@ -67,11 +67,12 @@ try {
     CREATE TABLE IF NOT EXISTS instant_payment_addresses (
         ipa_id INT AUTO_INCREMENT PRIMARY KEY,
         bank_id INT,
-        account_id VARCHAR(30),  -- This must match the type of account_number
+        account_number VARCHAR(30),  -- This must match the type of account_number
         ipa_address VARCHAR(255) NOT NULL,
         user_id INT,  -- Foreign key for users
+        pin VARCHAR(255) NOT NULL,  -- Add PIN (can be hashed or plain depending on use case)
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (bank_id, account_id) REFERENCES bank_accounts(bank_id, account_number) ON DELETE CASCADE ON UPDATE CASCADE
+        FOREIGN KEY (bank_id, account_number) REFERENCES bank_accounts(bank_id, account_number) ON DELETE CASCADE ON UPDATE CASCADE
     );
 
     -- 6. Cards Table
@@ -104,6 +105,8 @@ try {
         ipa_id INT,
         iban_used BOOLEAN NOT NULL DEFAULT FALSE,
         iban VARCHAR(34),  -- Standard max IBAN length
+        phone_number_used BOOLEAN NOT NULL DEFAULT FALSE,
+        phone_number VARCHAR(15),
         FOREIGN KEY (sender_user_id) REFERENCES users(user_id) ON DELETE CASCADE ON UPDATE CASCADE,
         FOREIGN KEY (receiver_user_id) REFERENCES users(user_id) ON DELETE CASCADE ON UPDATE CASCADE,
         FOREIGN KEY (sender_bank_id, sender_account_number) REFERENCES bank_accounts(bank_id, account_number) ON DELETE CASCADE ON UPDATE CASCADE,

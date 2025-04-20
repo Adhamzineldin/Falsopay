@@ -45,6 +45,13 @@ class UserController
         $user ? self::json($user) : self::json(['error' => 'User not found'], 404);
     }
 
+    #[NoReturn] public static function getUserByPhoneNumber(string $phone_number): void
+    {
+        $userModel = new User();
+        $user = $userModel->getUserByPhoneNumber($phone_number);
+        $user ? self::json($user) : self::json(['error' => 'User not found'], 404);
+    }
+
     #[NoReturn] public static function getUserByEmail(string $email): void
     {
         $userModel = new User();

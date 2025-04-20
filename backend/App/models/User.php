@@ -57,6 +57,18 @@ class User
         return $user ?: null;
     }
 
+    public function getUserByPhoneNumber(string $phone_number): ?array
+    {
+        $sql = "SELECT * FROM users WHERE phone_number = :phone_number";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute(['phone_number' => $phone_number]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $user ?: null;
+    }
+    
+    
+    
+
     public function getUserByEmail(string $email): ?array
     {
         $sql = "SELECT * FROM users WHERE email = :email";

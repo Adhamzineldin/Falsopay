@@ -18,6 +18,7 @@ class UsersRoute
 
         // Additional routes for user email 
         $router->add('GET', '/api/users/email/{email}', [UserController::class, 'getUserByEmail'], $middlewares);
+        $router->add('GET', '/api/users/number/{number}', [UserController::class, 'getUserByPhoneNumber'], $middlewares);
         
         // Route for checking if a user exists by phone number
         $router->add('GET', '/api/users/exists/{phone_number}', [UserController::class, 'checkUserExistsByPhoneNumber'], $middlewares);

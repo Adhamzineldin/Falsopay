@@ -10,6 +10,7 @@ use App\services\SocketService;
 use Exception;
 use JetBrains\PhpStorm\NoReturn;
 use function Symfony\Component\String\b;
+use function Symfony\Component\String\s;
 
 class TransactionController
 {
@@ -21,7 +22,9 @@ class TransactionController
             'sender_bank_id', 'receiver_bank_id',
             'sender_account_number', 'receiver_account_number',
             'ipa_used', 'ipa_id',
-            'iban_used', 'iban'
+            'iban_used', 'iban',
+            'phone_number_used',
+            'phone_number'
         ];
 
         foreach ($requiredFields as $field) {
@@ -56,12 +59,12 @@ class TransactionController
     {
         $transactionModel = new Transaction();
         $socketService = new SocketService();
+        $bankAccountModel = new BankAccount();
+        $ipaModel = new InstantPaymentAddress();
+        $userModel = new User();
 
         $requiredFields = [
-            'sender_user_id', 'receiver_user_id', 'amount',
-            'sender_bank_id', 'receiver_bank_id',
-            'sender_account_number', 'receiver_account_number',
-            'ipa_used', 'iban_used',
+            'amount', 'pin' // PIN is required, others can be conditional
         ];
 
         foreach ($requiredFields as $field) {
@@ -71,80 +74,119 @@ class TransactionController
         }
 
         try {
-            $bankAccountModel = new BankAccount();
-            $ipnModel = new InstantPaymentAddress();
-
-            // For the sender account, check if IPA or IBAN is used
-            if ($data['ipa_used'] && isset($data['ipa_id'])) {
-                // Use IPA to get account info
-                $senderAccount = $ipnModel->getByIpaAddress($data['ipa_id']);
-            } elseif ($data['iban_used'] && isset($data['iban'])) {
-                // Use IBAN to get account info
-                $senderAccount = $bankAccountModel->getByIban($data['iban']);
-            } else {
-                // Default behavior: use bank ID and account number
+            // Sender account retrieval (can use bank_id + account_number or IPA details)
+            $senderAccount = null;
+            if (isset($data['sender_bank_id'], $data['sender_account_number'])) {
                 $senderAccount = $bankAccountModel->getByCompositeKey($data['sender_bank_id'], $data['sender_account_number']);
+            } elseif (isset($data['sender_ipa_address'])) {
+                $senderIpaAddressAccount = $ipaModel->getByIpaAddress($data['sender_ipa_address']);
+                if ($senderIpaAddressAccount) {
+                    $senderAccount = $bankAccountModel->getByCompositeKey($senderIpaAddressAccount['bank_id'], $senderIpaAddressAccount['account_number']);
+                }
             }
 
-            // For the receiver account, check if IPA or IBAN is used
-            if ($data['ipa_used'] && isset($data['ipa_id'])) {
-                // Use IPA to get account info
-                $receiverAccount = $ipnModel->getByIpaAddress($data['ipa_id']);
-            } elseif ($data['iban_used'] && isset($data['iban'])) {
-                // Use IBAN to get account info
+            if (!$senderAccount) {
+                self::json(['error' => 'Invalid sender account or IPA address'], 400);
+            }
+
+            $senderIpaAddress = $ipaModel->getByBankAndAccount($senderAccount['bank_id'], $senderAccount['account_number'])["ipa_address"];
+            // PIN verification for the sender
+            if (!$ipaModel->verifyPin($senderIpaAddress, $data['pin'])) {
+                self::json(['error' => 'Invalid PIN'], 401);
+            }
+
+            // Receiver account retrieval (should use mobile number to find account)
+            $receiverAccount = null;
+            if (isset($data['receiver_mobile_number'])) {
+                $receiverUser = $userModel->getUserByPhoneNumber($data['receiver_mobile_number']);
+                if (!$receiverUser) {
+                    self::json(['error' => 'No user with that mobile number'], 404);
+                }
+
+                // Now, get the receiver's IPA or bank details
+                if (isset($receiverUser['default_account'])) {
+                    $receiverIpaAddressAccount = $ipaModel->getByIpaId($receiverUser['default_account']);
+                    if ($receiverIpaAddressAccount) {
+                        $receiverAccount = $bankAccountModel->getByCompositeKey($receiverIpaAddressAccount['bank_id'], $receiverIpaAddressAccount['account_number']);
+                    }
+                }
+
+                if (!$receiverAccount) {
+                    self::json(['error' => 'Receiver does not have an IPA account or valid bank account'], 400);
+                }
+
+            } elseif (isset($data['ipa_used']) && isset($data['ipa_address'])) {
+                $receiverAccount = $ipaModel->getByIpaAddress($data['ipa_address']);
+            } elseif (isset($data['iban_used']) && isset($data['iban'])) {
                 $receiverAccount = $bankAccountModel->getByIban($data['iban']);
-            } else {
-                // Default behavior: use bank ID and account number
+            } elseif (isset($data['receiver_bank_id'], $data['receiver_account_number'])) {
                 $receiverAccount = $bankAccountModel->getByCompositeKey($data['receiver_bank_id'], $data['receiver_account_number']);
+            } else {
+                self::json(['error' => 'Invalid receiver details'], 400);
             }
 
-            // Check if the sender and receiver accounts exist
-            if (!$senderAccount || !$receiverAccount) {
-                self::json(['error' => 'Invalid sender or receiver account'], 400);
+            if (!$receiverAccount) {
+                self::json(['error' => 'Invalid receiver account'], 400);
             }
 
-            // Set transaction type
+            // Transaction creation
             $data['transaction_type'] = 'send';
-            
-            
-            // Create the transaction
-            $transactionId = $transactionModel->createTransaction($data);
-            
-            
-            // Deduct the amount from the sender's account
-            $bankAccountModel->subtractBalance($senderAccount["bank_id"], $senderAccount["account_number"],  $data['amount']);
-            $bankAccountModel->addBalance($receiverAccount["bank_id"], $receiverAccount["account_number"],  $data['amount']);
-            
-            $userModel = new User();
-            // Get sender and receiver user details
-            $senderUser = $userModel->getUserById($data['sender_user_id']);
-            $receiverUser = $userModel->getUserById($data['receiver_user_id']);
 
-            // Send the transaction status to both users
+
+            $transactionData = [
+                'sender_user_id' => $data['sender_user_id'],
+                'receiver_user_id' => $data['receiver_user_id'] ?? null,  // Handle nullable receiver_user_id
+                'amount' => $data['amount'],
+                'transaction_type' => $data['transaction_type'],
+                'sender_bank_id' => $senderAccount['bank_id'],
+                'receiver_bank_id' => $receiverAccount['bank_id'],
+                'sender_account_number' => $senderAccount['account_number'],
+                'receiver_account_number' => $receiverAccount['account_number'],
+                'ipa_used' => $data['ipa_used'] ?? 0,  // Default to 0 if not set
+                'ipa_id' => $data['ipa_id'] ?? null,   // Nullable ipa_id
+                'iban_used' => $data['iban_used'] ?? 0,  // Default to 0 if not set
+                'iban' => $data['iban'] ?? null,   // Nullable iban
+                'phone_number_used' => isset($data['receiver_mobile_number']) ? 1 : 0,  // Check if mobile number is provided
+                'phone_number' => $data['receiver_mobile_number'] ?? null  // Nullable phone_number
+            ];
+
+
+            $transactionId = $transactionModel->createTransaction($transactionData);
+
+            // Balance update
+            $bankAccountModel->subtractBalance($senderAccount['bank_id'], $senderAccount['account_number'], $data['amount']);
+            $bankAccountModel->addBalance($receiverAccount['bank_id'], $receiverAccount['account_number'], $data['amount']);
+
+
+            $receiverUser = $ipaModel->getByBankAndAccount($receiverAccount['bank_id'], $receiverAccount['account_number']) ?? null;
+            $receiverUserId = $receiverUser['user_id'] ?? null;
+            // Send status update via socket
+            $senderUser = $userModel->getUserById($data['sender_user_id']);
+            if ($receiverUserId){
+                $receiverUser = $userModel->getUserById($receiverUserId);
+            }
+
+            $receiverName = $receiverUser ? $receiverUser['first_name'] . ' ' . $receiverUser['last_name'] : null;
+            
             $socketService->sendTransactionStatus(
                 fromUserId: $data['sender_user_id'],
-                toUserId: $data['receiver_user_id'],
+                toUserId: $receiverUserId ?? null,
                 amount: $data['amount'],
                 fromName: $senderUser['first_name'] . ' ' . $senderUser['last_name'],
-                toName: $receiverUser['first_name'] . ' ' . $receiverUser['last_name'],
+                toName: $receiverName ?? $receiverAccount['iban'],
                 transactionId: $transactionId
             );
-            
-//            $socketService->sendTransactionStatus(
-//                fromUserId: $data['sender_user_id'],
-//                toUserId: $data['sender_user_id'],
-//                amount: $data['amount'],
-//                fromName: $senderAccount['account_holder_name'],
-//                toName: $receiverAccount['account_holder_name'],
-//                transactionId: $transactionId
-//            );
 
-
+            // Response
             self::json(['success' => true, 'transaction_id' => $transactionId]);
+
         } catch (Exception $e) {
             self::json(['error' => 'Transaction creation failed: ' . $e->getMessage()], 500);
         }
     }
+
+
+
 
 
     #[NoReturn] private static function json($data, int $code = 200): void

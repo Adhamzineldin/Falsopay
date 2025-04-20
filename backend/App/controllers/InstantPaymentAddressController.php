@@ -13,22 +13,29 @@ class InstantPaymentAddressController
         $ipaModel = new InstantPaymentAddress();
 
         // Validate required fields
-        $requiredFields = ['bank_id', 'account_id', 'ipa_address', 'user_id'];
+        $requiredFields = ['bank_id', 'account_number', 'ipa_address', 'user_id', 'pin'];
         foreach ($requiredFields as $field) {
             if (!isset($data[$field])) {
                 self::json(['error' => "Missing required field: $field"], 400);
             }
         }
 
+        // Enforce PIN length (since it's hashed later)
+        if (strlen($data['pin']) < 10) {
+            self::json(['error' => 'PIN must be at least 10 characters long.'], 400);
+        }
+
         $ipaModel->create(
             $data['bank_id'],
-            $data['account_id'],
+            $data['account_number'],
             $data['ipa_address'],
-            $data['user_id']
+            $data['user_id'],
+            $data['pin']
         );
 
         self::json(['success' => true]);
     }
+
 
     #[NoReturn] public static function getAllInstantPaymentAddresses(): void
     {
@@ -51,10 +58,10 @@ class InstantPaymentAddressController
         self::json($ipas);
     }
 
-    #[NoReturn] public static function getByBankAndAccount(int $bank_id, string $account_id): void
+    #[NoReturn] public static function getByBankAndAccount(int $bank_id, string $account_number): void
     {
         $ipaModel = new InstantPaymentAddress();
-        $ipa = $ipaModel->getByBankAndAccount($bank_id, $account_id);
+        $ipa = $ipaModel->getByBankAndAccount($bank_id, $account_number);
         $ipa ? self::json($ipa) : self::json(['error' => 'IPA not found'], 404);
     }
 
@@ -65,7 +72,17 @@ class InstantPaymentAddressController
         $ipa ? self::json($ipa) : self::json(['error' => 'IPA address not found'], 404);
     }
 
-    #[NoReturn] public static function updateInstantPaymentAddress(int $bank_id, string $account_id, array $data): void
+
+    #[NoReturn] public static function getByIpaId(string $ipa_id): void
+    {
+        $ipaModel = new InstantPaymentAddress();
+        $ipa = $ipaModel->getByIpaId($ipa_id);
+        $ipa ? self::json($ipa) : self::json(['error' => 'IPA address not found'], 404);
+    }
+    
+    
+
+    #[NoReturn] public static function updateInstantPaymentAddress(int $bank_id, string $account_number, array $data): void
     {
         print_r($data);
         $ipaModel = new InstantPaymentAddress();
@@ -75,14 +92,14 @@ class InstantPaymentAddressController
             self::json(['error' => 'Missing ipa_address'], 400);
         }
 
-        $success = $ipaModel->update($bank_id, $account_id, $ipaAddress);
+        $success = $ipaModel->update($bank_id, $account_number, $ipaAddress);
         self::json(['success' => $success]);
     }
 
-    #[NoReturn] public static function deleteInstantPaymentAddress(int $bank_id, string $account_id): void
+    #[NoReturn] public static function deleteInstantPaymentAddress(int $bank_id, string $account_number): void
     {
         $ipaModel = new InstantPaymentAddress();
-        $success = $ipaModel->delete($bank_id, $account_id);
+        $success = $ipaModel->delete($bank_id, $account_number);
         self::json(['success' => $success]);
     }
 
@@ -92,6 +109,32 @@ class InstantPaymentAddressController
         $success = $ipaModel->deleteByUserId($user_id);
         self::json(['success' => $success]);
     }
+    
+    
+    
+    
+
+    #[NoReturn] public static function verifyPinForIpa(array $data): void
+    {
+        $ipaModel = new InstantPaymentAddress();
+
+        if (!isset($data['ipa_address'], $data['pin'])) {
+            self::json(['error' => 'Missing ipa_address or pin'], 400);
+        }
+
+        $isValid = $ipaModel->verifyPin($data['ipa_address'], $data['pin']);
+
+        if (!$isValid) {
+            self::json(['valid' => false, 'message' => 'Incorrect PIN'], 401);
+        }
+
+        self::json(['valid' => true]);
+    }
+
+
+
+
+
 
     #[NoReturn] private static function json($data, int $code = 200): void
     {

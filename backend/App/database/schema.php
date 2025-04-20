@@ -83,11 +83,13 @@ try {
         card_number VARCHAR(19) NOT NULL,
         expiration_date DATE NOT NULL,
         cvv VARCHAR(4) NOT NULL,
+        pin VARCHAR(255) DEFAULT NULL , -- Hashed card PIN
         card_type ENUM('debit', 'prepaid') NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (bank_user_id) REFERENCES bank_users(bank_user_id) ON DELETE CASCADE ON UPDATE CASCADE,
         FOREIGN KEY (bank_id) REFERENCES banks(bank_id) ON DELETE CASCADE ON UPDATE CASCADE
     );
+
 
     -- 7. Transactions Table
     CREATE TABLE IF NOT EXISTS transactions (
@@ -107,6 +109,8 @@ try {
         iban VARCHAR(34),  -- Standard max IBAN length
         phone_number_used BOOLEAN NOT NULL DEFAULT FALSE,
         phone_number VARCHAR(15),
+        card_number_used BOOLEAN NOT NULL DEFAULT FALSE,
+        card_number VARCHAR(19),
         FOREIGN KEY (sender_user_id) REFERENCES users(user_id) ON DELETE CASCADE ON UPDATE CASCADE,
         FOREIGN KEY (receiver_user_id) REFERENCES users(user_id) ON DELETE CASCADE ON UPDATE CASCADE,
         FOREIGN KEY (sender_bank_id, sender_account_number) REFERENCES bank_accounts(bank_id, account_number) ON DELETE CASCADE ON UPDATE CASCADE,

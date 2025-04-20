@@ -23,5 +23,8 @@ class BankAccountsRoute
 
         $router->add('GET', '/api/bank-accounts', [BankAccountController::class, 'getAllBankAccounts'], $middlewares);
         $router->add('POST', '/api/bank-accounts', [BankAccountController::class, 'createBankAccount'], $middlewares);
+
+        $router->add('POST', '/api/bank-accounts/link', [BankAccountController::class, 'linkAccountToService'], $middlewares);
+
     }
 }

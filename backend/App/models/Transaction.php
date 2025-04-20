@@ -27,7 +27,9 @@ class Transaction {
             'iban_used',
             'iban',
             'phone_number_used',
-            'phone_number'
+            'phone_number',
+            'card_number_used',
+            'card_number',
         ];
 
         $columns = implode(', ', $fields);

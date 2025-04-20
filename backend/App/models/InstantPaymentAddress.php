@@ -132,6 +132,17 @@ class InstantPaymentAddress {
         return $hashedPin && password_verify($enteredPin, $hashedPin);
     }
 
+    public function updatePin(string $ipa_address, string $newPin): bool {
+        $hashedPin = password_hash($newPin, PASSWORD_BCRYPT);
+
+        $sql = "UPDATE instant_payment_addresses SET pin = :pin WHERE ipa_address = :ipa_address";
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute([
+            'ipa_address' => $ipa_address,
+            'pin' => $hashedPin
+        ]);
+    }
+
 
 
 

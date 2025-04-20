@@ -131,6 +131,22 @@ class InstantPaymentAddressController
         self::json(['valid' => true]);
     }
 
+    #[NoReturn] public static function updatePinForIpa(array $data): void
+    {
+        $ipaModel = new InstantPaymentAddress();
+
+        if (!isset($data['ipa_address'], $data['new_pin'])) {
+            self::json(['error' => 'Missing ipa_address or new_pin'], 400);
+        }
+
+        if (strlen($data['new_pin']) < 10) {
+            self::json(['error' => 'PIN must be at least 10 characters long.'], 400);
+        }
+
+        $success = $ipaModel->updatePin($data['ipa_address'], $data['new_pin']);
+        self::json(['success' => $success]);
+    }
+
 
 
 

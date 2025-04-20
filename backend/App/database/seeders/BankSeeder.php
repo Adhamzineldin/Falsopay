@@ -17,7 +17,13 @@ class BankSeeder {
                     ('CIB', 'CIB001', 'CIBEGECA'),
                     ('NBE', 'NBE001', 'NBEGEGCX'),
                     ('Arab Bank', 'AB001', 'ARABEGCXXX'),
-                    ('AAIB', 'AAIB001', 'AAIBEGCXXX');
+                    ('AAIB', 'AAIB001', 'AAIBEGCXXX'),
+                    ('PREPAID', 'PREPAID001', 'PREPAIDXXX'),
+                    ('QNB', 'QNB001', 'QNBKQNBXXX'),
+                    ('Fawry', 'FAWRY001', 'FAWRYEGCXXX'),
+                    ('Banque Misr', 'BM001', 'BMISEGCXXXX'),
+                    ('Banque du Caire', 'BDC001', 'BDCIEGCXXXX')
+                
             ";
 
             $pdo->exec($sql);

@@ -3,6 +3,7 @@
 namespace App\controllers;
 
 use App\models\BankAccount;
+use App\models\Card;
 use App\models\InstantPaymentAddress;
 use App\models\Transaction;
 use App\models\User;
@@ -60,6 +61,7 @@ class TransactionController
         $transactionModel = new Transaction();
         $socketService = new SocketService();
         $bankAccountModel = new BankAccount();
+        $cardModel = new Card();
         $ipaModel = new InstantPaymentAddress();
         $userModel = new User();
 
@@ -119,6 +121,12 @@ class TransactionController
                 $receiverAccount = $ipaModel->getByIpaAddress($data['ipa_address']);
             } elseif (isset($data['iban_used']) && isset($data['iban'])) {
                 $receiverAccount = $bankAccountModel->getByIban($data['iban']);
+            } elseif (isset($data['card_number_used']) && isset($data['receiver_card_number'])) {
+                $card = $cardModel->getByBankAndCardNumber($data['receiver_bank_id'], $data['receiver_card_number']);
+                if (!$card) {
+                    self::json(['error' => 'Invalid card details'], 400);
+                }
+                $receiverAccount = $bankAccountModel->getAllByUserAndBankId($card["bank_user_id"], $data['receiver_bank_id'])[0];
             } elseif (isset($data['receiver_bank_id'], $data['receiver_account_number'])) {
                 $receiverAccount = $bankAccountModel->getByCompositeKey($data['receiver_bank_id'], $data['receiver_account_number']);
             } else {
@@ -147,7 +155,9 @@ class TransactionController
                 'iban_used' => $data['iban_used'] ?? 0,  // Default to 0 if not set
                 'iban' => $data['iban'] ?? null,   // Nullable iban
                 'phone_number_used' => isset($data['receiver_mobile_number']) ? 1 : 0,  // Check if mobile number is provided
-                'phone_number' => $data['receiver_mobile_number'] ?? null  // Nullable phone_number
+                'phone_number' => $data['receiver_mobile_number'] ?? null,  // Nullable phone_number,
+                'card_number_used' => $data['card_number_used'] ? 1 : 0,  // Default to 0 if not set
+                'card_number' => $data['receiver_card_number'] ?? null,  // Nullable card_number
             ];
 
 

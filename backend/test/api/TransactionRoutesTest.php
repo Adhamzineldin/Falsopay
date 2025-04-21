@@ -1,8 +1,8 @@
 <?php
 
-$url = 'http://localhost:4000/api/transactions/send-money'; // Adjust path to match your routing
+//$url = 'http://localhost:4000/api/transactions/send-money'; // Adjust path to match your routing
 
-//$url = 'https://app4000.maayn.me/api/transactions/send-money';
+$url = 'https://app4000.maayn.me/api/transactions/send-money';
 
 
 //$data = [

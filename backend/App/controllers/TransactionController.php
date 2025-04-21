@@ -161,7 +161,14 @@ class TransactionController
                 'card_number_used' => $data['card_number_used'] ? 1 : 0,  // Default to 0 if not set
                 'card_number' => $data['receiver_card_number'] ?? null,  // Nullable card_number
             ];
-
+            
+            
+            
+            $senderBalance = $bankAccountModel->getBalance($senderAccount['bank_id'], $senderAccount['account_number']);
+            if ($senderBalance < $data['amount']) {
+                self::json(['error' => 'Insufficient balance'], 400);
+            }
+            
 
             $transactionId = $transactionModel->createTransaction($transactionData);
 

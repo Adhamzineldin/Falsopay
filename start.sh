@@ -5,25 +5,25 @@ echo "Starting React app..."
 cd frontend
 npm run dev &  # Run React in background
 
-# Go back to the root or backend directory
+# Go back to the root
 cd ..
 
 # Start PHP (backend) with server.php entry point
 echo "Starting PHP server..."
 cd backend
-php -S 0.0.0.0:4000 -t . server.php  # Specify server.php as the entry point
+php -S 0.0.0.0:4000 -t . server.php &  # Run PHP server in background
 
 # Start WebSocket server
-cd websockets
+cd ../websockets
 echo "Starting WebSocket server..."
 php WebSocketServer.php &  # Run WebSocket server in background
 
 # Go back to the root
 cd ..
 
-# Connect to MySQL
-#echo "Connecting to MySQL..."
-#mysql -h app3306.maayn.me -u Falsopay -p"YOUR_PASSWORD"  # Replace YOUR_PASSWORD with the actual password
+# Optional: Connect to MySQL (commented out for safety)
+# echo "Connecting to MySQL..."
+# mysql -h app3306.maayn.me -u Falsopay -p"YOUR_PASSWORD"
 
-# Wait for all processes to run
+# Wait for all background processes
 wait

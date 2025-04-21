@@ -71,13 +71,13 @@ class Router
     private function sendNotFound(): void
     {
         http_response_code(404);
-        echo file_get_contents(__DIR__ . '/../../public/404.html');
+        echo file_get_contents(__DIR__ . '/../public/404.html');
     }
 
     private function sendUnauthorized(): void
     {
         http_response_code(401);
-        echo file_get_contents(__DIR__ . '/../../public/401.html');
+        echo file_get_contents(__DIR__ . '/../public/401.html');
     }
 
     private function convertRouteToRegex(string $path): string

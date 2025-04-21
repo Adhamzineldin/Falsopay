@@ -1,6 +1,8 @@
 <?php
 
-$url = 'http://localhost:4000/api/transactions/send-money'; // Adjust path to match your routing
+//$url = 'http://localhost:4000/api/transactions/send-money'; // Adjust path to match your routing
+
+$url = 'https://app4000.maayn.me/api/transactions/send-money';
 
 
 //$data = [
@@ -50,6 +52,7 @@ curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
 curl_setopt($ch, CURLOPT_HTTPHEADER, [
     'Content-Type: application/json',
 ]);
+
 
 // Execute the request
 $response = curl_exec($ch);

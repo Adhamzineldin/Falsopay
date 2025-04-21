@@ -32,7 +32,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 20px;
+            padding: 16px;
         }
 
         .container {
@@ -46,11 +46,17 @@
 
         .header {
             background: linear-gradient(90deg, #3b82f6, #1d4ed8);
-            padding: 30px;
+            padding: 24px 20px;
             color: white;
             text-align: center;
             position: relative;
             overflow: hidden;
+        }
+
+        @media (min-width: 640px) {
+            .header {
+                padding: 30px;
+            }
         }
 
         .header::after {
@@ -76,26 +82,46 @@
         .header h1 {
             font-weight: 700;
             margin-bottom: 8px;
-            font-size: 28px;
+            font-size: 22px;
+        }
+
+        @media (min-width: 640px) {
+            .header h1 {
+                font-size: 28px;
+            }
         }
 
         .header p {
             font-weight: 400;
             opacity: 0.9;
-            font-size: 16px;
+            font-size: 14px;
+        }
+
+        @media (min-width: 640px) {
+            .header p {
+                font-size: 16px;
+            }
         }
 
         .status-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            padding: 30px;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            padding: 20px 16px;
+        }
+
+        @media (min-width: 640px) {
+            .status-grid {
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 20px;
+                padding: 30px;
+            }
         }
 
         .status-card {
             background-color: #f8fafc;
             border-radius: 12px;
-            padding: 24px;
+            padding: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -105,30 +131,50 @@
             border: 1px solid #e2e8f0;
         }
 
-        .status-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        @media (min-width: 640px) {
+            .status-card {
+                padding: 24px;
+            }
+
+            .status-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            }
         }
 
         .status-title {
             display: flex;
             align-items: center;
             gap: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
             font-weight: 600;
-            font-size: 18px;
+            font-size: 16px;
             color: var(--text);
         }
 
+        @media (min-width: 640px) {
+            .status-title {
+                margin-bottom: 20px;
+                font-size: 18px;
+            }
+        }
+
         .status-icon {
-            height: 80px;
-            width: 80px;
+            height: 70px;
+            width: 70px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             margin-bottom: 16px;
             position: relative;
+        }
+
+        @media (min-width: 640px) {
+            .status-icon {
+                height: 80px;
+                width: 80px;
+            }
         }
 
         .status-icon.operational {
@@ -258,28 +304,51 @@
         }
 
         .footer {
-            padding: 20px 30px;
+            padding: 16px;
             border-top: 1px solid #e2e8f0;
-            font-size: 14px;
+            font-size: 13px;
             color: #64748b;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        @media (min-width: 640px) {
+            .footer {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                padding: 20px 30px;
+                font-size: 14px;
+            }
         }
 
         .uptime {
             display: flex;
             gap: 8px;
             align-items: center;
+            order: 1;
+        }
+
+        @media (min-width: 640px) {
+            .uptime {
+                order: 0;
+            }
         }
 
         .uptime-bar {
             display: flex;
             height: 6px;
-            width: 120px;
+            width: 80px;
             background-color: #e2e8f0;
             border-radius: 3px;
             overflow: hidden;
+        }
+
+        @media (min-width: 640px) {
+            .uptime-bar {
+                width: 120px;
+            }
         }
 
         .uptime-progress {
@@ -289,7 +358,15 @@
         }
 
         .update-time {
-            font-size: 13px;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        @media (min-width: 640px) {
+            .update-time {
+                font-size: 13px;
+                text-align: left;
+            }
         }
 
         .services-icon {
@@ -338,7 +415,17 @@
             transition: all 0.2s ease;
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 6px;
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        @media (min-width: 640px) {
+            #refreshButton {
+                width: auto;
+                margin-top: 0;
+            }
         }
 
         #refreshButton:hover {
@@ -348,11 +435,17 @@
         /* Dark theme toggle (mock) */
         .theme-switch {
             position: absolute;
-            top: 20px;
-            right: 20px;
+            top: 16px;
+            right: 16px;
             color: white;
             opacity: 0.8;
             cursor: pointer;
+        }
+
+        @media (max-width: 359px) {
+            .theme-switch {
+                display: none;
+            }
         }
     </style>
 </head>

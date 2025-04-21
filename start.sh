@@ -34,7 +34,7 @@ cd ..
 
 # Start WebSocket server
 echo "Starting WebSocket server..."
-cd core || exit
+cd backend/core || exit
 php WebSocketServer.php &  # Run in background
 PIDS+=($!)
 cd ..

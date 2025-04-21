@@ -38,7 +38,7 @@ class SocketService
 
     protected function postToWebSocketServer(array $data): void
     {
-        $ch = curl_init($this->pushEndpoint);
+        $ch = \curl_init($this->pushEndpoint);
         curl_setopt_array($ch, [
             CURLOPT_POST       => true,
             CURLOPT_RETURNTRANSFER => true,

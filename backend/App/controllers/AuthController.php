@@ -101,16 +101,16 @@ class AuthController
         if (!$user) {
             self::json(['error' => 'User not found'], 404);
         }
-        
-        $ipa = $ipaModel->getAllByUserId($user['user_id']);
 
-        if (empty($ipa)) {
+        $ipa_accounts = $ipaModel->getAllByUserId($user['user_id']);
+
+        if (empty($ipa_accounts)) {
             $user_token = $authMiddleware->generateToken($user['user_id']);
             self::json(['success' => true, 'user_token' => $user_token, 'user' => $user]);
         } else {
             $ipaExists = false;
-            foreach ($ipa as $item) {
-                if ($item['ipa'] === $data['ipa']) {
+            foreach ($ipa_accounts as $ipa_account) {
+                if ($ipa_account['ipa_address'] === $data['ipa_address']) {
                     $ipaExists = true;
                     break;
                 }

@@ -51,7 +51,7 @@ This file contains the logic for handling authentication-related requests.
 - **Description**: Logs in a user.
 - **Parameters**:
     - `phone_number`: User's phone number.
-    - `ipa`: Instant Payment Address (IPA).
+    - `ipa_address`: Instant Payment Address (IPA).
 - **Response**: JSON response with user token or error message.
 
 ### `deleteAccount(array $data): void`

@@ -43,7 +43,7 @@ class NotificationServer implements MessageComponentInterface {
         if (isset($conn->userId)) {
             unset($this->userConnections[$conn->userId]);
         }
-        echo "Connection {$conn->resourceId} closed\n";
+        echo "Connection {$conn->resourceId} With User ID {$conn->userId} closed\n";
     }
 
     public function onError(ConnectionInterface $conn, \Exception $e) {

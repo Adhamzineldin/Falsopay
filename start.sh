@@ -18,7 +18,7 @@ php -S 0.0.0.0:4000 -t . server.php &  # Run PHP server in background
 
 # Start WebSocket server
 # shellcheck disable=SC2164
-cd ../core
+cd core
 echo "Starting WebSocket server..."
 php WebSocketServer.php &  # Run WebSocket server in background
 

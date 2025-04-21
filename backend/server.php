@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // Check WebSocket status (running on localhost:4100)
-function checkWebSocketStatus() {
+function checkWebSocketStatus(): array {
     $wsAddress = 'localhost';
     $wsPort = 4100;
     $warningThreshold = 150; // in ms
@@ -72,18 +72,20 @@ function checkDatabaseStatus(): array {
     $warningThreshold = 200; // ms
 
     try {
+        $dbConnection =  Database::getInstance()->getConnection();
         $startTime = microtime(true);
-        $database = Database::getInstance();
-        $dbConnection = $database->getConnection();
-        $endTime = microtime(true);
+        // Lightweight test query
+        $stmt = $dbConnection->query('SELECT 1');
+        $stmt->fetch();
 
+        $endTime = microtime(true);
         $responseTime = round(($endTime - $startTime) * 1000);
 
         if ($responseTime > $warningThreshold) {
             return [
                 'status' => 'warning',
                 'label' => 'Degraded',
-                'message' => 'Database is responding slowly. Performance may be degraded.',
+                'message' => 'Database is reachable, but query execution is slow.',
                 'response_time' => $responseTime . 'ms'
             ];
         }
@@ -91,19 +93,20 @@ function checkDatabaseStatus(): array {
         return [
             'status' => 'operational',
             'label' => 'Operational',
-            'message' => 'Database connections are stable with normal query times.',
+            'message' => 'Database is responsive with good query performance.',
             'response_time' => $responseTime . 'ms'
         ];
     } catch (\Exception $e) {
-        error_log("Database connection error: " . $e->getMessage());
+        error_log("Database health check error: " . $e->getMessage());
         return [
             'status' => 'error',
             'label' => 'Outage',
-            'message' => 'Database connection failure. Automatic recovery in progress.',
+            'message' => 'Database is down or unreachable.',
             'response_time' => 'null'
         ];
     }
 }
+
 
 // Check database status
 $dbStatusInfo = checkDatabaseStatus();

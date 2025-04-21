@@ -32,6 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 function checkWebSocketStatus() {
     $wsAddress = 'localhost';
     $wsPort = 4100;
+    $warningThreshold = 150; // in ms
 
     $startTime = microtime(true);
     $socket = @fsockopen($wsAddress, $wsPort, $errno, $errstr, 10);
@@ -41,6 +42,16 @@ function checkWebSocketStatus() {
 
     if ($socket) {
         fclose($socket);
+
+        if ($responseTime > $warningThreshold) {
+            return [
+                'status' => 'warning',
+                'label' => 'Degraded',
+                'message' => 'WebSocket is reachable but responding slower than expected.',
+                'response_time' => $responseTime . 'ms'
+            ];
+        }
+
         return [
             'status' => 'operational',
             'label' => 'Operational',
@@ -57,32 +68,45 @@ function checkWebSocketStatus() {
     }
 }
 
+function checkDatabaseStatus(): array {
+    $warningThreshold = 200; // ms
 
-// Database connection
-$dbStatusInfo = [];
-try {
-    $startTime = microtime(true);
-    $database = Database::getInstance();
-    $dbConnection = $database->getConnection();
-    $endTime = microtime(true);
-    $responseTime = round(($endTime - $startTime) * 1000);
+    try {
+        $startTime = microtime(true);
+        $database = Database::getInstance();
+        $dbConnection = $database->getConnection();
+        $endTime = microtime(true);
 
-    $dbStatusInfo = [
-        'status' => 'operational',
-        'label' => 'Operational',
-        'message' => 'Database connections are stable with normal query times.',
-        'response_time' => $responseTime . 'ms'
-    ];
-} catch (\Exception $e) {
-    $dbConnection = false;
-    $dbStatusInfo = [
-        'status' => 'error',
-        'label' => 'Outage',
-        'message' => 'Database connection failure. Automatic recovery in progress.',
-        'response_time' => 'null'
-    ];
-    error_log("Database connection error: " . $e->getMessage());
+        $responseTime = round(($endTime - $startTime) * 1000);
+
+        if ($responseTime > $warningThreshold) {
+            return [
+                'status' => 'warning',
+                'label' => 'Degraded',
+                'message' => 'Database is responding slowly. Performance may be degraded.',
+                'response_time' => $responseTime . 'ms'
+            ];
+        }
+
+        return [
+            'status' => 'operational',
+            'label' => 'Operational',
+            'message' => 'Database connections are stable with normal query times.',
+            'response_time' => $responseTime . 'ms'
+        ];
+    } catch (\Exception $e) {
+        error_log("Database connection error: " . $e->getMessage());
+        return [
+            'status' => 'error',
+            'label' => 'Outage',
+            'message' => 'Database connection failure. Automatic recovery in progress.',
+            'response_time' => 'null'
+        ];
+    }
 }
+
+// Check database status
+$dbStatusInfo = checkDatabaseStatus();
 
 // Get WebSocket status
 $wsStatusInfo = checkWebSocketStatus();

@@ -1,33 +1,43 @@
 #!/bin/bash
 
+# Exit script on any error
+set -e
+
+# Store all background process PIDs
+PIDS=()
+
+# Cleanup function on Ctrl+C or exit
+cleanup() {
+  echo "Shutting down servers..."
+  for pid in "${PIDS[@]}"; do
+    kill "$pid" 2>/dev/null || true
+  done
+  exit 0
+}
+
+# Trap SIGINT (Ctrl+C) and SIGTERM
+trap cleanup SIGINT SIGTERM
+
 # Start React (frontend)
 echo "Starting React app..."
-# shellcheck disable=SC2164
-cd frontend
-npm run dev &  # Run React in background
-
-# Go back to the root
-# shellcheck disable=SC2103
+cd frontend || exit
+npm run dev &  # Run in background
+PIDS+=($!)
 cd ..
 
-# Start PHP (backend) with server.php entry point
+# Start PHP (backend)
 echo "Starting PHP server..."
-# shellcheck disable=SC2164
-cd backend
-php -S 0.0.0.0:4000 -t . server.php &  # Run PHP server in background
+cd backend || exit
+php -S 0.0.0.0:4000 -t . server.php &  # Run in background
+PIDS+=($!)
+cd ..
 
 # Start WebSocket server
-# shellcheck disable=SC2164
-cd core
 echo "Starting WebSocket server..."
-php WebSocketServer.php &  # Run WebSocket server in background
-
-# Go back to the root
+cd core || exit
+php WebSocketServer.php &  # Run in background
+PIDS+=($!)
 cd ..
-
-# Optional: Connect to MySQL (commented out for safety)
-# echo "Connecting to MySQL..."
-# mysql -h app3306.maayn.me -u Falsopay -p"YOUR_PASSWORD"
 
 # Wait for all background processes
 wait

@@ -3,6 +3,8 @@
 namespace App\services;
 
 use Dotenv\Dotenv;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
 
 $dotenv = Dotenv::createImmutable(__DIR__ . '/../../');
 $dotenv->load();
@@ -10,12 +12,13 @@ $dotenv->load();
 class SocketService
 {
     protected string $pushEndpoint;
+    protected Client $client;
 
     public function __construct()
     {
         // Load WebSocket endpoint from environment variables, use fallback if not defined
-        
         $this->pushEndpoint = $_ENV['WEBSOCKET_PUSH_ENDPOINT'] ?? 'http://localhost:4101/push';
+        $this->client = new Client();  // Guzzle client instance
     }
 
     public function sendTransactionStatus(
@@ -44,18 +47,19 @@ class SocketService
 
     protected function postToWebSocketServer(array $data): void
     {
-        $ch = \curl_init($this->pushEndpoint);
-        curl_setopt_array($ch, [
-            CURLOPT_POST       => true,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
-            CURLOPT_POSTFIELDS => json_encode($data),
-        ]);
-
-        $response = curl_exec($ch);
-        if (curl_errno($ch)) {
-            error_log('SocketService cURL error: ' . curl_error($ch));
+        try {
+            $response = $this->client->post($this->pushEndpoint, [
+                'json' => $data,  // Automatically encodes the data as JSON
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                ],
+            ]);
+            // You can log the response or handle it as needed
+            if ($response->getStatusCode() !== 200) {
+                error_log('Failed to send transaction notification.');
+            }
+        } catch (RequestException $e) {
+            error_log('SocketService Guzzle error: ' . $e->getMessage());
         }
-        curl_close($ch);
     }
 }

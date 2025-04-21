@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <title>Payment Received</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Poppins', Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+            color: #333333;
+            line-height: 1.6;
+        }
+
+        .email-wrapper {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .email-header {
+            background: linear-gradient(135deg, #2e7d32 0%, #43a047 100%);
+            padding: 30px;
+            text-align: center;
+        }
+
+        .email-header h1 {
+            color: #ffffff;
+            margin: 0;
+            font-weight: 600;
+            font-size: 24px;
+            letter-spacing: 0.5px;
+        }
+
+        .email-body {
+            padding: 35px;
+        }
+
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 25px;
+            color: #333333;
+        }
+
+        .transaction-details {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border-left: 4px solid #2e7d32;
+        }
+
+        .transaction-amount {
+            font-size: 22px;
+            font-weight: 600;
+            color: #2e7d32;
+            margin-bottom: 15px;
+        }
+
+        .sender-name {
+            color: #43a047;
+            font-weight: 500;
+        }
+
+        .transaction-info {
+            margin-top: 20px;
+        }
+
+        .transaction-info p {
+            margin: 8px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .transaction-info .label {
+            color: #6c757d;
+            font-weight: 500;
+            min-width: 150px;
+        }
+
+        .transaction-info .value {
+            font-weight: 500;
+            color: #333333;
+            text-align: right;
+        }
+
+        .balance-update {
+            background-color: #eef9ee;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .balance-amount {
+            font-size: 24px;
+            font-weight: 600;
+            color: #2e7d32;
+        }
+
+        .footer {
+            background-color: #f8f9fa;
+            padding: 25px;
+            text-align: center;
+            font-size: 14px;
+            color: #6c757d;
+            border-top: 1px solid #eeeeee;
+        }
+
+        @media only screen and (max-width: 600px) {
+            .email-wrapper {
+                border-radius: 0;
+                margin: 0;
+            }
+
+            .email-body {
+                padding: 20px;
+            }
+
+            .transaction-info p {
+                flex-direction: column;
+                margin: 15px 0;
+            }
+
+            .transaction-info .value {
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class='email-wrapper'>
+    <div class='email-header'>
+        <h1>Payment Received</h1>
+    </div>
+
+    <div class='email-body'>
+        <div class='greeting'>
+            Hello <strong>{{FIRST_NAME}} {{LAST_NAME}}</strong>,
+        </div>
+
+        <div class='transaction-details'>
+            <div class='transaction-amount'>
+                EGP {{AMOUNT}} received
+            </div>
+
+            <p>You've received a payment from <span class='sender-name'>{{SENDER_NAME}}</span>.</p>
+
+            <div class='transaction-info'>
+                <p>
+                    <span class='label'>Transaction ID:</span>
+                    <span class='value'>{{TRANSACTION_ID}}</span>
+                </p>
+                <p>
+                    <span class='label'>Date & Time:</span>
+                    <span class='value'>{{DATE_TIME}}</span>
+                </p>
+                <p>
+                    <span class='label'>Received via:</span>
+                    <span class='value'>{{PAYMENT_METHOD}}</span>
+                </p>
+            </div>
+        </div>
+
+        <div class='balance-update'>
+            <p>Your account balance has been updated</p>
+            <div class='balance-amount'>EGP {{BALANCE}}</div>
+        </div>
+    </div>
+
+    <div class='footer'>
+        <p>Thank you for using our service.</p>
+        <p>&copy; {{YEAR}} | This is an automated message. Please do not reply to this email.</p>
+    </div>
+</div>
+</body>
+</html>

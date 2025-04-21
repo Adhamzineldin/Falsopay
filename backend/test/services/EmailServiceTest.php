@@ -6,7 +6,9 @@ use App\services\EmailService;
 require_once '../../App/services/EmailService.php'; // Adjust the path if needed
 
 // Pass the recipient number and message as parameters to the sendMessage function
-$email = "Mohalya3@gmail.com";
+//$email = "Mohalya3@gmail.com";
+
+$email = "eyadgamal18@gmail.com";
 $code = 123456;
 
 

@@ -15,6 +15,7 @@ use App\routes\api\TransactionRoutes;
 use App\routes\api\UsersRoute;
 use App\routes\auth\AuthRoutes;
 use core\Router;
+use JetBrains\PhpStorm\NoReturn;
 
 // Enable CORS
 header("Access-Control-Allow-Origin: *");
@@ -107,8 +108,8 @@ foreach ($routes as $routeClass) {
     $routeClass::define($router, $middleware);
 }
 
-// Fallback API route to serve the status page
-$router->add('GET', '/api', function () use ($dbStatusInfo, $wsStatusInfo) {
+
+#[NoReturn] function home($dbStatusInfo, $wsStatusInfo) {
     // Get status page HTML template
     $htmlContent = file_get_contents(__DIR__ . '/public/index.html');
 
@@ -173,7 +174,19 @@ $router->add('GET', '/api', function () use ($dbStatusInfo, $wsStatusInfo) {
 
     echo $htmlContent;
     exit();
+}
+
+
+// Fallback API route to serve the status page
+
+$router->add('GET', '/', function () use ($dbStatusInfo, $wsStatusInfo) {
+    home($dbStatusInfo, $wsStatusInfo);
 });
+
+$router->add('GET', '/api', function () use ($dbStatusInfo, $wsStatusInfo) {
+    home($dbStatusInfo, $wsStatusInfo);
+});
+
 
 // Handle all requests
 $router->handleRequest();

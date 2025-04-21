@@ -88,7 +88,7 @@ class AuthController
         $authMiddleware = new AuthMiddleware();
         $ipaModel = new InstantPaymentAddress();
         
-        $fields = ['phone_number', 'ipa'];
+        $fields = ['phone_number', 'ipa_address'];
         
         foreach ($fields as $field) {
             if (!isset($data[$field])) {

@@ -5,6 +5,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/App/routes/api/UsersRoute.php';
 
 use App\database\Database;
+use App\middleware\AuthMiddleware;
 use App\routes\api\BankAccountsRoute;
 use App\routes\api\BanksRoute;
 use App\routes\api\BankUsersRoute;
@@ -46,16 +47,25 @@ try {
 $router = new Router();
 
 //Routes
-//UsersRoute::define($router, [[AuthMiddleware::class, 'ensureAuthenticated']]);
 
-UsersRoute::define($router);
-BanksRoute::define($router);
-BankAccountsRoute::define($router);
-BankUsersRoute::define($router);
-CardsRoute::define($router);
-InstantPaymentAddressesRoute::define($router);
-TransactionRoutes::define($router);
 AuthRoutes::define($router);
+$routes = [
+    UsersRoute::class,
+    BanksRoute::class,
+    BankAccountsRoute::class,
+    BankUsersRoute::class,
+    CardsRoute::class,
+    InstantPaymentAddressesRoute::class,
+    TransactionRoutes::class
+];
+
+$middleware = [[AuthMiddleware::class, 'ensureAuthenticated']];
+
+foreach ($routes as $routeClass) {
+    $routeClass::define($router, $middleware);
+}
+
+
 
 
 // Fallback API route example

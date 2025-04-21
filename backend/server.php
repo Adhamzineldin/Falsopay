@@ -32,7 +32,11 @@ function checkWebSocketStatus() {
     $wsAddress = 'localhost';
     $wsPort = 4100;
 
+    $startTime = microtime(true);
     $socket = @fsockopen($wsAddress, $wsPort, $errno, $errstr, 10);
+    $endTime = microtime(true);
+
+    $responseTime = round(($endTime - $startTime) * 1000); // ms
 
     if ($socket) {
         fclose($socket);
@@ -40,17 +44,18 @@ function checkWebSocketStatus() {
             'status' => 'operational',
             'label' => 'Operational',
             'message' => 'WebSocket connection is active and running smoothly.',
-            'response_time' => rand(15, 50) . 'ms'
+            'response_time' => $responseTime . 'ms'
         ];
     } else {
         return [
             'status' => 'error',
             'label' => 'Outage',
             'message' => 'WebSocket connection is down. Reconnection attempts in progress.',
-            'response_time' => '0ms'
+            'response_time' => 'null'
         ];
     }
 }
+
 
 // Database connection
 $dbStatusInfo = [];
@@ -73,7 +78,7 @@ try {
         'status' => 'error',
         'label' => 'Outage',
         'message' => 'Database connection failure. Automatic recovery in progress.',
-        'response_time' => '0ms'
+        'response_time' => 'null'
     ];
     error_log("Database connection error: " . $e->getMessage());
 }

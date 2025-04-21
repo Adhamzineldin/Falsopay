@@ -5,7 +5,6 @@ require_once __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/App/routes/api/UsersRoute.php';
 
 use App\database\Database;
-use App\middleware\AuthMiddleware;
 use App\routes\api\BankAccountsRoute;
 use App\routes\api\BanksRoute;
 use App\routes\api\BankUsersRoute;
@@ -14,7 +13,7 @@ use App\routes\api\InstantPaymentAddressesRoute;
 use App\routes\api\TransactionRoutes;
 use App\routes\api\UsersRoute;
 use App\routes\auth\AuthRoutes;
-use App\routes\Router;
+use core\Router;
 
 // Enable CORS
 header("Access-Control-Allow-Origin: *");

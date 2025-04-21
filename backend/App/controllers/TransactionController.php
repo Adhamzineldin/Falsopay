@@ -7,6 +7,7 @@ use App\models\Card;
 use App\models\InstantPaymentAddress;
 use App\models\Transaction;
 use App\models\User;
+use App\services\EmailService;
 use App\services\SocketService;
 use App\services\WhatsAppAPI;
 use Exception;
@@ -193,7 +194,7 @@ class TransactionController
 
             
             self::sendTransactionNotification($transactionData, $senderUser, $receiverUser, $transactionId, $senderNewBalance, $receiverNewBalance);
-            
+            EmailService::sendTransactionNotification($transactionData, $senderUser, $receiverUser, $transactionId, $senderNewBalance, $receiverNewBalance);
 
 
 
@@ -208,7 +209,8 @@ class TransactionController
 
     static function sendTransactionNotification($transactionData, $senderUser, $receiverUser, $transactionId, $senderNewBalance, $receiverNewBalance) {
         // Helper function to determine the method of transaction
-        function getMethodDetails($transactionData, $isSender = true) {
+        function getMethodDetails($transactionData, $isSender = true): string
+        {
             if ($isSender) {
                 if ($transactionData['phone_number_used']) {
                     return "to phone number {$transactionData['phone_number']}.";

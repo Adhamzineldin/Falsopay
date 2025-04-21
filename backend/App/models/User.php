@@ -20,7 +20,10 @@ class User
         $this->pdo = Database::getInstance()->getConnection();
     }
 
-    public function createUser(string $first_name, string $last_name, string $email, string $phone_number, ?int $default_account = null): bool
+    /**
+     * @throws Exception
+     */
+    public function createUser(string $first_name, string $last_name, string $email, string $phone_number, ?int $default_account = null): array
     {
         // Modify the SQL query to include the default_account column and allow NULL for it
         
@@ -31,13 +34,21 @@ class User
         $stmt = $this->pdo->prepare($sql);
 
         // Bind parameters and pass null if default_account is null
-        return $stmt->execute([
+         $status = $stmt->execute([
             'first_name'   => $first_name,
             'last_name'    => $last_name,
             'email'        => $email,
             'phone_number' => $phone_number,
             'default_account' => $default_account 
         ]);
+        // Check if the insert was successful
+        if ($status) {
+            $userId = $this->pdo->lastInsertId();
+            return $this->getUserById($userId);
+        } else {
+            throw new Exception("Failed to create user.");
+        }
+         
     }
 
 

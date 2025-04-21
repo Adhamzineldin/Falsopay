@@ -2,13 +2,20 @@
 
 namespace App\services;
 
+use Dotenv\Dotenv;
+
+$dotenv = Dotenv::createImmutable(__DIR__ . '/../../');
+$dotenv->load();
+
 class SocketService
 {
     protected string $pushEndpoint;
 
-    public function __construct(string $pushEndpoint = 'http://localhost:8081/push')
+    public function __construct()
     {
-        $this->pushEndpoint = $pushEndpoint;
+        // Load WebSocket endpoint from environment variables, use fallback if not defined
+        
+        $this->pushEndpoint = $_ENV['WEBSOCKET_PUSH_ENDPOINT'] ?? 'http://localhost:4101/push';
     }
 
     public function sendTransactionStatus(
@@ -34,7 +41,6 @@ class SocketService
 
         $this->postToWebSocketServer($payload);
     }
-
 
     protected function postToWebSocketServer(array $data): void
     {

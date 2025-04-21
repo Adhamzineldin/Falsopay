@@ -2,7 +2,10 @@
 // Suppress deprecated warnings (PHP 8.2+ compatibility)
 error_reporting(E_ALL & ~E_DEPRECATED);
 
+// Load environment variables
 require __DIR__ . '/../vendor/autoload.php';
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../');
+$dotenv->load();
 
 use Ratchet\MessageComponentInterface;
 use Ratchet\ConnectionInterface;
@@ -63,12 +66,17 @@ class NotificationServer implements MessageComponentInterface {
 $loop = Factory::create();
 $notificationServer = new NotificationServer();
 
+// Get host and port from environment variables
+$host = $_ENV["HOST"] ?? 'localhost';
+$wsPort = $_ENV['WS_PORT'] ?? 4100;
+$httpPort = $_ENV['HTTP_PORT'] ?? 4101;
+
 // Set up WebSocket server
 $webSocketServer = new Ratchet\Server\IoServer(
     new Ratchet\Http\HttpServer(
         new Ratchet\WebSocket\WsServer($notificationServer)
     ),
-    new ReactSocket('0.0.0.0:8080'),
+    new ReactSocket("$host:$wsPort"),
     $loop
 );
 
@@ -87,10 +95,10 @@ $httpServer = new HttpServer(function (ServerRequestInterface $request) use ($no
     return new Response(404, [], 'Not found');
 });
 
-$socket = new SocketServer('0.0.0.0:8081', [], $loop); // HTTP server on port 8081
+$socket = new SocketServer("$host:$httpPort", [], $loop); // HTTP server on dynamic port
 $httpServer->listen($socket);
 
-echo "✅ WebSocket server running on ws://localhost:8080\n";
-echo "✅ HTTP push endpoint running on http://localhost:8081/push\n";
+echo "✅ WebSocket server running on ws://$host:$wsPort\n";
+echo "✅ HTTP push endpoint running on http://$host:$httpPort/push\n";
 
 $loop->run();

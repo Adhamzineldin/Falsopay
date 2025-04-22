@@ -35,7 +35,7 @@ function checkWebSocketStatus(): array {
     $warningThreshold = 150; // in ms
 
     $startTime = microtime(true);
-    $socket = @fsockopen($wsAddress, $wsPort, $errno, $errstr, 10);
+    $socket = @fsockopen($wsAddress, $wsPort, $errno, $errstr, 3);
     $endTime = microtime(true);
 
     $responseTime = round(($endTime - $startTime) * 1000); // ms

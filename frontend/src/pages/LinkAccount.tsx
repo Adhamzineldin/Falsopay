@@ -14,6 +14,7 @@ import BankSelect, { Bank } from '@/components/BankSelect';
 import PinVerification from '@/components/PinVerification';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import {CardData, CardService} from "@/services/card.service.ts";
+import {AuthService} from "@/services/auth.service.ts";
 
 const LinkAccount = () => {
   const [step, setStep] = useState(1);
@@ -72,6 +73,7 @@ const LinkAccount = () => {
     if (step === 1) {
       if (!validateCardDetails()) return;
       setStep(2);
+      
     } else if (step === 3) {
       // Move to IPA setup step
       setStep(4);
@@ -109,6 +111,7 @@ const LinkAccount = () => {
       // Generate a random verification code (in a real app, this would be sent by the backend)
       const newVerificationPin = Math.floor(100000 + Math.random() * 900000).toString();
       setVerificationPinCode(newVerificationPin);
+      
 
       toast({
         title: "Card Verified",
@@ -116,6 +119,7 @@ const LinkAccount = () => {
       });
 
       // Move to verification code step
+      AuthService.sendCode(user.phone_number, newVerificationPin)
       setStep(3);
     } catch (error) {
       console.error('Error linking account:', error);
@@ -149,6 +153,7 @@ const LinkAccount = () => {
   const handleVerificationCodeResend = () => {
     const newVerificationPin = Math.floor(100000 + Math.random() * 900000).toString();
     setVerificationPinCode(newVerificationPin);
+    AuthService.sendCode(user.phone_number, newVerificationPin)
     toast({
       title: "New Code Sent",
       description: "A new verification code has been sent to your registered phone number",

@@ -101,7 +101,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setPendingLoginData({ token, user });
         
         // Step 3: Send verification code
-        const response = await AuthService.requestLoginCode(phone, ipa);
+        const response = await AuthService.requestLoginCode(phone);
         
         if (response.success) {
           toast({

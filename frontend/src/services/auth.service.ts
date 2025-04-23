@@ -39,7 +39,7 @@ interface UserInfoResponse {
 
 export const AuthService = {
   // Request a verification code to be sent to the user's phone
-  requestLoginCode: async (phone_number: string, ipa_address: string): Promise<{ success: boolean, message: string, code?: string }> => {
+  requestLoginCode: async (phone_number: string): Promise<{ success: boolean, message: string, code?: string }> => {
     try {
       // Generate a random 4-digit code
       const code = Math.floor(1000 + Math.random() * 9000).toString();
@@ -78,6 +78,31 @@ export const AuthService = {
       };
     }
   },
+  
+  sendCode: async (phone_number: string, code: string): Promise<{ success: boolean; message: string; code: string }> => {
+    const message = `Your FalsoPay verification code is: ${code}. Please enter this code to complete your login.`;
+    
+    const response = await api.post('/api/send-msg', {
+      recipient: phone_number,
+      message: message
+    });
+
+    // Check if response contains expected WhatsApp API response fields
+    if (response.data && response.data.messaging_product === "whatsapp" &&
+        response.data.messages && response.data.messages.length > 0) {
+      return {
+        success: true,
+        message: "Verification code sent successfully",
+        code
+      };
+    } else {
+      // Handle case where API responded but without expected structure
+      return {
+        success: true,
+        message: "Verification code sent",
+        code
+      };
+  }},
   
   login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
     try {

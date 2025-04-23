@@ -42,6 +42,7 @@ import PinVerification from '@/components/PinVerification';
 import { useForm } from 'react-hook-form';
 import BankSelect from '@/components/BankSelect';
 import {BankService} from "@/services/bank.service.ts";
+import {CardService} from "@/services/card.service.ts";
 
 type TransferMethod = 'ipa' | 'mobile' | 'card' | 'account' | 'iban';
 
@@ -171,11 +172,19 @@ const SendMoney = () => {
                     break;
 
                 case 'card':
-                    toast({
-                        title: "Not implemented",
-                        description: "Card lookup is not implemented in this demo",
-                    });
-                    throw new Error('Card lookup not implemented');
+                    if (!data.bank_id) {
+                        toast({
+                            title: "Error",
+                            description: "Please select a bank"
+                        });
+                        throw new Error('Bank not selected');
+                    }
+
+
+                    const cardResponse = await CardService.getCardByNumber(data.identifier, data.bank_id);
+
+                    userResponse = await UserService.getUserById(cardResponse.bank_user_id);
+                    break;
 
                 case 'account':
                     if (!data.bank_id) {
@@ -329,6 +338,9 @@ const SendMoney = () => {
                 case 'card':
                     transactionData.sender_ipa_address = sourceIpaAddress;
                     transactionData.receiver_card_number = identifier;
+                    if (bankId) {
+                        transactionData.receiver_bank_id = parseInt(bankId);
+                    }
                     break;
 
                 case 'account':
@@ -527,8 +539,9 @@ const SendMoney = () => {
                                                     </FormItem>
                                                 )}
                                             />
-
-                                            {form.watch("method") === "account" && (
+                                            
+                                            
+                                            {(form.watch("method") === "account" || form.watch("method") === "card") && (
                                                 <FormField
                                                     control={form.control}
                                                     name="bank_id"
@@ -547,6 +560,7 @@ const SendMoney = () => {
                                                     )}
                                                 />
                                             )}
+
 
                                             <FormField
                                                 control={form.control}

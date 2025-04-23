@@ -26,7 +26,7 @@ export const CardService = {
     }
   },
   
-  getCardByNumber: async (cardNumber: string, bankId: number) => {
+  getCardByNumber: async (cardNumber: string, bankId: number | string) => {
     try {
       const response = await api.get(`/api/cards/bank/${bankId}/card/${cardNumber}`);
       return response.data;

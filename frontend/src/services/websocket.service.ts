@@ -30,29 +30,38 @@ class WebSocketService {
       console.log('WebSocket connected for user:', userId);
       this.reconnectAttempts = 0;
     };
-    
+
     this.socket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
         console.log('WebSocket message received:', data);
-        
-        // Handle notification messages
+
+        // Handle transaction notification messages
+        if (data.type === 'transaction_notification') {
+          const { from_name, amount, transaction_id } = data;
+
+          toast(`Transaction from ${from_name}`, {
+            description: `You received EGP ${amount} (ID: ${transaction_id})`,
+          });
+        }
+
+        // General fallback for any other notification type
         if (data.type === 'notification') {
-          // Display notification using toast
           toast(data.title, {
             description: data.message,
           });
         }
-        
+
         // Notify all listeners for this event type
         const eventListeners = this.listeners.get(data.type) || [];
         eventListeners.forEach(listener => listener(data));
-        
+
       } catch (error) {
         console.error('Error parsing WebSocket message:', error);
       }
     };
-    
+
+
     this.socket.onclose = (event) => {
       if (!event.wasClean) {
         console.log('WebSocket connection closed unexpectedly. Attempting to reconnect...');

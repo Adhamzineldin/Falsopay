@@ -436,39 +436,9 @@ const Profile = () => {
   };
 
   // Demo data for display purposes
-  const demoAccounts = [
-    {
-      id: 1,
-      bank_name: "First National Bank",
-      account_number: "********1234",
-      iban: "DE89 3704 0044 0532 0130 00",
-      balance: 2500.75,
-      type: "Checking"
-    },
-    {
-      id: 2,
-      bank_name: "International Savings",
-      account_number: "********5678",
-      iban: "GB29 NWBK 6016 1331 9268 19",
-      balance: 10000.00,
-      type: "Savings"
-    }
-  ];
+  const demoAccounts = [];
 
-  const demoIpas = [
-    {
-      id: 1,
-      ipa_address: "user@falsopay",
-      status: "Active",
-      created_at: "2023-01-15"
-    },
-    {
-      id: 2,
-      ipa_address: "business@falsopay",
-      status: "Inactive",
-      created_at: "2023-03-22"
-    }
-  ];
+  const demoIpas = [];
 
   const displayAccounts = accounts.length ? accounts : demoAccounts;
   const displayIpas = ipas.length ? ipas : demoIpas;

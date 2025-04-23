@@ -71,57 +71,9 @@ const Dashboard = () => {
     fetchData();
   }, [user, toast]);
 
-  const demoAccounts = [
-    {
-      bank_id: 1,
-      account_number: "123456789",
-      iban: "DE89370400440532013000",
-      balance: 2500.75,
-      type: "checking",
-      status: "active"
-    },
-    {
-      bank_id: 2,
-      account_number: "987654321",
-      iban: "GB29NWBK60161331926819",
-      balance: 10000.00,
-      type: "savings",
-      status: "active"
-    }
-  ];
+  const demoAccounts = [];
   
-  const demoTransactions = [
-    {
-      transaction_id: "tx1",
-      amount: 250.00,
-      currency: "€",
-      sender: { name: "John Smith", user_id: "1" },
-      receiver: { name: user?.first_name + " " + user?.last_name, user_id: user?.user_id.toString() || "2" },
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-      status: "completed" as const,
-      type: "incoming" as const
-    },
-    {
-      transaction_id: "tx2",
-      amount: 85.50,
-      currency: "€",
-      sender: { name: user?.first_name + " " + user?.last_name, user_id: user?.user_id.toString() || "2" },
-      receiver: { name: "Coffee Shop", user_id: "3" },
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-      status: "completed" as const,
-      type: "outgoing" as const
-    },
-    {
-      transaction_id: "tx3",
-      amount: 1200.00,
-      currency: "€",
-      sender: { name: "Employer Inc.", user_id: "4" },
-      receiver: { name: user?.first_name + " " + user?.last_name, user_id: user?.user_id.toString() || "2" },
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(),
-      status: "completed" as const,
-      type: "incoming" as const
-    }
-  ];
+  const demoTransactions = [];
 
   const displayAccounts = accounts.length ? accounts : demoAccounts;
   const displayTransactions = transactions.length ? transactions : demoTransactions;

@@ -68,58 +68,7 @@ const Transactions = () => {
   }, [user, toast]);
 
   // For demo/testing purposes - remove in production
-  const demoTransactions = [
-    {
-      transaction_id: "tx1",
-      amount: 250.00,
-      currency: "€",
-      sender: { name: "John Smith", user_id: "1" },
-      receiver: { name: user?.first_name + " " + user?.last_name, user_id: user?.user_id.toString() || "2" },
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
-      status: "completed" as const,
-      type: "incoming" as const
-    },
-    {
-      transaction_id: "tx2",
-      amount: 85.50,
-      currency: "€",
-      sender: { name: user?.first_name + " " + user?.last_name, user_id: user?.user_id.toString() || "2" },
-      receiver: { name: "Coffee Shop", user_id: "3" },
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
-      status: "completed" as const,
-      type: "outgoing" as const
-    },
-    {
-      transaction_id: "tx3",
-      amount: 1200.00,
-      currency: "€",
-      sender: { name: "Employer Inc.", user_id: "4" },
-      receiver: { name: user?.first_name + " " + user?.last_name, user_id: user?.user_id.toString() || "2" },
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(), // 3 days ago
-      status: "completed" as const,
-      type: "incoming" as const
-    },
-    {
-      transaction_id: "tx4",
-      amount: 120.00,
-      currency: "€",
-      sender: { name: user?.first_name + " " + user?.last_name, user_id: user?.user_id.toString() || "2" },
-      receiver: { name: "Online Store", user_id: "5" },
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString(), // 5 days ago
-      status: "failed" as const,
-      type: "outgoing" as const
-    },
-    {
-      transaction_id: "tx5",
-      amount: 50.00,
-      currency: "€",
-      sender: { name: user?.first_name + " " + user?.last_name, user_id: user?.user_id.toString() || "2" },
-      receiver: { name: "Friend", user_id: "6" },
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7).toISOString(), // 7 days ago
-      status: "pending" as const,
-      type: "outgoing" as const
-    }
-  ];
+  const demoTransactions = [];
 
   // Use either real data or demo data
   const displayTransactions = transactions.length ? transactions : demoTransactions;

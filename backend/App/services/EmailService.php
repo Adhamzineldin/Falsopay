@@ -37,13 +37,29 @@ class EmailService
         // Infer method details from schema-compliant fields
         $senderPaymentMethod = $transactionData['sender_ipa_address'] ?? $transactionData['sender_account_number'] ?? 'Unknown';
         $receiverPaymentMethod = match ($transactionData['transfer_method']) {
-            'mobile' => $transactionData['receiver_phone'] ?? 'Unknown Phone',
-            'card'   => $transactionData['receiver_card'] ?? 'Unknown Card',
-            'iban'   => $transactionData['receiver_iban'] ?? 'Unknown IBAN',
-            'ipa'    => $transactionData['receiver_ipa_address'] ?? 'Unknown IPA',
-            'account'=> $transactionData['receiver_account_number'] ?? 'Unknown Account',
-            default  => 'Unknown Method'
+            'mobile' => isset($transactionData['receiver_phone'])
+                ? "via mobile number " . $transactionData['receiver_phone'] 
+                : "via mobile number",
+
+            'card' => isset($transactionData['receiver_card'])
+                ? "to card ending in " . substr($transactionData['receiver_card'], -4)
+                : "to a card",
+
+            'iban' => isset($transactionData['receiver_iban'])
+                ? "through IBAN " . $transactionData['receiver_iban'] 
+                : "through IBAN",
+
+            'ipa' => isset($transactionData['receiver_ipa_address'])
+                ? "using IPA address " . $transactionData['receiver_ipa_address']
+                : "via IPA address",
+
+            'account' => isset($transactionData['receiver_account_number'])
+                ? "to account number ending in " . $transactionData['receiver_account_number']
+                : "to a bank account",
+
+            default => "via unknown method"
         };
+
 
         $senderReplacements = [
             '{{FIRST_NAME}}'     => $senderUser['first_name'],

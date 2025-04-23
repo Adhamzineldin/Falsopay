@@ -68,8 +68,8 @@ class AuthController
         $user = $userModel->createUser(
             $data['first_name'],
             $data['last_name'],
+            $data['email'],
             $data['phone_number'],
-            $data['email']
         );
         
         if ($user) {

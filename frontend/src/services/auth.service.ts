@@ -1,6 +1,6 @@
 
 import api from './api';
-
+import { DateTime } from 'luxon';
 interface LoginCredentials {
   phone_number: string;
   ipa_address: string;
@@ -75,13 +75,20 @@ export const AuthService = {
       throw error;
     }
   },
-  
+
   saveAuthToken: (token: string) => {
-    // Store token with expiry time (1 hour from now)
-    const expiryTime = new Date().getTime() + 60 * 60 * 1000; // 1 hour in milliseconds
+    // Calculate expiry time (1 hour from Cairo time)
+    const expiryTime = DateTime.now().setZone('Africa/Cairo').plus({ hours: 1 }).toMillis();
+
+    const cairoTime = DateTime.now().setZone('Africa/Cairo');
+    console.log("Current Cairo time:", cairoTime.toString()); // Check if this matches your expectation
+    console.log("Current Cairo timestamp:", cairoTime.toMillis());
+    
+    // Store token and expiry time in localStorage
     localStorage.setItem('falsopay_token', token);
-    localStorage.setItem('falsopay_token_expiry', expiryTime.toString());
-    console.log('Token saved with expiry');
+    localStorage.setItem('falsopay_token_expiry', expiryTime);
+
+    console.log('Token saved with Cairo-based expiry');
   },
   
   logout: () => {
@@ -124,15 +131,21 @@ export const AuthService = {
   isAuthenticated: (): boolean => {
     const token = localStorage.getItem('falsopay_token');
     const expiry = localStorage.getItem('falsopay_token_expiry');
-    
+
+
+    const cairoTime = DateTime.now().setZone('Africa/Cairo');
+    console.log("Current Cairo time:", cairoTime.toString()); // Check if this matches your expectation
+    console.log("Current Cairo timestamp:", cairoTime.toMillis());
+
     if (!token || !expiry) {
       console.log('No token or expiry found');
       return false;
     }
-    
-    const now = new Date().getTime();
+
+    // Get the current time in Cairo timezone
+    const now = DateTime.now().setZone('Africa/Cairo').toMillis();
     const expiryTime = parseInt(expiry, 10);
-    
+
     // If token has expired, clean up
     if (now > expiryTime) {
       console.log('Token expired, cleaning up');
@@ -141,7 +154,7 @@ export const AuthService = {
       localStorage.removeItem('falsopay_user');
       return false;
     }
-    
+
     return true;
   }
 };

@@ -1,6 +1,7 @@
 
 import axios from 'axios';
 import { toast } from '@/components/ui/sonner';
+import {DateTime} from "luxon";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -26,24 +27,40 @@ api.interceptors.request.use(
 
 // Add a response interceptor to handle token expiration
 api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-    
-    // If token has expired (401) and hasn't been retried yet
-    // if (error.response && error.response.status === 401 && !originalRequest._retry) {
-    //   originalRequest._retry = true;
-    //  
-    //   // Clear token and redirect to login
-    //   localStorage.removeItem('falsopay_token');
-    //   window.location.href = '/login';
-    //  
-    //   // Show toast notification
-    //   toast.error('Session expired. Please login again.');
-    // }
-    
-    return Promise.reject(error);
-  }
+    (response) => response,
+    async (error) => {
+        const originalRequest = error.config;
+
+        // Get token expiry time from localStorage
+        const expiry = localStorage.getItem('falsopay_token_expiry');
+
+        if (!expiry) {
+            return Promise.reject(error);
+        }
+
+        // Get current time in Cairo time zone
+        const now = DateTime.now().setZone('Africa/Cairo').toMillis();
+        const expiryTime = parseInt(expiry, 10);
+
+        const isExpired = expiryTime <= now;
+
+        if (
+            error.response &&
+            error.response.status === 401 &&
+            isExpired &&
+            !originalRequest._retry
+        ) {
+            originalRequest._retry = true;
+
+            // Clear token and redirect to login
+            localStorage.removeItem('falsopay_token');
+            localStorage.removeItem('falsopay_token_expiry');
+            toast.error('Session expired. Please login again.');
+            window.location.href = '/login';
+        }
+
+        return Promise.reject(error);
+    }
 );
 
 export default api;

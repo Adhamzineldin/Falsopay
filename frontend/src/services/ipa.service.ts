@@ -8,8 +8,6 @@ export interface IpaData {
   ipa_address: string;
   user_id: number;
   pin: string;
-  created_at?: string;
-  bank_name?: string; // Added for convenience when displaying bank details
 }
 
 export interface VerifyPinData {

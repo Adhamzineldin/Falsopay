@@ -21,7 +21,7 @@ class InstantPaymentAddressController
         }
 
         // Enforce PIN length (since it's hashed later)
-        if (strlen($data['pin']) < 10) {
+        if (strlen($data['pin']) < 6) {
             self::json(['error' => 'PIN must be at least 10 characters long.'], 400);
         }
 

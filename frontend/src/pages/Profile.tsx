@@ -50,11 +50,12 @@ const Profile = () => {
     setIsLoading(true);
     try {
       // Fetch bank accounts
-      const accountsResponse = await BankAccountService.getAccountsByUserId(user.id);
+      console.log(user)
+      const accountsResponse = await BankAccountService.getAccountsByUserId(user.user_id);
       setAccounts(accountsResponse);
       
       // Fetch IPAs
-      const ipasResponse = await IPAService.getIPAsByUserId(user.id);
+      const ipasResponse = await IPAService.getIPAsByUserId(user.user_id);
       setIpas(ipasResponse);
     } catch (error) {
       console.error('Error fetching user data:', error);
@@ -123,7 +124,7 @@ const Profile = () => {
     
     setIsUpdating(true);
     try {
-      await IPAService.deleteAllByUserId(user.id);
+      await IPAService.deleteAllByUserId(user.user_id);
       
       // This would need to call the real API for account deletion
       toast({
@@ -355,45 +356,6 @@ const Profile = () => {
           
           {/* Security Tab */}
           <TabsContent value="security">
-            <Card className="mb-8">
-              <CardHeader>
-                <CardTitle>Change Password</CardTitle>
-                <CardDescription>Update your account password</CardDescription>
-              </CardHeader>
-              
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="currentPassword">Current Password</Label>
-                  <Input
-                    id="currentPassword"
-                    type="password"
-                    placeholder="Enter your current password"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="newPassword">New Password</Label>
-                  <Input
-                    id="newPassword"
-                    type="password"
-                    placeholder="Enter your new password"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    placeholder="Confirm your new password"
-                  />
-                </div>
-              </CardContent>
-              
-              <CardFooter>
-                <Button>Update Password</Button>
-              </CardFooter>
-            </Card>
             
             <Card>
               <CardHeader>

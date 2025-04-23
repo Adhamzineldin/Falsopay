@@ -91,7 +91,7 @@ const TransactionCard: React.FC<TransactionCardProps> = ({
           <div className="text-right">
             <p className={cn(
               "font-semibold text-lg",
-              isIncoming ? "text-green-600" : "text-gray-800"
+              isIncoming ? "text-green-600" : "text-red-600"
             )}>
               {isIncoming ? '+' : '-'} {transaction.currency} {formatAmount(transaction.amount)}
             </p>

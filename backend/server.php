@@ -17,22 +17,16 @@ use App\routes\auth\AuthRoutes;
 use core\Router;
 use JetBrains\PhpStorm\NoReturn;
 
-// Enable CORS
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
-header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
-header("Access-Control-Allow-Credentials: true");
-// Handle pre-flight requests (OPTIONS)
+// Handle CORS and preflight request
 if (isset($_SERVER['HTTP_ORIGIN'])) {
     header("Access-Control-Allow-Origin: {$_SERVER['HTTP_ORIGIN']}");
-    header('Access-Control-Allow-Credentials: true');
-    header('Access-Control-Max-Age: 86400'); // cache preflight for 1 day
+    header("Access-Control-Allow-Credentials: true");
+    header("Access-Control-Max-Age: 86400");  // cache OPTIONS for 1 day
 }
 
-// Handle pre-flight
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-    header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+    header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+    header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
     exit(0);
 }
 
@@ -152,7 +146,6 @@ foreach ($routes as $routeClass) {
     date_default_timezone_set('Africa/Cairo');
     $currentDateTime = date('Y-m-d h:i:s A');
 
-
     // Replace database status placeholders
     $htmlContent = str_replace('id="db-status" class="status-icon operational"',
         'id="db-status" class="status-icon ' . $dbStatusInfo['status'] . '"',
@@ -213,7 +206,6 @@ foreach ($routes as $routeClass) {
 
 
 // Fallback API route to serve the status page
-
 $router->add('GET', '/', function () use ($dbStatusInfo, $wsStatusInfo) {
     home($dbStatusInfo, $wsStatusInfo);
 });

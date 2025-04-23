@@ -15,30 +15,10 @@ class Router
             'middlewares' => $middlewares
         ];
     }
-
-    private function sendCorsHeaders(): void
-    {
-        header("Access-Control-Allow-Origin: *");
-        header("Access-Control-Allow-Headers: Content-Type, Authorization");
-        header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
-        header("Access-Control-Allow-Credentials: true");
-    }
-
-
+    
 
     public function handleRequest(): void
     {
-
-        $this->sendCorsHeaders(); // 🔥 inject CORS headers into every response
-
-        if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-            http_response_code(200);
-            exit(); // handle CORS preflight and end early
-        }
-        
-        
-        
-        
         $uri    = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
         $method = $_SERVER['REQUEST_METHOD'];
 

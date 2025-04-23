@@ -11,6 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Search, Loader } from 'lucide-react';
+import WebSocketService from '@/services/websocket.service';
+
 
 const Transactions = () => {
   const { user } = useApp();
@@ -24,13 +26,15 @@ const Transactions = () => {
 
   // Fetch transactions
   useEffect(() => {
+    if (!user) return;
+
+    let unsubscribe: (() => void) | undefined;
+
     const fetchTransactions = async () => {
-      if (!user) return;
-      
       setIsLoading(true);
       try {
         const response = await TransactionService.getTransactionsByUserId(user.user_id);
-        
+
         // Map transactions to our Transaction type
         const mappedTransactions = response.map((tx: any) => ({
           transaction_id: tx.transaction_id,
@@ -49,7 +53,7 @@ const Transactions = () => {
           // Ensure type is strictly "incoming" or "outgoing"
           type: tx.sender_user_id === user.user_id ? 'outgoing' as const : 'incoming' as const
         }));
-        
+
         setTransactions(mappedTransactions);
         setFilteredTransactions(mappedTransactions);
       } catch (error) {
@@ -63,9 +67,42 @@ const Transactions = () => {
         setIsLoading(false);
       }
     };
-    
+
     fetchTransactions();
+
+    // 🔥 Real-time socket updates
+    unsubscribe = WebSocketService.subscribe("transaction_notification", (data: any) => {
+      const newTransaction: Transaction = {
+        transaction_id: data.transaction_id,
+        amount:         data.amount,
+        currency:       data.currency || 'EGP',
+        sender: {
+          name:    data.from_name || 'Unknown',
+          user_id: data.from_user_id?.toString() || '0'
+        },
+        receiver: {
+          name:    data.to_name   || 'Unknown',
+          user_id: data.to_user_id?.toString() || '0'
+        },
+        timestamp: data.transaction_time || new Date().toISOString(),
+        status:    data.status           || 'completed',
+        // ← here we assert the union:
+        type: (data.from_user_id === user.user_id
+                ? 'outgoing'
+                : 'incoming'
+        ) as 'outgoing' | 'incoming'
+      };
+
+      setTransactions(prev => [newTransaction, ...prev]);
+    });
+
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, [user, toast]);
+
+
 
   // For demo/testing purposes - remove in production
   const demoTransactions = [];

@@ -78,7 +78,16 @@ const Dashboard = () => {
 
     // 🔥 Real-time socket updates
     unsubscribe = WebSocketService.subscribe("transaction_notification", (data: any) => {
-     fetchData();
+      const newTransaction = mapTransactions([data])[0];
+      newTransaction.receiver.user_id = data.to.toString();
+      newTransaction.sender.user_id = data.from_user_id.toString();
+      newTransaction.sender.name = data.from_name || 'Unknown';
+      newTransaction.receiver.name = data.to_name || 'Unknown';
+      newTransaction.currency = data.currency || 'EGP';
+      console.log('New transaction received:', newTransaction);
+
+      // Optional: filter out duplicates or cap at 5 recent
+      setTransactions(prev => [newTransaction, ...prev.filter(t => t.transaction_id !== newTransaction.transaction_id)].slice(0, 5));
     });
 
     return () => {

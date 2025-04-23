@@ -139,7 +139,7 @@ class InstantPaymentAddressController
             self::json(['error' => 'Missing ipa_address or new_pin'], 400);
         }
 
-        if (strlen($data['new_pin']) < 10) {
+        if (strlen($data['new_pin']) < 6) {
             self::json(['error' => 'PIN must be at least 10 characters long.'], 400);
         }
 

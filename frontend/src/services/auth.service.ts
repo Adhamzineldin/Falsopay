@@ -23,6 +23,20 @@ interface AuthResponse {
   user: any;
 }
 
+interface UserInfoResponse {
+  success: boolean;
+  message: string;
+  user: {
+    phone_number: string;
+    name?: string;
+    email?: string;
+    isDefault: boolean;
+    // Add other user properties as needed
+  };
+}
+
+
+
 export const AuthService = {
   // Request a verification code to be sent to the user's phone
   requestLoginCode: async (phone_number: string, ipa_address: string): Promise<{ success: boolean, message: string, code?: string }> => {
@@ -123,6 +137,17 @@ export const AuthService = {
       });
       return response.data;
     } catch (error) {
+      throw error;
+    }
+  },
+
+  // Add this method to your AuthService object
+  getUserInfo: async (phone_number: string): Promise<UserInfoResponse> => {
+    try {
+      const response = await api.get(`/api/users/number/${phone_number}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching user info:", error);
       throw error;
     }
   },

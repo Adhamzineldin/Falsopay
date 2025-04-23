@@ -96,5 +96,14 @@ export const BankAccountService = {
     } catch (error) {
       throw error;
     }
+  },
+  
+  getAccountByNumberAndBankId: async (bankId: number, accountNumber: string)=> {
+  try {
+    const response = await api.get(`/api/bank-accounts/${bankId}/${accountNumber}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
   }
 };

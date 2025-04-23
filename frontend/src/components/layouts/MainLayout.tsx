@@ -45,7 +45,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   }, [location.pathname]);
 
   useEffect(() => {
-    const unsubscribe = WebSocketService.subscribe('notification', (data) => {
+    const unsubscribe = WebSocketService.subscribe('transaction_notification', (data) => {
       const newNotification: Notification = {
         id: Date.now().toString(),
         title: data.title,

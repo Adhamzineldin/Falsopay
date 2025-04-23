@@ -10,7 +10,7 @@ import { BankAccountService } from '@/services/bank-account.service';
 import { TransactionService } from '@/services/transaction.service';
 import { Send, CreditCard, ArrowRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
+import WebSocketService from '@/services/websocket.service';
 interface BankAccount {
   bank_id: number;
   account_number: string;
@@ -26,36 +26,23 @@ const Dashboard = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+
   
+
   useEffect(() => {
+    if (!user) return;
+
+    let unsubscribe: (() => void) | undefined;
+
     const fetchData = async () => {
-      if (!user) return;
-      
       setIsLoading(true);
       try {
         const accountsResponse = await BankAccountService.getAccountsByUserId(user.user_id);
         setAccounts(accountsResponse);
-        
+
         const transactionsResponse = await TransactionService.getTransactionsByUserId(user.user_id);
-        
-        const mappedTransactions = transactionsResponse.map((tx: any) => ({
-          transaction_id: tx.transaction_id,
-          amount: tx.amount,
-          currency: tx.currency || '€',
-          sender: {
-            name: tx.sender_name || 'Unknown',
-            user_id: tx.sender_user_id?.toString() || '0'
-          },
-          receiver: {
-            name: tx.receiver_name || 'Unknown',
-            user_id: tx.receiver_user_id?.toString() || '0'
-          },
-          timestamp: tx.transaction_time || new Date().toISOString(),
-          status: tx.status || 'completed',
-          type: tx.sender_user_id === user.user_id ? 'outgoing' as const : 'incoming' as const
-        }));
-        
-        setTransactions(mappedTransactions.slice(0, 5));
+        const mapped = mapTransactions(transactionsResponse);
+        setTransactions(mapped.slice(0, 5));
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
         toast({
@@ -67,9 +54,38 @@ const Dashboard = () => {
         setIsLoading(false);
       }
     };
-    
+
+    const mapTransactions = (transactionsData: any[]): Transaction[] => {
+      return transactionsData.map((tx) => ({
+        transaction_id: tx.transaction_id,
+        amount: tx.amount,
+        currency: tx.currency || '€',
+        sender: {
+          name: tx.sender_name || 'Unknown',
+          user_id: tx.sender_user_id?.toString() || '0'
+        },
+        receiver: {
+          name: tx.receiver_name || 'Unknown',
+          user_id: tx.receiver_user_id?.toString() || '0'
+        },
+        timestamp: tx.transaction_time || new Date().toISOString(),
+        status: tx.status || 'completed',
+        type: tx.sender_user_id === user.user_id ? 'outgoing' : 'incoming'
+      }));
+    };
+
     fetchData();
+
+    // 🔥 Real-time socket updates
+    unsubscribe = WebSocketService.subscribe("transaction_notification", (data: any) => {
+     fetchData();
+    });
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, [user, toast]);
+
 
   const demoAccounts = [];
   

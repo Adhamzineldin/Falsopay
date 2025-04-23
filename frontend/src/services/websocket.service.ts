@@ -54,6 +54,7 @@ class WebSocketService {
 
         // Notify all listeners for this event type
         const eventListeners = this.listeners.get(data.type) || [];
+        console.log(eventListeners)
         eventListeners.forEach(listener => listener(data));
 
       } catch (error) {

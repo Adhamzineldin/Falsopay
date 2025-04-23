@@ -26,21 +26,20 @@ class TransactionSeeder {
                     receiver_ipa_address,
                     receiver_phone,
                     receiver_card,
-                    receiver_iban,
-                    pin
+                    receiver_iban
                 )
                 VALUES
                     (
                         1, 2, 'Adham Zineldin', 'Eyad Smith', 100.50, 1, 2, '1234567890123456', '9876543210987654',
-                        'ipa', 'alice@ipa.com', 'bob@ipa.com', NULL, NULL, NULL, NULL
+                        'ipa', 'alice@ipa.com', 'eyad_cib', NULL, NULL, NULL
                     ),
                     (
                         2, 3, 'Eyad Smith', 'Ayman Abdelaziz', 200.75, 2, 3, '9876543210987654', '4567890123456789',
-                        'iban', NULL, NULL, NULL, NULL, 'EG500000100000000000007654321', NULL
+                        'iban', NULL, NULL, NULL, NULL, 'EG500000100000000000007654321'
                     ),
                     (
                         3, 1, 'Eyad Smith', 'Adham Zineldin', 300.25, 3, 1, '4567890123456789', '1234567890123456',
-                        'card', NULL, NULL, NULL, '4111111111111111', NULL, NULL
+                        'card', NULL, NULL, NULL, '4111111111111111', NULL
                     );
             ";
 

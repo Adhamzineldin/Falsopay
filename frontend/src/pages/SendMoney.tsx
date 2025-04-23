@@ -244,12 +244,12 @@ const SendMoney = () => {
 
         case 'mobile':
           transactionData.sender_ipa_address = sourceIpaAddress;
-          transactionData.receiver_phone = identifier;
+          transactionData.receiver_mobile_number = identifier;
           break;
 
         case 'card':
           transactionData.sender_ipa_address = sourceIpaAddress;
-          transactionData.receiver_card = identifier;
+          transactionData.receiver_card_number = identifier;
           break;
 
         case 'account':

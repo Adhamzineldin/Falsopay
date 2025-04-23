@@ -13,7 +13,7 @@ class Transaction {
     }
 
     public function createTransaction(array $data): int {
-        // Updated fields based on the new schema
+        // Exact fields from your schema (excluding auto-increment + default timestamp)
         $fields = [
             'sender_user_id',
             'receiver_user_id',
@@ -24,33 +24,32 @@ class Transaction {
             'receiver_bank_id',
             'sender_account_number',
             'receiver_account_number',
-            'status',
-            'currency',
-            'transaction_time',
             'sender_ipa_address',
             'receiver_ipa_address',
             'receiver_phone',
             'receiver_card',
             'receiver_iban',
-            'transfer_method',
-            'pin'
+            'transfer_method'
         ];
 
-        // Prepare column names and placeholders for insertion
+        // Prepare SQL
         $columns = implode(', ', $fields);
         $placeholders = implode(', ', array_map(fn($f) => ":$f", $fields));
 
-        // Insert query
         $sql = "INSERT INTO transactions ($columns) VALUES ($placeholders)";
         $stmt = $this->pdo->prepare($sql);
 
-        // Extract only the expected fields from $data
+        // Build data array for binding
         $filteredData = array_intersect_key($data, array_flip($fields));
 
-        // Execute the query with the filtered data
-        $stmt->execute($filteredData);
+        // Ensure all fields exist (default to null)
+        foreach ($fields as $field) {
+            if (!array_key_exists($field, $filteredData)) {
+                $filteredData[$field] = null;
+            }
+        }
 
-        // Return the ID of the inserted transaction
+        $stmt->execute($filteredData);
         return (int)$this->pdo->lastInsertId();
     }
 

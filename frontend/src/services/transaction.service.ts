@@ -35,8 +35,8 @@ export interface SendMoneyData {
   receiver_account_number?: string;
   sender_ipa_address?: string;
   receiver_ipa_address?: string;
-  receiver_phone?: string;
-  receiver_card?: string;
+  receiver_mobile_number?: string;
+  receiver_card_number?: string;
   receiver_iban?: string;
   transfer_method?: 'ipa' | 'mobile' | 'card' | 'account' | 'iban';
   pin?: string;

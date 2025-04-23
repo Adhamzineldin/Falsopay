@@ -28,11 +28,11 @@ class InstantPaymentAddressController
         $ipaModel->create(
             $data['bank_id'],
             $data['account_number'],
-            $data['ipa_address'],
+            strtolower($data['ipa_address']),
             $data['user_id'],
             $data['pin']
         );
-
+        
         self::json(['success' => true]);
     }
 

@@ -13,6 +13,7 @@ import { CreditCard, ArrowLeft, Shield, Fingerprint } from 'lucide-react';
 import BankSelect, { Bank } from '@/components/BankSelect';
 import PinVerification from '@/components/PinVerification';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
+import {CardData, CardService} from "@/services/card.service.ts";
 
 const LinkAccount = () => {
   const [step, setStep] = useState(1);
@@ -89,6 +90,7 @@ const LinkAccount = () => {
     setIsLoading(true);
     setErrorMessage('');
 
+    let card_response;
     try {
       // Call the backend service with the required fields
       const response = await BankAccountService.linkAccountToService({
@@ -99,7 +101,10 @@ const LinkAccount = () => {
       });
 
       // Handle successful response - the backend returns bank accounts
-      setBankAccounts(response);
+      const card_response:CardData = await CardService.getCardByNumber(cardNumber, selectedBank.bank_id)
+      const accounts_linked_to_card = await BankAccountService.getAccountsByUserIdAndBankId(card_response.bank_user_id, card_response.bank_id);
+      console.log(accounts_linked_to_card)
+      setBankAccounts(accounts_linked_to_card);
 
       // Generate a random verification code (in a real app, this would be sent by the backend)
       const newVerificationPin = Math.floor(100000 + Math.random() * 900000).toString();

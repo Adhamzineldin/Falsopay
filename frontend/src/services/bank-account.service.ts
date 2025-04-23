@@ -52,6 +52,28 @@ export const BankAccountService = {
       throw error;
     }
   },
+  getAccountsByUserIdAndBankId: async (bankUserId: number, bankId: number) => {
+    try {
+      // backend expects "bank_user_id"
+      const response = await api.get(`/api/bank-accounts/user/${bankUserId}/bank/${bankId}`);
+      // Ensure keys match backend
+      return Array.isArray(response.data)
+          ? response.data.map((acc: any) => ({
+            ...acc,
+            bank_id: acc.bank_id,
+            account_number: acc.account_number,
+            bank_user_id: acc.bank_user_id,
+            iban: acc.iban,
+            status: acc.status,
+            type: acc.type,
+            balance: parseFloat(acc.balance),
+            created_at: acc.created_at,
+          }))
+          : [];
+    } catch (error) {
+      throw error;
+    }
+  },
   
   getAccountByIBAN: async (iban: string) => {
     try {

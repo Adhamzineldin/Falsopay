@@ -117,9 +117,9 @@ class TransactionController
                 }
 
             } elseif ($data['transfer_method'] == 'ipa' && isset($data['receiver_ipa_address'])) {
-                $receiverAccount = $ipaModel->getByIpaAddress($data['ipa_address']);
+                $receiverAccount = $ipaModel->getByIpaAddress($data['receiver_ipa_address']);
             } elseif ($data['transfer_method'] == 'iban' && isset($data['receiver_iban'])) {
-                $receiverAccount = $bankAccountModel->getByIban($data['iban']);
+                $receiverAccount = $bankAccountModel->getByIban($data['receiver_iban']);
             } elseif ($data['transfer_method'] == 'card' && isset($data['receiver_card_number'])) {
                 $card = $cardModel->getByBankAndCardNumber($data['receiver_bank_id'], $data['receiver_card_number']);
                 if (!$card) {

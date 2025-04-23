@@ -1,0 +1,147 @@
+
+import api from './api';
+
+interface LoginCredentials {
+  phone_number: string;
+  ipa_address: string;
+}
+
+interface PhoneCheckParams {
+  phone_number: string;
+}
+
+interface UserRegistrationData {
+  first_name: string;
+  last_name: string;
+  phone_number: string;
+  email: string;
+  default_account?: string;
+}
+
+interface AuthResponse {
+  user_token: string;
+  user: any;
+}
+
+export const AuthService = {
+  // Request a verification code to be sent to the user's phone
+  requestLoginCode: async (phone_number: string, ipa_address: string): Promise<{ success: boolean, message: string, code?: string }> => {
+    try {
+      // Generate a random 4-digit code
+      const code = Math.floor(1000 + Math.random() * 9000).toString();
+      
+      // Create a clear message with the verification code
+      const message = `Your FalsoPay verification code is: ${code}. Please enter this code to complete your login.`;
+      
+      // Send the code to the backend as required
+      const response = await api.post('/api/send-msg', { 
+        recipient: phone_number, 
+        message: message
+      });
+      
+      // Check if response contains expected WhatsApp API response fields
+      if (response.data && response.data.messaging_product === "whatsapp" && 
+          response.data.messages && response.data.messages.length > 0) {
+        return { 
+          success: true, 
+          message: "Verification code sent successfully", 
+          code 
+        };
+      } else {
+        // Handle case where API responded but without expected structure
+        return { 
+          success: true, 
+          message: "Verification code sent", 
+          code 
+        };
+      }
+    } catch (error: any) {
+      console.error("Error sending verification code:", error);
+      return {
+        success: false,
+        message: error.response?.data?.message || "Failed to send verification code",
+        code: undefined
+      };
+    }
+  },
+  
+  login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
+    try {
+      console.log('Logging in with credentials:', credentials);
+      const response = await api.post('/api/login', credentials);
+      console.log('Login response:', response.data);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  
+  saveAuthToken: (token: string) => {
+    // Store token with expiry time (1 hour from now)
+    const expiryTime = new Date().getTime() + 60 * 60 * 1000; // 1 hour in milliseconds
+    localStorage.setItem('falsopay_token', token);
+    localStorage.setItem('falsopay_token_expiry', expiryTime.toString());
+    console.log('Token saved with expiry');
+  },
+  
+  logout: () => {
+    localStorage.removeItem('falsopay_token');
+    localStorage.removeItem('falsopay_token_expiry');
+    localStorage.removeItem('falsopay_user');
+    console.log('User logged out, storage cleared');
+  },
+  
+  checkIfUserExists: async (params: PhoneCheckParams): Promise<boolean> => {
+    try {
+      const response = await api.post('/api/check-phone', params);
+      return response.data.exists;
+    } catch (error) {
+      throw error;
+    }
+  },
+  
+  registerUser: async (userData: UserRegistrationData): Promise<AuthResponse> => {
+    try {
+      const response = await api.post('/api/create-user', userData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  
+  deleteAccount: async (phone_number: string): Promise<any> => {
+    try {
+      const response = await api.delete('/api/delete-account', {
+        data: { phone_number }
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Helper method to check if token is valid
+  isAuthenticated: (): boolean => {
+    const token = localStorage.getItem('falsopay_token');
+    const expiry = localStorage.getItem('falsopay_token_expiry');
+    
+    if (!token || !expiry) {
+      console.log('No token or expiry found');
+      return false;
+    }
+    
+    const now = new Date().getTime();
+    const expiryTime = parseInt(expiry, 10);
+    
+    // If token has expired, clean up
+    if (now > expiryTime) {
+      console.log('Token expired, cleaning up');
+      localStorage.removeItem('falsopay_token');
+      localStorage.removeItem('falsopay_token_expiry');
+      localStorage.removeItem('falsopay_user');
+      return false;
+    }
+    
+    return true;
+  }
+};

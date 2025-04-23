@@ -12,7 +12,7 @@ class InstantPaymentAddressSeeder
             $pdo = $database->getConnection();
 
             $entries = [
-                [1, '1234567890123456', 'ipa_1234567890HSBC', 1],
+                [1, '1234567890123456', 'adham_hsbc', 1],
                 [2, '9876543210987654', 'ipa_9876543210CIB', 2],
                 [3, '4567890123456789', 'ipa_4567890123NBE', 3],
                 [4, '7890123456789012', 'ipa_7890123456ABANK', 1],

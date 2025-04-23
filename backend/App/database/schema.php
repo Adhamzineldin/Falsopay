@@ -96,27 +96,30 @@ try {
         transaction_id INT AUTO_INCREMENT PRIMARY KEY,
         sender_user_id INT,
         receiver_user_id INT,
+        sender_name VARCHAR(255),  -- Added for sender's name
+        receiver_name VARCHAR(255),  -- Added for receiver's name
         amount DECIMAL(10, 2) NOT NULL,
-        transaction_type ENUM('send', 'receive') NOT NULL,
         sender_bank_id INT,
         receiver_bank_id INT,
         sender_account_number VARCHAR(30),
         receiver_account_number VARCHAR(30),
+        status VARCHAR(50),  -- Added for transaction status
+        currency VARCHAR(10),  -- Added for currency type (e.g., USD, EUR)
         transaction_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        ipa_used BOOLEAN NOT NULL DEFAULT FALSE,
-        ipa_id INT,
-        iban_used BOOLEAN NOT NULL DEFAULT FALSE,
-        iban VARCHAR(34),  -- Standard max IBAN length
-        phone_number_used BOOLEAN NOT NULL DEFAULT FALSE,
-        phone_number VARCHAR(15),
-        card_number_used BOOLEAN NOT NULL DEFAULT FALSE,
-        card_number VARCHAR(19),
+        sender_ipa_address VARCHAR(255),  -- Added for sender IPA address
+        receiver_ipa_address VARCHAR(255),  -- Added for receiver IPA address
+        receiver_phone VARCHAR(15),  -- Added for receiver phone number
+        receiver_card VARCHAR(19),  -- Added for receiver card number
+        receiver_iban VARCHAR(34),  -- Added for receiver IBAN
+        transfer_method ENUM('ipa', 'mobile', 'card', 'account', 'iban') NOT NULL,  -- Added for transfer method
+        pin VARCHAR(10),  -- Added for PIN (if required)
         FOREIGN KEY (sender_user_id) REFERENCES users(user_id) ON DELETE CASCADE ON UPDATE CASCADE,
         FOREIGN KEY (receiver_user_id) REFERENCES users(user_id) ON DELETE CASCADE ON UPDATE CASCADE,
         FOREIGN KEY (sender_bank_id, sender_account_number) REFERENCES bank_accounts(bank_id, account_number) ON DELETE CASCADE ON UPDATE CASCADE,
-        FOREIGN KEY (receiver_bank_id, receiver_account_number) REFERENCES bank_accounts(bank_id, account_number) ON DELETE CASCADE ON UPDATE CASCADE,
-        FOREIGN KEY (ipa_id) REFERENCES instant_payment_addresses(ipa_id) ON DELETE SET NULL ON UPDATE CASCADE
+        FOREIGN KEY (receiver_bank_id, receiver_account_number) REFERENCES bank_accounts(bank_id, account_number) ON DELETE CASCADE ON UPDATE CASCADE
     );
+
+
 
 
     ";

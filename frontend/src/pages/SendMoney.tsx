@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MainLayout from '@/components/layouts/MainLayout';
 import { useApp } from '@/contexts/AppContext';
-import { TransactionService } from '@/services/transaction.service';
+import {SendMoneyData, TransactionService} from '@/services/transaction.service';
 import { UserService } from '@/services/user.service';
 import { IPAService, IpaData } from '@/services/ipa.service';
 import { BankAccountService } from '@/services/bank-account.service';
@@ -215,24 +215,63 @@ const SendMoney = () => {
 
   const handleSendMoney = async (pin: string) => {
     if (!recipient) return;
-    
+
     const amount = parseFloat(form.getValues('amount'));
     const sourceIpaAddress = form.getValues('sourceIpaAddress');
-    
+    const transferMethod = form.getValues('method') as TransferMethod;
+    const identifier = form.getValues('identifier');
+    const bankId = form.getValues('bank_id');
+
     setSendLoading(true);
     try {
-      await TransactionService.sendMoney({
+      // Base transaction data that's always required
+      const transactionData: SendMoneyData = {
         sender_user_id: user?.user_id || 0,
         receiver_user_id: recipient.user_id,
         amount: amount,
         transaction_type: 'send',
-        sender_ipa_address: sourceIpaAddress,
+        transfer_method: transferMethod,
         pin: pin
-      });
+      };
+
+      // Add method-specific data based on transfer method
       
+      switch (transferMethod) {
+        case 'ipa':
+          transactionData.sender_ipa_address = sourceIpaAddress;
+          transactionData.receiver_ipa_address = identifier;
+          break;
+
+        case 'mobile':
+          transactionData.sender_ipa_address = sourceIpaAddress;
+          transactionData.receiver_phone = identifier;
+          break;
+
+        case 'card':
+          transactionData.sender_ipa_address = sourceIpaAddress;
+          transactionData.receiver_card = identifier;
+          break;
+
+        case 'account':
+          transactionData.sender_ipa_address = sourceIpaAddress;
+          transactionData.sender_bank_id = parseInt(sourceIpaAddress.split(':')[1]);
+          if (bankId) {
+            transactionData.receiver_bank_id = parseInt(bankId);
+          }
+          transactionData.receiver_account_number = identifier;
+          break;
+
+        case 'iban':
+          transactionData.sender_ipa_address = sourceIpaAddress;
+          transactionData.receiver_iban = identifier;
+          break;
+      }
+      console.log(transactionData);
+      await TransactionService.sendMoney(transactionData);
+
       setSuccess(true);
       setStep(4);
-      
+
       toast({
         title: "Success",
         description: `You've sent €${amount} to ${recipient.name}`,
@@ -516,7 +555,7 @@ const SendMoney = () => {
                   onPinSubmit={handlePinSubmit}
                   isLoading={sendLoading}
                   title="Enter Your IPA PIN"
-                  maxLength={4}
+                  maxLength={6}
                 />
               </CardContent>
               

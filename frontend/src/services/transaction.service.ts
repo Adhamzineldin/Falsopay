@@ -5,8 +5,9 @@ import api from './api';
 export interface TransactionData {
   sender_user_id: number;
   receiver_user_id: number;
+  sender_name?: string;
+  receiver_name?: string;
   amount: number;
-  transaction_type: 'send' | 'receive';
   sender_bank_id?: number;
   receiver_bank_id?: number;
   sender_account_number?: string;
@@ -25,7 +26,7 @@ export interface TransactionData {
 
 export interface SendMoneyData {
   sender_user_id: number;
-  receiver_user_id: number;
+  receiver_user_id ?: number;
   amount: number;
   transaction_type: 'send' | 'receive';
   sender_bank_id?: number;

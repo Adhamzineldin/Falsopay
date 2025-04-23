@@ -20,7 +20,7 @@ class WebSocketService {
 
     this.userId = userId;
     // Ensure userId is included in the websocket connection URL
-    const wsUrl = `${import.meta.env.VITE_WS_URL}/ws/${userId}`;
+    const wsUrl = `${import.meta.env.VITE_WS_URL}?userID=${userId}`;
     
     console.log('Connecting to WebSocket:', wsUrl);
     

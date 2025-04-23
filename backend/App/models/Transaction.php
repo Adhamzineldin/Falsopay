@@ -13,38 +13,46 @@ class Transaction {
     }
 
     public function createTransaction(array $data): int {
+        // Updated fields based on the new schema
         $fields = [
             'sender_user_id',
             'receiver_user_id',
+            'sender_name',
+            'receiver_name',
             'amount',
-            'transaction_type',
             'sender_bank_id',
             'receiver_bank_id',
             'sender_account_number',
             'receiver_account_number',
-            'ipa_used',
-            'ipa_id',
-            'iban_used',
-            'iban',
-            'phone_number_used',
-            'phone_number',
-            'card_number_used',
-            'card_number',
+            'status',
+            'currency',
+            'transaction_time',
+            'sender_ipa_address',
+            'receiver_ipa_address',
+            'receiver_phone',
+            'receiver_card',
+            'receiver_iban',
+            'transfer_method',
+            'pin'
         ];
 
+        // Prepare column names and placeholders for insertion
         $columns = implode(', ', $fields);
         $placeholders = implode(', ', array_map(fn($f) => ":$f", $fields));
 
+        // Insert query
         $sql = "INSERT INTO transactions ($columns) VALUES ($placeholders)";
         $stmt = $this->pdo->prepare($sql);
 
-        // Extract only the expected fields
+        // Extract only the expected fields from $data
         $filteredData = array_intersect_key($data, array_flip($fields));
 
+        // Execute the query with the filtered data
         $stmt->execute($filteredData);
+
+        // Return the ID of the inserted transaction
         return (int)$this->pdo->lastInsertId();
     }
-
 
     public function getAll(): array {
         $sql = "SELECT * FROM transactions ORDER BY transaction_time DESC";

@@ -31,16 +31,16 @@ api.interceptors.response.use(
     const originalRequest = error.config;
     
     // If token has expired (401) and hasn't been retried yet
-    if (error.response && error.response.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      
-      // Clear token and redirect to login
-      localStorage.removeItem('falsopay_token');
-      window.location.href = '/login';
-      
-      // Show toast notification
-      toast.error('Session expired. Please login again.');
-    }
+    // if (error.response && error.response.status === 401 && !originalRequest._retry) {
+    //   originalRequest._retry = true;
+    //  
+    //   // Clear token and redirect to login
+    //   localStorage.removeItem('falsopay_token');
+    //   window.location.href = '/login';
+    //  
+    //   // Show toast notification
+    //   toast.error('Session expired. Please login again.');
+    // }
     
     return Promise.reject(error);
   }

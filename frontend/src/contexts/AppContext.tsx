@@ -33,7 +33,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [pendingLoginData, setPendingLoginData] = useState<{token?: string, phone: string} | null>(null);
+  const [pendingLoginData, setPendingLoginData] = useState<{token?: string, user: User} | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -97,7 +97,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         // Step 2: If login is successful, store token temporarily but don't save it yet
         // We'll save it after verification
         const token = loginResponse.user_token;
-        setPendingLoginData({ token, phone });
+        const user = loginResponse.user;
+        setPendingLoginData({ token, user });
         
         // Step 3: Send verification code
         const response = await AuthService.requestLoginCode(phone, ipa);
@@ -145,28 +146,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       let userData;
       let token;
       
-      // If we already have a token from the first login attempt, use that
-      if (pendingLoginData?.token) {
-        console.log('Using token from first login attempt');
-        // Try to login again to get user data
-        const loginResponse = await AuthService.login({ 
-          phone_number: phone, 
-          ipa_address: code // Use the verification code as the IPA for the second login attempt
-        });
+   
         
-        userData = loginResponse.user;
-        token = pendingLoginData.token; // Use the token from the first login
-      } else {
-        // If no token yet, do a full login with the verification code
-        console.log('No token yet, doing full login with verification code');
-        const loginResponse = await AuthService.login({ 
-          phone_number: phone, 
-          ipa_address: code // Use the verification code as the IPA
-        });
-        
-        userData = loginResponse.user;
-        token = loginResponse.user_token || loginResponse.token;
-      }
+      userData = pendingLoginData.user;
+      token = pendingLoginData.token; // Use the token from the first login
+      
+      
       
       // Save the token and user data
       if (token) {

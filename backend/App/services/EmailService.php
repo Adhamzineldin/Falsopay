@@ -26,47 +26,49 @@ class EmailService
      */
     public static function sendTransactionNotification($transactionData, $senderUser, $receiverUser, $transactionId, $senderNewBalance, $receiverNewBalance)
     {
-        // Get current date and time
         date_default_timezone_set('Africa/Cairo');
         $currentDate = date("F j, Y, g:i a");
         $currentYear = date("Y");
 
-        // Format amounts with commas for better readability
         $formattedAmount = number_format($transactionData['amount'], 2);
         $formattedSenderBalance = number_format($senderNewBalance, 2);
         $formattedReceiverBalance = number_format($receiverNewBalance, 2);
 
-        // Determine the payment method details
-        $senderPaymentMethod = self::getMethodDetails($transactionData, true);
-        $receiverPaymentMethod = self::getMethodDetails($transactionData, false);
+        // Infer method details from schema-compliant fields
+        $senderPaymentMethod = $transactionData['sender_ipa_address'] ?? $transactionData['sender_account_number'] ?? 'Unknown';
+        $receiverPaymentMethod = match ($transactionData['transfer_method']) {
+            'mobile' => $transactionData['receiver_phone'] ?? 'Unknown Phone',
+            'card'   => $transactionData['receiver_card'] ?? 'Unknown Card',
+            'iban'   => $transactionData['receiver_iban'] ?? 'Unknown IBAN',
+            'ipa'    => $transactionData['receiver_ipa_address'] ?? 'Unknown IPA',
+            'account'=> $transactionData['receiver_account_number'] ?? 'Unknown Account',
+            default  => 'Unknown Method'
+        };
 
-        // Prepare replacements for sender's email template
         $senderReplacements = [
-            '{{FIRST_NAME}}' => $senderUser['first_name'],
-            '{{LAST_NAME}}' => $senderUser['last_name'],
-            '{{AMOUNT}}' => $formattedAmount,
+            '{{FIRST_NAME}}'     => $senderUser['first_name'],
+            '{{LAST_NAME}}'      => $senderUser['last_name'],
+            '{{AMOUNT}}'         => $formattedAmount,
             '{{RECIPIENT_NAME}}' => $receiverUser['first_name'] . ' ' . $receiverUser['last_name'],
             '{{TRANSACTION_ID}}' => $transactionId,
-            '{{DATE_TIME}}' => $currentDate,
+            '{{DATE_TIME}}'      => $currentDate,
             '{{PAYMENT_METHOD}}' => $senderPaymentMethod,
-            '{{BALANCE}}' => $formattedSenderBalance,
-            '{{YEAR}}' => $currentYear
+            '{{BALANCE}}'        => $formattedSenderBalance,
+            '{{YEAR}}'           => $currentYear
         ];
 
-        // Prepare replacements for receiver's email template
         $receiverReplacements = [
-            '{{FIRST_NAME}}' => $receiverUser['first_name'],
-            '{{LAST_NAME}}' => $receiverUser['last_name'],
-            '{{AMOUNT}}' => $formattedAmount,
-            '{{SENDER_NAME}}' => $senderUser['first_name'] . ' ' . $senderUser['last_name'],
+            '{{FIRST_NAME}}'     => $receiverUser['first_name'],
+            '{{LAST_NAME}}'      => $receiverUser['last_name'],
+            '{{AMOUNT}}'         => $formattedAmount,
+            '{{SENDER_NAME}}'    => $senderUser['first_name'] . ' ' . $senderUser['last_name'],
             '{{TRANSACTION_ID}}' => $transactionId,
-            '{{DATE_TIME}}' => $currentDate,
+            '{{DATE_TIME}}'      => $currentDate,
             '{{PAYMENT_METHOD}}' => $receiverPaymentMethod,
-            '{{BALANCE}}' => $formattedReceiverBalance,
-            '{{YEAR}}' => $currentYear
+            '{{BALANCE}}'        => $formattedReceiverBalance,
+            '{{YEAR}}'           => $currentYear
         ];
 
-        // Send email to sender
         try {
             $senderTemplate = self::getTemplate('transaction-sender-template.html');
             $senderContent = self::replaceTemplateVariables($senderTemplate, $senderReplacements);
@@ -76,7 +78,6 @@ class EmailService
             echo "Error sending email to sender: {$e->getMessage()}\n";
         }
 
-        // Send email to receiver
         try {
             $receiverTemplate = self::getTemplate('transaction-receiver-template.html');
             $receiverContent = self::replaceTemplateVariables($receiverTemplate, $receiverReplacements);
@@ -86,6 +87,7 @@ class EmailService
             echo "Error sending email to receiver: {$e->getMessage()}\n";
         }
     }
+
 
     /**
      * Helper function to determine the method of transaction

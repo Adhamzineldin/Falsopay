@@ -363,7 +363,7 @@ const LinkAccount = () => {
                               <div className="flex justify-between items-center text-sm text-gray-600">
                                 <span>Account No: {account.account_number}</span>
                                 <span className="px-2 py-1 bg-gray-100 rounded text-xs">
-                                  {account.account_type || 'Checking'}
+                                  {account.type || 'Checking'}
                                 </span>
                               </div>
                             </div>

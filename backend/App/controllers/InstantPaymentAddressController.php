@@ -37,7 +37,7 @@ class InstantPaymentAddressController
 
         // Check if (bank_id, account_number) combo already exists
         if ($ipaModel->getByBankAndAccount($bankId, $accountNumber)) {
-            self::json(['error' => 'This bank and account number is already linked to another IPA.'], 409);
+            self::json(['error' => 'This account is already linked to another IPA.'], 409);
         }
 
         // All checks passed; create the IPA

@@ -198,6 +198,8 @@ const LinkAccount = () => {
       
       const newIpa = await IPAService.getIPAByAddress(ipaAddress);
       
+      
+      
       await UserService.setDefaultAccount(user.user_id, newIpa.ipa_id);
 
       toast({
@@ -207,12 +209,22 @@ const LinkAccount = () => {
 
       navigate('/dashboard');
     } catch (error) {
-      console.error('Error setting up IPA:', error);
+
+      let errorDesc = "Could not set up your IPA address. Please check your details and try again.";
+      
+      if (error.response && error.response.data && error.response.data.error) {
+        errorDesc = error.response.data.error;
+        setErrorMessage(errorDesc);
+      }
+
       toast({
         title: "Setup Failed",
-        description: "Could not set up your IPA address. Please try again.",
+        description: errorDesc,
         variant: "destructive",
       });
+      
+      console.error('Error setting up IPA:', error);
+     
     } finally {
       setIsLoading(false);
     }

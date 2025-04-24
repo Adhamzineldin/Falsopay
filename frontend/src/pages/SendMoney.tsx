@@ -108,7 +108,6 @@ const SendMoney = () => {
                 // Enhance accounts with balance data
                 const enhancedAccounts = await Promise.all(accounts.map(async (account) => {
                     try {
-                        // In a real app, you would fetch the balance from your API
                         const balanceData = await BankAccountService.getAccountBalance(account.bank_id, account.account_number);
                         return {
                             ...account,
@@ -434,6 +433,8 @@ const SendMoney = () => {
             setSelectedAccount(account);
         }
     };
+    
+    
 
     return (
         <MainLayout>

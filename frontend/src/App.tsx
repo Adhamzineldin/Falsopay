@@ -17,6 +17,7 @@ import Transactions from "@/pages/Transactions";
 import Profile from "@/pages/Profile";
 import LinkAccount from "@/pages/LinkAccount";
 import NotFound from "@/pages/NotFound";
+import AuthFlow from "@/pages/AuthFlow.tsx";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ const App = () => (
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Landing />} />
+            <Route path="/auth" element={<AuthFlow/>} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             

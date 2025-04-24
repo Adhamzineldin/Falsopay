@@ -4,6 +4,7 @@ import { useApp } from '@/contexts/AppContext';
 import { BankAccountService } from '@/services/bank-account.service';
 import { IPAService } from '@/services/ipa.service';
 import { UserService } from '@/services/user.service'; // Import for default account methods
+import { AuthService } from '@/services/auth.service';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,7 +15,8 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { CreditCard, Lock, User, AlertTriangle, CheckCircle2, XCircle } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import {AuthService} from "@/services/auth.service.ts";
+import PinVerification from '@/components/PinVerification'; // Import the PinVerification component from AuthFlow
+
 // Change PIN Dialog Component
 const ChangePinDialog = ({ ipaId, ipaAddress }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -230,11 +232,145 @@ const ChangePinDialog = ({ ipaId, ipaAddress }) => {
   );
 };
 
+// New verification dialog component for email and phone updates
+const VerificationDialog = ({ isOpen, onClose, type, value, onVerified }) => {
+  const [verificationCode, setVerificationCode] = useState('');
+  const [verificationPin, setVerificationPin] = useState('');
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [error, setError] = useState('');
+  const { toast } = useToast();
+
+  // Generate and send verification code
+  useEffect(() => {
+    if (isOpen) {
+      generateVerificationCode();
+    }
+  }, [isOpen, value]);
+
+  // Generate verification PIN
+  const generateVerificationCode = () => {
+    // For email: 6-digit code, for phone: 4-digit code
+    const codeLength = type === 'email' ? 6 : 4;
+    const minVal = type === 'email' ? 100000 : 1000;
+    const maxVal = type === 'email' ? 999999 : 9999;
+    const code = Math.floor(minVal + Math.random() * (maxVal - minVal + 1)).toString();
+
+    setVerificationPin(code);
+
+    // Call the appropriate service to send the code
+    if (type === 'email') {
+      // In a real app, this would send an email
+      AuthService.sendVerificationCode(value, code);
+      toast({
+        title: "Verification Code Sent",
+        description: `A verification code has been sent to ${value}`,
+      });
+    } else {
+      // In a real app, this would send an SMS
+      AuthService.sendCode(value, code);
+      toast({
+        title: "Verification Code Sent",
+        description: `A verification code has been sent to ${value}`,
+      });
+    }
+
+    return code;
+  };
+
+  // Handle verification submission
+  const handleVerificationSubmit = async (code) => {
+    if (!code) {
+      setError('Please enter the verification code');
+      return;
+    }
+
+    if (code !== verificationPin) {
+      setError('Incorrect verification code');
+      return;
+    }
+
+    setIsVerifying(true);
+    try {
+      // Verification is successful
+      toast({
+        title: "Verification Successful",
+        description: `Your ${type} has been verified successfully`,
+      });
+
+      // Call the callback to proceed with the update
+      if (onVerified) {
+        onVerified();
+      }
+
+      // Close the dialog
+      onClose();
+    } catch (error) {
+      console.error(`${type} verification error:`, error);
+      setError('Failed to verify. Please try again.');
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  // Handle resend code
+  const handleResendCode = () => {
+    setIsVerifying(true);
+    setTimeout(() => {
+      const newCode = generateVerificationCode();
+      setVerificationPin(newCode);
+      setIsVerifying(false);
+    }, 1000);
+  };
+
+  return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Verify Your {type === 'email' ? 'Email' : 'Phone Number'}</DialogTitle>
+            <DialogDescription>
+              Please enter the verification code sent to your {type === 'email' ? 'email' : 'phone number'}: <span className="font-medium">{value}</span>
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            {error && (
+                <div className="bg-red-50 p-3 rounded-md flex items-center gap-2 text-red-700 text-sm">
+                  <XCircle className="h-4 w-4" />
+                  {error}
+                </div>
+            )}
+
+            <div className="w-full flex justify-center">
+              <PinVerification
+                  onPinSubmit={handleVerificationSubmit}
+                  isLoading={isVerifying}
+                  title={`Enter ${type === 'email' ? 'Email' : 'Phone'} Verification Code`}
+                  maxLength={type === 'email' ? 6 : 4}
+                  expectedPin={verificationPin}
+                  onResend={handleResendCode}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+  );
+};
+
 const Profile = () => {
   const { user, updateUserData, logout } = useApp();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
+    email: '',
+    phoneNumber: ''
+  });
+  const [originalData, setOriginalData] = useState({
     email: '',
     phoneNumber: ''
   });
@@ -246,13 +382,26 @@ const Profile = () => {
   const [settingDefaultIpa, setSettingDefaultIpa] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  // New state for verification
+  const [verificationDialogOpen, setVerificationDialogOpen] = useState(false);
+  const [verificationType, setVerificationType] = useState(''); // 'email' or 'phone'
+  const [verificationValue, setVerificationValue] = useState('');
+  const [pendingUpdate, setPendingUpdate] = useState(null);
+
   const { toast } = useToast();
 
   useEffect(() => {
     if (user) {
-      setFormData({
+      const userData = {
         firstName: user.first_name || '',
         lastName: user.last_name || '',
+        email: user.email || '',
+        phoneNumber: user.phone_number || ''
+      };
+
+      setFormData(userData);
+      setOriginalData({
         email: user.email || '',
         phoneNumber: user.phone_number || ''
       });
@@ -337,13 +486,48 @@ const Profile = () => {
       return;
     }
 
+    // Check if email or phone number has changed
+    if (formData.email !== originalData.email) {
+      // Initiate email verification
+      setVerificationType('email');
+      setVerificationValue(formData.email);
+      setPendingUpdate({
+        ...formData,
+        type: 'email'
+      });
+      setVerificationDialogOpen(true);
+      return;
+    } else if (formData.phoneNumber !== originalData.phoneNumber) {
+      // Initiate phone verification
+      setVerificationType('phone');
+      setVerificationValue(formData.phoneNumber);
+      setPendingUpdate({
+        ...formData,
+        type: 'phone'
+      });
+      setVerificationDialogOpen(true);
+      return;
+    } else {
+      // No sensitive fields changed, proceed with update
+      await updateProfile(formData);
+    }
+  };
+
+  // Function to handle actual profile update after verification
+  const updateProfile = async (data) => {
     setIsUpdating(true);
     try {
       await updateUserData({
-        first_name: formData.firstName,
-        last_name: formData.lastName,
-        email: formData.email,
-        phone_number: formData.phoneNumber
+        first_name: data.firstName,
+        last_name: data.lastName,
+        email: data.email,
+        phone_number: data.phoneNumber
+      });
+
+      // Update originalData after successful update
+      setOriginalData({
+        email: data.email,
+        phoneNumber: data.phoneNumber
       });
 
       toast({
@@ -355,6 +539,14 @@ const Profile = () => {
       console.error('Profile update error:', error);
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  // Function called after verification is successful
+  const handleVerificationSuccess = () => {
+    if (pendingUpdate) {
+      updateProfile(pendingUpdate);
+      setPendingUpdate(null);
     }
   };
 
@@ -401,11 +593,10 @@ const Profile = () => {
 
     setIsUpdating(true);
     try {
-      
+
       await IPAService.deleteAllByUserId(user.user_id);
       await AuthService.deleteAccount(user.user_id);
 
-      // This would need to call the real API for account deletion
       toast({
         title: "Account Deleted",
         description: "Your account has been successfully deleted",
@@ -436,14 +627,9 @@ const Profile = () => {
     // Convert both to numbers to ensure consistent comparison
     return Number(ipaId) === Number(defaultIpaId);
   };
-  
-  
-  
-  
 
   // Demo data for display purposes
   const demoAccounts = [];
-
   const demoIpas = [];
 
   const displayAccounts = accounts.length ? accounts : demoAccounts;
@@ -453,6 +639,15 @@ const Profile = () => {
       <MainLayout>
         <div className="space-y-8">
           <h1 className="text-2xl font-bold text-gray-900">Your Profile</h1>
+
+          {/* Verification Dialog */}
+          <VerificationDialog
+              isOpen={verificationDialogOpen}
+              onClose={() => setVerificationDialogOpen(false)}
+              type={verificationType}
+              value={verificationValue}
+              onVerified={handleVerificationSuccess}
+          />
 
           <Tabs defaultValue="personal">
             <TabsList className="mb-6">
@@ -519,6 +714,11 @@ const Profile = () => {
                           value={formData.email}
                           onChange={handleChange}
                       />
+                      {formData.email !== originalData.email && (
+                          <p className="text-xs text-amber-600 mt-1">
+                            Changing your email will require verification
+                          </p>
+                      )}
                     </div>
 
                     <div className="space-y-2">
@@ -527,8 +727,14 @@ const Profile = () => {
                           id="phoneNumber"
                           placeholder="Your phone number"
                           value={formData.phoneNumber}
+                          disabled
                           onChange={handleChange}
                       />
+                      {formData.phoneNumber !== originalData.phoneNumber && (
+                          <p className="text-xs text-amber-600 mt-1">
+                            Changing your phone number will require verification
+                          </p>
+                      )}
                     </div>
                   </CardContent>
 
@@ -558,7 +764,6 @@ const Profile = () => {
                             <p className="text-sm text-gray-500">{account.account_number}</p>
                             <p className="text-xs text-gray-400">{account.type} • {account.iban}</p>
                           </div>
-                          <Button variant="outline" size="sm">Manage</Button>
                         </div>
                       </div>
                   ))}
@@ -571,7 +776,6 @@ const Profile = () => {
                 </CardContent>
 
                 <CardFooter>
-                  <Button className="w-full">Link a New Bank Account</Button>
                 </CardFooter>
               </Card>
 

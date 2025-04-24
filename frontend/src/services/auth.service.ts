@@ -175,7 +175,7 @@ export const AuthService = {
     }
   },
   
-  
+  //email verfication
   sendVerificationCode: async (mail: string, code: string): Promise<{ success: boolean; message: string }> => {
     try {
       const response = await api.post('/api/send-verification-email', { mail, code });

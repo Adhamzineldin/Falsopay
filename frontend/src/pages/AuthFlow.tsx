@@ -260,7 +260,7 @@ const AuthFlow = () => {
 
                     toast({
                         title: "Success",
-                        description: "Your account setup is complete!",
+                        description: "You have been successfully logged in!",
                     });
                     navigate(returnTo);
                 }
@@ -526,7 +526,7 @@ const AuthFlow = () => {
                             {currentStep === 'phone-verification' && "Verify Your Phone"}
                             {currentStep === 'email-verification' && "Verify Your Email"}
                             {currentStep === 'ipa-verification' && "Login to Your Account"}
-                            {currentStep === 'default-account' && "Complete Your Account"}
+                            {currentStep === 'default-account' && "Verify Your Account"}
                             {currentStep === 'registration' && "Create Your Account"}
                         </CardTitle>
                         <CardDescription className="text-center">
@@ -534,7 +534,7 @@ const AuthFlow = () => {
                             {currentStep === 'phone-verification' && "Enter the verification code sent to your phone"}
                             {currentStep === 'email-verification' && "Enter the verification code sent to your email"}
                             {currentStep === 'ipa-verification' && "Enter your IPA address to login"}
-                            {currentStep === 'default-account' && "Verify your IPA address or delete your account"}
+                            {currentStep === 'default-account' && "Verify your IPA address or reset your account"}
                             {currentStep === 'registration' && "Fill in your details to create an account"}
                         </CardDescription>
                     </CardHeader>
@@ -651,7 +651,7 @@ const AuthFlow = () => {
                             <div className="space-y-6">
                                 <div className="text-center">
                                     <p className="text-sm text-gray-500 mb-4">
-                                        Your account requires additional setup. You can either enter your IPA address to verify or delete your account.
+                                        Your phone number was used before and requires additional verification. You can either enter any of your IPA addresses to verify or reset your account.
                                     </p>
                                 </div>
 

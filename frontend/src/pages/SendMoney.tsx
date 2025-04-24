@@ -384,6 +384,7 @@ const SendMoney = () => {
         form.reset();
         setRecipient(null);
         setSuccess(false);
+        setStep(1); // Add this line to reset the step back to 1
 
         // Reset to default values
         if (linkedAccounts.length > 0) {

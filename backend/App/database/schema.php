@@ -68,7 +68,7 @@ try {
         ipa_id INT AUTO_INCREMENT PRIMARY KEY,
         bank_id INT,
         account_number VARCHAR(30),  -- This must match the type of account_number
-        ipa_address VARCHAR(255) NOT NULL,
+        ipa_address VARCHAR(255) NOT NULL UNIQUE,
         user_id INT,  -- Foreign key for users
         pin VARCHAR(255) NOT NULL,  -- Add PIN (can be hashed or plain depending on use case)
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

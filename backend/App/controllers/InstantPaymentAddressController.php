@@ -8,7 +8,8 @@ use JetBrains\PhpStorm\NoReturn;
 
 class InstantPaymentAddressController
 {
-    #[NoReturn] public static function createInstantPaymentAddress(array $data): void
+    #[NoReturn]
+    public static function createInstantPaymentAddress(array $data): void
     {
         $ipaModel = new InstantPaymentAddress();
 
@@ -22,19 +23,35 @@ class InstantPaymentAddressController
 
         // Enforce PIN length (since it's hashed later)
         if (strlen($data['pin']) < 6) {
-            self::json(['error' => 'PIN must be at least 10 characters long.'], 400);
+            self::json(['error' => 'PIN must be at least 6 characters long.'], 400);
         }
 
+        $ipaAddress = strtolower($data['ipa_address']);
+        $bankId = (int)$data['bank_id'];
+        $accountNumber = $data['account_number'];
+
+        // Check if IPA address already exists
+        if ($ipaModel->getByIpaAddress($ipaAddress)) {
+            self::json(['error' => 'IPA address already exists.'], 409);
+        }
+
+        // Check if (bank_id, account_number) combo already exists
+        if ($ipaModel->getByBankAndAccount($bankId, $accountNumber)) {
+            self::json(['error' => 'This bank and account number is already linked to another IPA.'], 409);
+        }
+
+        // All checks passed; create the IPA
         $ipaModel->create(
-            $data['bank_id'],
-            $data['account_number'],
-            strtolower($data['ipa_address']),
-            $data['user_id'],
+            $bankId,
+            $accountNumber,
+            $ipaAddress,
+            (int)$data['user_id'],
             $data['pin']
         );
-        
-        self::json(['success' => true]);
+
+        self::json(['success' => true], 201);
     }
+
 
 
     #[NoReturn] public static function getAllInstantPaymentAddresses(): void

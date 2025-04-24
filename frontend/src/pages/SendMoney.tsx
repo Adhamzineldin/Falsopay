@@ -1,14 +1,14 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import {useState, useEffect} from 'react';
+import {useNavigate} from 'react-router-dom';
 import MainLayout from '@/components/layouts/MainLayout';
-import { useApp } from '@/contexts/AppContext';
+import {useApp} from '@/contexts/AppContext';
 import {SendMoneyData, TransactionService} from '@/services/transaction.service';
-import { UserService } from '@/services/user.service';
-import { IPAService, IpaData } from '@/services/ipa.service';
-import { BankAccountService } from '@/services/bank-account.service';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import {UserService} from '@/services/user.service';
+import {IPAService, IpaData} from '@/services/ipa.service';
+import {BankAccountService} from '@/services/bank-account.service';
+import {Button} from '@/components/ui/button';
+import {Input} from '@/components/ui/input';
+import {Label} from '@/components/ui/label';
 import {
     Card,
     CardContent,
@@ -36,10 +36,10 @@ import {
     RadioGroup,
     RadioGroupItem,
 } from "@/components/ui/radio-group";
-import { useToast } from '@/hooks/use-toast';
-import { ArrowRight, CheckCircle, Search, User, Send, CreditCard, Phone, Banknote, AlertCircle } from 'lucide-react';
+import {useToast} from '@/hooks/use-toast';
+import {ArrowRight, CheckCircle, Search, User, Send, CreditCard, Phone, Banknote, AlertCircle} from 'lucide-react';
 import PinVerification from '@/components/PinVerification';
-import { useForm } from 'react-hook-form';
+import {useForm} from 'react-hook-form';
 import BankSelect from '@/components/BankSelect';
 import {BankService} from "@/services/bank.service.ts";
 import {CardService} from "@/services/card.service.ts";
@@ -75,7 +75,7 @@ const formatCurrency = (value: number, currency = '€') => {
 };
 
 const SendMoney = () => {
-    const { user } = useApp();
+    const {user} = useApp();
     const [step, setStep] = useState(1);
     const [searchLoading, setSearchLoading] = useState(false);
     const [sendLoading, setSendLoading] = useState(false);
@@ -84,7 +84,7 @@ const SendMoney = () => {
     const [linkedAccounts, setLinkedAccounts] = useState<EnhancedIpaData[]>([]);
     const [isLoadingAccounts, setIsLoadingAccounts] = useState(false);
     const [selectedAccount, setSelectedAccount] = useState<EnhancedIpaData | null>(null);
-    const { toast } = useToast();
+    const {toast} = useToast();
     const navigate = useNavigate();
 
     const form = useForm<FormValues>({
@@ -393,24 +393,36 @@ const SendMoney = () => {
     };
 
     const getMethodName = (method: TransferMethod) => {
-        switch(method) {
-            case 'ipa': return 'IPA Address';
-            case 'mobile': return 'Mobile Number';
-            case 'card': return 'Card Number';
-            case 'account': return 'Account Number';
-            case 'iban': return 'IBAN';
-            default: return method;
+        switch (method) {
+            case 'ipa':
+                return 'IPA Address';
+            case 'mobile':
+                return 'Mobile Number';
+            case 'card':
+                return 'Card Number';
+            case 'account':
+                return 'Account Number';
+            case 'iban':
+                return 'IBAN';
+            default:
+                return method;
         }
     };
 
     const getMethodIcon = (method: TransferMethod) => {
-        switch(method) {
-            case 'ipa': return <User className="h-4 w-4" />;
-            case 'mobile': return <Phone className="h-4 w-4" />;
-            case 'card': return <CreditCard className="h-4 w-4" />;
-            case 'account': return <Banknote className="h-4 w-4" />;
-            case 'iban': return <Banknote className="h-4 w-4" />;
-            default: return <User className="h-4 w-4" />;
+        switch (method) {
+            case 'ipa':
+                return <User className="h-4 w-4"/>;
+            case 'mobile':
+                return <Phone className="h-4 w-4"/>;
+            case 'card':
+                return <CreditCard className="h-4 w-4"/>;
+            case 'account':
+                return <Banknote className="h-4 w-4"/>;
+            case 'iban':
+                return <Banknote className="h-4 w-4"/>;
+            default:
+                return <User className="h-4 w-4"/>;
         }
     };
 
@@ -446,7 +458,7 @@ const SendMoney = () => {
                                             <FormField
                                                 control={form.control}
                                                 name="sourceIpaAddress"
-                                                render={({ field }) => (
+                                                render={({field}) => (
                                                     <FormItem>
                                                         <FormLabel>Send from</FormLabel>
                                                         <Select
@@ -459,7 +471,8 @@ const SendMoney = () => {
                                                         >
                                                             <FormControl>
                                                                 <SelectTrigger>
-                                                                    <SelectValue placeholder={isLoadingAccounts ? "Loading accounts..." : "Select account"} />
+                                                                    <SelectValue
+                                                                        placeholder={isLoadingAccounts ? "Loading accounts..." : "Select account"}/>
                                                                 </SelectTrigger>
                                                             </FormControl>
                                                             <SelectContent>
@@ -468,12 +481,12 @@ const SendMoney = () => {
                                                                         key={account.ipa_address}
                                                                         value={account.ipa_address}
                                                                     >
-                                                                        {account.ipa_address} (Bank ID: {account.bank_id})
+                                                                        {account.ipa_address} 
                                                                     </SelectItem>
                                                                 ))}
                                                             </SelectContent>
                                                         </Select>
-                                                        <FormMessage />
+                                                        <FormMessage/>
                                                     </FormItem>
                                                 )}
                                             />
@@ -494,58 +507,77 @@ const SendMoney = () => {
                                             <FormField
                                                 control={form.control}
                                                 name="method"
-                                                render={({ field }) => (
+                                                render={({field}) => (
                                                     <FormItem className="space-y-3">
                                                         <FormLabel>Send using</FormLabel>
                                                         <FormControl>
                                                             <RadioGroup
                                                                 onValueChange={field.onChange}
                                                                 defaultValue={field.value}
-                                                                className="flex flex-wrap gap-2"
+                                                                className="grid grid-cols-2 md:grid-cols-3 gap-3"
                                                             >
-                                                                <div className="flex items-center space-x-2">
-                                                                    <RadioGroupItem value="ipa" id="ipa" />
-                                                                    <Label htmlFor="ipa" className="flex items-center gap-1">
-                                                                        <User className="h-4 w-4" /> IPA Address
-                                                                    </Label>
-                                                                </div>
-                                                                <div className="flex items-center space-x-2">
-                                                                    <RadioGroupItem value="mobile" id="mobile" />
-                                                                    <Label htmlFor="mobile" className="flex items-center gap-1">
-                                                                        <Phone className="h-4 w-4" /> Mobile Number
-                                                                    </Label>
-                                                                </div>
-                                                                <div className="flex items-center space-x-2">
-                                                                    <RadioGroupItem value="card" id="card" />
-                                                                    <Label htmlFor="card" className="flex items-center gap-1">
-                                                                        <CreditCard className="h-4 w-4" /> Card Number
-                                                                    </Label>
-                                                                </div>
-                                                                <div className="flex items-center space-x-2">
-                                                                    <RadioGroupItem value="account" id="account" />
-                                                                    <Label htmlFor="account" className="flex items-center gap-1">
-                                                                        <Banknote className="h-4 w-4" /> Account Number
-                                                                    </Label>
-                                                                </div>
-                                                                <div className="flex items-center space-x-2">
-                                                                    <RadioGroupItem value="iban" id="iban" />
-                                                                    <Label htmlFor="iban" className="flex items-center gap-1">
-                                                                        <Banknote className="h-4 w-4" /> IBAN
-                                                                    </Label>
-                                                                </div>
+                                                                {[
+                                                                    {
+                                                                        value: 'ipa',
+                                                                        label: 'IPA Address',
+                                                                        icon: <User className="h-5 w-5"/>
+                                                                    },
+                                                                    {
+                                                                        value: 'mobile',
+                                                                        label: 'Mobile Number',
+                                                                        icon: <Phone className="h-5 w-5"/>
+                                                                    },
+                                                                    {
+                                                                        value: 'card',
+                                                                        label: 'Card Number',
+                                                                        icon: <CreditCard className="h-5 w-5"/>
+                                                                    },
+                                                                    {
+                                                                        value: 'account',
+                                                                        label: 'Account Number',
+                                                                        icon: <Banknote className="h-5 w-5"/>
+                                                                    },
+                                                                    {
+                                                                        value: 'iban',
+                                                                        label: 'IBAN',
+                                                                        icon: <Banknote className="h-5 w-5"/>
+                                                                    },
+                                                                ].map((option) => (
+                                                                    <div key={option.value} className="relative">
+                                                                        <RadioGroupItem
+                                                                            value={option.value}
+                                                                            id={option.value}
+                                                                            className="peer sr-only"
+                                                                        />
+                                                                        <Label
+                                                                            htmlFor={option.value}
+                                                                            className={`flex flex-col items-center justify-center rounded-md border-2 border-muted bg-white p-4 hover:bg-gray-50 hover:border-gray-300 
+                  ${field.value === option.value ? 'border-falsopay-primary bg-falsopay-primary/5' : ''}
+                  peer-focus:ring-1 peer-focus:ring-falsopay-primary peer-focus:border-falsopay-primary
+                  cursor-pointer text-center h-full transition-all`}
+                                                                        >
+                                                                            <div
+                                                                                className={`mb-2 rounded-full p-2 ${field.value === option.value ? 'bg-falsopay-primary text-white' : 'bg-gray-100 text-gray-500'}`}>
+                                                                                {option.icon}
+                                                                            </div>
+                                                                            <span
+                                                                                className="font-medium text-sm">{option.label}</span>
+                                                                        </Label>
+                                                                    </div>
+                                                                ))}
                                                             </RadioGroup>
                                                         </FormControl>
-                                                        <FormMessage />
+                                                        <FormMessage/>
                                                     </FormItem>
                                                 )}
                                             />
-                                            
-                                            
+
+
                                             {(form.watch("method") === "account" || form.watch("method") === "card") && (
                                                 <FormField
                                                     control={form.control}
                                                     name="bank_id"
-                                                    render={({ field }) => (
+                                                    render={({field}) => (
                                                         <FormItem>
                                                             <FormLabel>Bank</FormLabel>
                                                             <FormControl>
@@ -555,7 +587,7 @@ const SendMoney = () => {
                                                                     disabled={searchLoading}
                                                                 />
                                                             </FormControl>
-                                                            <FormMessage />
+                                                            <FormMessage/>
                                                         </FormItem>
                                                     )}
                                                 />
@@ -565,7 +597,7 @@ const SendMoney = () => {
                                             <FormField
                                                 control={form.control}
                                                 name="identifier"
-                                                render={({ field }) => (
+                                                render={({field}) => (
                                                     <FormItem>
                                                         <FormLabel>{getMethodName(form.watch("method") as TransferMethod)}</FormLabel>
                                                         <div className="flex">
@@ -581,10 +613,11 @@ const SendMoney = () => {
                                                                 disabled={searchLoading || !field.value || !form.getValues("sourceIpaAddress") || (form.watch("method") === "account" && !form.getValues("bank_id"))}
                                                                 className="rounded-l-none"
                                                             >
-                                                                {searchLoading ? 'Searching...' : <Search className="h-4 w-4" />}
+                                                                {searchLoading ? 'Searching...' :
+                                                                    <Search className="h-4 w-4"/>}
                                                             </Button>
                                                         </div>
-                                                        <FormMessage />
+                                                        <FormMessage/>
                                                     </FormItem>
                                                 )}
                                             />
@@ -603,10 +636,12 @@ const SendMoney = () => {
                             </CardHeader>
 
                             <CardContent className="space-y-6">
-                                <div className="flex items-center justify-center p-4 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+                                <div
+                                    className="flex items-center justify-center p-4 bg-gray-50 rounded-lg border border-dashed border-gray-200">
                                     <div className="flex items-center space-x-4">
-                                        <div className="w-12 h-12 rounded-full bg-falsopay-primary flex items-center justify-center text-white">
-                                            <User className="h-6 w-6" />
+                                        <div
+                                            className="w-12 h-12 rounded-full bg-falsopay-primary flex items-center justify-center text-white">
+                                            <User className="h-6 w-6"/>
                                         </div>
                                         <div>
                                             <h3 className="font-medium">{recipient.name}</h3>
@@ -643,7 +678,7 @@ const SendMoney = () => {
                                         <FormField
                                             control={form.control}
                                             name="amount"
-                                            render={({ field }) => (
+                                            render={({field}) => (
                                                 <FormItem>
                                                     <FormLabel>Amount (€)</FormLabel>
                                                     <FormControl>
@@ -669,11 +704,12 @@ const SendMoney = () => {
                                                     </FormControl>
                                                     {parseFloat(field.value) > selectedAccount.balance && (
                                                         <div className="flex items-center mt-1 text-red-500 text-sm">
-                                                            <AlertCircle className="h-4 w-4 mr-1" />
-                                                            Insufficient funds. Your maximum available amount is {formatCurrency(selectedAccount.balance, selectedAccount.currency)}
+                                                            <AlertCircle className="h-4 w-4 mr-1"/>
+                                                            Insufficient funds. Your maximum available amount
+                                                            is {formatCurrency(selectedAccount.balance, selectedAccount.currency)}
                                                         </div>
                                                     )}
-                                                    <FormMessage />
+                                                    <FormMessage/>
                                                 </FormItem>
                                             )}
                                         />
@@ -688,7 +724,7 @@ const SendMoney = () => {
                                                     parseFloat(form.getValues("amount")) > selectedAccount.balance
                                                 }
                                             >
-                                                Continue <ArrowRight className="ml-2 h-4 w-4" />
+                                                Continue <ArrowRight className="ml-2 h-4 w-4"/>
                                             </Button>
                                         </div>
                                     </form>
@@ -752,13 +788,15 @@ const SendMoney = () => {
                         <>
                             <CardHeader className="text-center">
                                 <div className="flex justify-center mb-4">
-                                    <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
-                                        <CheckCircle className="h-8 w-8 text-green-600" />
+                                    <div
+                                        className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
+                                        <CheckCircle className="h-8 w-8 text-green-600"/>
                                     </div>
                                 </div>
                                 <CardTitle>Transfer Complete!</CardTitle>
                                 <CardDescription>
-                                    You've successfully sent {formatCurrency(parseFloat(form.getValues("amount")))} to {recipient.name}
+                                    You've successfully
+                                    sent {formatCurrency(parseFloat(form.getValues("amount")))} to {recipient.name}
                                 </CardDescription>
                             </CardHeader>
 
@@ -770,14 +808,16 @@ const SendMoney = () => {
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-gray-500">Amount</span>
-                                        <span className="font-medium">{formatCurrency(parseFloat(form.getValues("amount")))}</span>
+                                        <span
+                                            className="font-medium">{formatCurrency(parseFloat(form.getValues("amount")))}</span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-gray-500">Recipient</span>
                                         <span className="font-medium">{recipient.name}</span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-gray-500">{getMethodName(form.getValues("method") as TransferMethod)}</span>
+                                        <span
+                                            className="text-gray-500">{getMethodName(form.getValues("method") as TransferMethod)}</span>
                                         <span className="font-medium">{recipient.identifier}</span>
                                     </div>
                                     {recipient.bank_name && (
@@ -796,7 +836,7 @@ const SendMoney = () => {
                             <CardFooter className="flex justify-between">
                                 <Button variant="outline" onClick={resetForm}>Send Another</Button>
                                 <Button onClick={() => navigate('/dashboard')}>
-                                    Back to Dashboard <ArrowRight className="ml-2 h-4 w-4" />
+                                    Back to Dashboard <ArrowRight className="ml-2 h-4 w-4"/>
                                 </Button>
                             </CardFooter>
                         </>

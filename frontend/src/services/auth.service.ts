@@ -176,6 +176,20 @@ export const AuthService = {
       throw error;
     }
   },
+  
+  
+  sendVerificationCode: async (mail: string, code: string): Promise<{ success: boolean; message: string }> => {
+    try {
+      const response = await api.post('/api/send-verification-email', { mail, code });
+      return response.data;
+    } catch (error) {
+      console.error("Error sending verification code:", error);
+      throw error;
+    }
+  },
+    
+  
+  
 
   // Helper method to check if token is valid
   isAuthenticated: (): boolean => {

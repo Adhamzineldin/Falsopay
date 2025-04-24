@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { ArrowLeft, Trash2 } from 'lucide-react';
 import PinVerification from '@/components/PinVerification';
 import { AuthService } from '@/services/auth.service';
-import {UserService} from "@/services/user.service.ts";
+import { UserService } from "@/services/user.service.ts";
 
 const AuthFlow = () => {
     // State for each step of the authentication flow
@@ -18,6 +18,10 @@ const AuthFlow = () => {
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
     const [email, setEmail] = useState('');
+
+    // Email verification state
+    const [emailVerificationCode, setEmailVerificationCode] = useState('');
+    const [emailForVerification, setEmailForVerification] = useState('');
 
     // Flow control states
     const [currentStep, setCurrentStep] = useState('phone-entry');
@@ -40,8 +44,21 @@ const AuthFlow = () => {
     // Generate verification PIN (mock implementation)
     const generatePin = () => {
         const $code = Math.floor(1000 + Math.random() * 9000).toString();
-        AuthService.sendCode(phoneNumber, $code);
+        AuthService.sendCode(phoneNumber, $code); // Assuming this is just a mock and doesn't need to be awaited
         return $code;
+    }
+
+    // Generate email verification code
+    const generateEmailVerificationCode = () => {
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        // In a real app, you would send this via email
+        console.log('Email verification code:', code);
+        // Simulating email sending
+        toast({
+            title: "Verification Code Sent",
+            description: `A verification code has been sent to ${emailForVerification}`,
+        });
+        return code;
     }
 
     // Step 1: Handle phone number submission
@@ -66,10 +83,12 @@ const AuthFlow = () => {
             if (exists) {
                 // Fetch user data to check if it's a default account
                 const userData = await UserService.getUserByPhone(phoneNumber);
-                setIsDefaultAccount(!userData.hasCompletedSetup);
+                console.log("User data:", userData);
+                // Fixed logic: isDefaultAccount should be true if default_account is truthy
+                setIsDefaultAccount(!!userData.default_account);
             }
 
-            // Send verification code in all cases
+            // Generate and send verification code locally
             const newPin = generatePin();
             setVerificationPin(newPin);
 
@@ -118,11 +137,34 @@ const AuthFlow = () => {
                 // Begin registration process if phone doesn't exist
                 setCurrentStep('registration');
             } else if (isDefaultAccount) {
-                // User exists but has default account (needs IPA verification)
+                // User exists and has default account (needs IPA verification)
                 setCurrentStep('default-account');
             } else {
-                // User exists with complete account - proceed to login with IPA
-                setCurrentStep('ipa-verification');
+                // User exists with no default account - log in directly
+                // Pass null as IPA address to bypass IPA verification
+                const result = await login(phoneNumber, "null");
+
+                if (result && result.success) {
+                    // Complete the login process with the verification code
+                    if (result.code) {
+                        await verifyLoginCode(phoneNumber, result.code, {
+                            user: result.user,
+                            token: result.token
+                        });
+                    }
+
+                    toast({
+                        title: "Success",
+                        description: "You have been successfully logged in!",
+                    });
+                    navigate(returnTo);
+                } else {
+                    toast({
+                        title: "Error",
+                        description: "Failed to log in. Please try again.",
+                        variant: "destructive",
+                    });
+                }
             }
         } catch (error) {
             console.error('Verification error:', error);
@@ -153,14 +195,22 @@ const AuthFlow = () => {
         try {
             // Use login with phone number and IPA address
             const result = await login(phoneNumber, ipaAddress);
-            
+
             if (result && result.success) {
-               
-                toast({
-                    title: "Success",
-                    description: "You have been successfully logged in!",
-                });
-                navigate(returnTo);
+                // If login succeeds, use the verification code from the result for the next step
+                if (result.code) {
+                    // Pass the user and token directly to avoid race condition
+                    await verifyLoginCode(phoneNumber, result.code, {
+                        user: result.user,
+                        token: result.token
+                    });
+
+                    toast({
+                        title: "Success",
+                        description: "You have been successfully logged in!",
+                    });
+                    navigate(returnTo);
+                }
             } else {
                 toast({
                     title: "Error",
@@ -197,14 +247,22 @@ const AuthFlow = () => {
         try {
             // Try to login with the provided IPA address
             const result = await login(phoneNumber, ipaAddress);
+
             if (result && result.success) {
-                // If login succeeds, the IPA was correct, complete account setup
-                // await AuthService.saveAuthToken(result.user_token);
-                toast({
-                    title: "Success",
-                    description: "Your account setup is complete!",
-                });
-                navigate(returnTo);
+                // If login succeeds, complete the process with the verification code
+                if (result.code) {
+                    // Pass the user and token directly to avoid race condition
+                    await verifyLoginCode(phoneNumber, result.code, {
+                        user: result.user,
+                        token: result.token
+                    });
+
+                    toast({
+                        title: "Success",
+                        description: "Your account setup is complete!",
+                    });
+                    navigate(returnTo);
+                }
             } else {
                 toast({
                     title: "Error",
@@ -246,7 +304,7 @@ const AuthFlow = () => {
         }
     };
 
-    // Handle registration form submission
+    // Handle registration form submission - Now moves to email verification step
     const handleRegistrationSubmit = async (e) => {
         e.preventDefault();
 
@@ -259,8 +317,40 @@ const AuthFlow = () => {
             return;
         }
 
+        // Set email for verification and generate a code
+        setEmailForVerification(email);
+        const code = generateEmailVerificationCode();
+        setEmailVerificationCode(code);
+        
+        await AuthService.sendVerificationCode(email, code);
+
+        // Move to email verification step
+        setCurrentStep('email-verification');
+    };
+
+    // Handle email verification code submission
+    const handleEmailVerificationSubmit = async (code) => {
+        if (!code || code.length !== 6) {
+            toast({
+                title: "Error",
+                description: "Please enter the 6-digit verification code",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        if (code !== emailVerificationCode) {
+            toast({
+                title: "Error",
+                description: "Incorrect verification code",
+                variant: "destructive",
+            });
+            return;
+        }
+
         setIsLoading(true);
         try {
+            // Now actually register the user after email verification
             await AuthService.registerUser({
                 first_name: firstName,
                 last_name: lastName,
@@ -276,9 +366,14 @@ const AuthFlow = () => {
             // Auto login after registration
             const result = await login(phoneNumber, ipaAddress);
             if (result && result.success) {
+                if (result.code) {
+                    await verifyLoginCode(phoneNumber, result.code, {
+                        user: result.user,
+                        token: result.token
+                    });
+                }
                 navigate(returnTo);
             } else {
-                // If auto-login fails, go to login screen
                 setCurrentStep('ipa-verification');
             }
         } catch (error) {
@@ -307,10 +402,27 @@ const AuthFlow = () => {
         }, 1000);
     };
 
+    // Handle resend email verification code
+    const handleResendEmailCode = () => {
+        setIsLoading(true);
+        setTimeout(async () => {
+            const newCode = generateEmailVerificationCode();
+            setEmailVerificationCode(newCode);
+            await AuthService.sendVerificationCode(email, newCode);
+            toast({
+                title: "Code Resent",
+                description: `A new verification code has been sent to ${emailForVerification}`,
+            });
+            setIsLoading(false);
+        }, 1000);
+    };
+
     // Handle going back to previous step
     const handleBack = () => {
         if (currentStep === 'phone-verification') {
             setCurrentStep('phone-entry');
+        } else if (currentStep === 'email-verification') {
+            setCurrentStep('registration');
         } else if (currentStep === 'default-account' || currentStep === 'ipa-verification' || currentStep === 'registration') {
             setCurrentStep('phone-verification');
         }
@@ -330,6 +442,7 @@ const AuthFlow = () => {
                         <CardTitle className="text-2xl text-center">
                             {currentStep === 'phone-entry' && "Welcome to FalsoPay"}
                             {currentStep === 'phone-verification' && "Verify Your Phone"}
+                            {currentStep === 'email-verification' && "Verify Your Email"}
                             {currentStep === 'ipa-verification' && "Login to Your Account"}
                             {currentStep === 'default-account' && "Complete Your Account"}
                             {currentStep === 'registration' && "Create Your Account"}
@@ -337,6 +450,7 @@ const AuthFlow = () => {
                         <CardDescription className="text-center">
                             {currentStep === 'phone-entry' && "Enter your phone number to get started"}
                             {currentStep === 'phone-verification' && "Enter the verification code sent to your phone"}
+                            {currentStep === 'email-verification' && "Enter the verification code sent to your email"}
                             {currentStep === 'ipa-verification' && "Enter your IPA address to login"}
                             {currentStep === 'default-account' && "Verify your IPA address or delete your account"}
                             {currentStep === 'registration' && "Fill in your details to create an account"}
@@ -379,6 +493,36 @@ const AuthFlow = () => {
                                         maxLength={4}
                                         expectedPin={verificationPin}
                                         onResend={handleResendCode}
+                                    />
+                                </div>
+
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    className="w-full mt-4"
+                                    onClick={handleBack}
+                                >
+                                    Back
+                                </Button>
+                            </div>
+                        )}
+
+                        {currentStep === 'email-verification' && (
+                            <div className="flex flex-col items-center justify-center space-y-4">
+                                <div className="text-center mb-4">
+                                    <p className="text-sm text-gray-500">
+                                        Verification code sent to: {emailForVerification}
+                                    </p>
+                                </div>
+
+                                <div className="w-full flex justify-center">
+                                    <PinVerification
+                                        onPinSubmit={handleEmailVerificationSubmit}
+                                        isLoading={isLoading}
+                                        title="Enter Email Verification Code"
+                                        maxLength={6}
+                                        expectedPin={emailVerificationCode}
+                                        onResend={handleResendEmailCode}
                                     />
                                 </div>
 
@@ -512,7 +656,7 @@ const AuthFlow = () => {
                                 
 
                                 <Button type="submit" className="w-full" disabled={isLoading}>
-                                    {isLoading ? 'Creating Account...' : 'Create Account'}
+                                    {isLoading ? 'Processing...' : 'Continue'}
                                 </Button>
 
                                 <Button

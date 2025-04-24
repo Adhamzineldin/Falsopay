@@ -31,9 +31,8 @@ const App = () => (
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Landing />} />
-            <Route path="/auth" element={<AuthFlow/>} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+            <Route path="/login" element={<AuthFlow />} />
+            <Route path="/register" element={<AuthFlow />} />
             
             {/* Protected Routes */}
             <Route path="/dashboard" element={

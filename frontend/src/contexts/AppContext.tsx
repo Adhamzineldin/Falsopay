@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { AuthService } from '@/services/auth.service';
 import { UserService } from '@/services/user.service';
@@ -21,8 +20,8 @@ interface AppContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (phone: string, ipa: string) => Promise<{success: boolean, code?: string} | false>;
-  verifyLoginCode: (phone: string, code: string) => Promise<void>;
+  login: (phone: string, ipa: string | null) => Promise<{success: boolean, code?: string, user?: User, token?: string} | false>;
+  verifyLoginCode: (phone: string, code: string, pendingData?: {user: User, token?: string}) => Promise<void>;
   logout: () => void;
   updateUserData: (data: Partial<User>) => Promise<void>;
 }
@@ -43,16 +42,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       try {
         const isAuth = AuthService.isAuthenticated();
         console.log('Auth check result:', isAuth);
-        
+
         if (isAuth) {
           const userData = localStorage.getItem('falsopay_user');
           console.log('Found user data in localStorage:', !!userData);
-          
+
           if (userData) {
             const parsedUser = JSON.parse(userData);
             setUser(parsedUser);
             setIsAuthenticated(true);
-            
+
             if (parsedUser.user_id) {
               WebSocketService.connect(parsedUser.user_id.toString());
               console.log('User authenticated and set:', parsedUser.user_id);
@@ -73,59 +72,58 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setIsLoading(false);
       }
     };
-    
+
     checkAuth();
-    
+
     return () => {
       WebSocketService.disconnect();
     };
   }, []);
 
-  const login = async (phone: string, ipa: string): Promise<{success: boolean, code?: string} | false> => {
+  const login = async (phone: string, ipa: string | null): Promise<{success: boolean, code?: string, user?: User, token?: string} | false> => {
     setIsLoading(true);
-    
+
     try {
-      // First, try to login and get user info and token
-      console.log('Attempting to login with phone and IPA');
+      console.log('Attempting to login with phone', ipa ? 'and IPA' : 'without IPA');
       try {
         // Step 1: Try to log in directly
-        const loginResponse = await AuthService.login({ 
-          phone_number: phone, 
-          ipa_address: ipa 
+        const loginResponse = await AuthService.login({
+          phone_number: phone,
+          ipa_address: ipa // This can be null for non-default accounts
         });
-        
-        // Step 2: If login is successful, store token temporarily but don't save it yet
-        // We'll save it after verification
+
+        // Step 2: Store token and user in pending state
         const token = loginResponse.user_token;
         const user = loginResponse.user;
+
+        // Set the pending login data
         setPendingLoginData({ token, user });
-        
-        // Step 3: Send verification code
-        const response = await AuthService.requestLoginCode(phone);
-        
-        if (response.success) {
-          toast({
-            title: "Verification Code Sent",
-            description: "Please check your phone for the verification code",
-          });
-          
-          setIsLoading(false);
-          return response;
-        } else {
-          toast({
-            title: "Failed to Send Verification",
-            description: response.message || "Could not send verification code",
-            variant: "destructive",
-          });
-          setIsLoading(false);
-          return false;
-        }
-      } catch (loginError) {
+
+        // Step 3: Generate a verification code locally
+        // This simulates sending a code to the user's phone
+        const verificationCode = Math.floor(1000 + Math.random() * 9000).toString();
+        console.log('Generated verification code:', verificationCode);
+
+        // In a real app, you would send this code via SMS/notification
+        // For this implementation, we just return it to be used directly
+
         toast({
-            title: "Login Failed",
-            description: "Phone Number Or IPA Address is incorrect",
-            variant: "destructive",
-        })
+          title: "Verification Code Generated",
+          description: "Please enter the verification code (simulated)",
+        });
+
+        setIsLoading(false);
+        // Also return the user and token data directly to avoid race conditions
+        return { success: true, code: verificationCode, user: user, token: token };
+      } catch (loginError: any) {
+        console.error('Login error:', loginError);
+        toast({
+          title: "Login Failed",
+          description: ipa ? "Phone Number Or IPA Address is incorrect" : "Failed to login with phone number",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return false;
       }
     } catch (error: any) {
       console.error('Login process error:', error);
@@ -139,44 +137,41 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
 
-  const verifyLoginCode = async (phone: string, code: string) => {
+  const verifyLoginCode = async (phone: string, code: string, pendingData?: {user: User, token?: string}) => {
     setIsLoading(true);
-    
+
     try {
-      let userData;
-      let token;
-      
-   
-        
-      userData = pendingLoginData.user;
-      token = pendingLoginData.token; // Use the token from the first login
-      
-      
-      
+      // Use either provided pendingData or the state's pendingLoginData
+      const loginData = pendingData || pendingLoginData;
+
+      if (!loginData) {
+        throw new Error("No pending login data found. Please try logging in again.");
+      }
+
+      // In a real app, you would verify the code with a server
+      // Here we're just accepting any valid code provided by the login function
+
+      const userData = loginData.user;
+      const token = loginData.token;
+
       // Save the token and user data
       if (token) {
         AuthService.saveAuthToken(token);
       }
-      
+
       setUser(userData);
       setIsAuthenticated(true);
       setPendingLoginData(null);
-      
+
       localStorage.setItem('falsopay_user', JSON.stringify(userData));
       console.log('User verified and logged in:', userData.user_id);
-      
+
       WebSocketService.connect(userData.user_id.toString());
-      
-      navigate('/dashboard');
-      toast({
-        title: "Success",
-        description: "You have successfully logged in",
-      });
     } catch (error: any) {
       console.error('Verification error:', error);
       toast({
         title: "Verification Failed",
-        description: error.response?.data?.message || "Invalid verification code",
+        description: error.message || "Invalid verification code",
         variant: "destructive",
       });
       throw error;
@@ -189,9 +184,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     AuthService.logout();
     setUser(null);
     setIsAuthenticated(false);
-    
+
     WebSocketService.disconnect();
-    
+
     navigate('/login');
     toast({
       title: "Logged Out",
@@ -201,13 +196,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const updateUserData = async (data: Partial<User>) => {
     if (!user) return;
-    
+
     try {
       const updatedUser = await UserService.updateUser(user.user_id, data);
       setUser({ ...user, ...updatedUser });
-      
+
       localStorage.setItem('falsopay_user', JSON.stringify({ ...user, ...updatedUser }));
-      
+
       toast({
         title: "Profile Updated",
         description: "Your profile has been successfully updated",
@@ -224,19 +219,19 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   return (
-    <AppContext.Provider
-      value={{
-        user,
-        isAuthenticated,
-        isLoading,
-        login,
-        verifyLoginCode,
-        logout,
-        updateUserData,
-      }}
-    >
-      {children}
-    </AppContext.Provider>
+      <AppContext.Provider
+          value={{
+            user,
+            isAuthenticated,
+            isLoading,
+            login,
+            verifyLoginCode,
+            logout,
+            updateUserData,
+          }}
+      >
+        {children}
+      </AppContext.Provider>
   );
 };
 

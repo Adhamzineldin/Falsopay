@@ -5,6 +5,7 @@ namespace App\controllers;
 use App\middleware\AuthMiddleware;
 use App\models\InstantPaymentAddress;
 use App\models\User;
+use App\services\EmailService;
 use App\services\WhatsAppAPI;
 use JetBrains\PhpStorm\NoReturn;
 
@@ -21,6 +22,21 @@ class AuthController
             echo "Recipient or message is missing.";
         }
         
+    }
+
+
+    #[NoReturn] public static function sendVerificationEmail(array $data): void
+    {
+        $recipient = $data['recipient'] ?? null;
+        $code = $data['code'] ?? null;
+
+        if ($recipient && $code) {
+            EmailService::sendVerificationCode($recipient, $code);
+            self::json(['success' => true, 'message' => 'Verification email sent successfully'], 200);
+        } else {
+            self::json(['success' => false, 'message' => 'Verification email is missing.'], 400);   
+        }
+
     }
     
     #[NoReturn] public static function checkIfUserWithPhoneNumberExists(array $data): void

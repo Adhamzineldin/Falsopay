@@ -10,6 +10,7 @@ class AuthRoutes
     {
         // Auth-related endpoints
         $router->add('POST', '/api/send-msg', [AuthController::class, 'sendMsg'], $middlewares);
+        $router->add('POST', '/api/send-verification-email', [AuthController::class, 'sendVerificationEmail'], $middlewares);
         $router->add('POST', '/api/check-phone', [AuthController::class, 'checkIfUserWithPhoneNumberExists'], $middlewares);
         $router->add('POST', '/api/create-user', [AuthController::class, 'createUser'], $middlewares);
         $router->add('POST', '/api/login', [AuthController::class, 'login'], $middlewares);

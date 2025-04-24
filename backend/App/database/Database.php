@@ -12,19 +12,13 @@ class Database {
     private static ?Database $instance = null;
     private ?PDO $conn = null;
 
-    /**
-     * Private constructor to prevent direct instantiation
-     * @throws Exception
-     */
+ 
     private function __construct() {
         $this->loadEnv();
         $this->connect();
     }
 
-    /**
-     * Get the singleton instance of the Database
-     * @throws Exception
-     */
+   
     public static function getInstance(): Database {
         if (self::$instance === null) {
             self::$instance = new self();
@@ -32,10 +26,7 @@ class Database {
         return self::$instance;
     }
 
-    /**
-     * Load environment variables
-     * @throws Exception
-     */
+   
     private function loadEnv(): void {
         if (!file_exists(__DIR__ . '/../../.env')) {
             throw new Exception('.env file not found');

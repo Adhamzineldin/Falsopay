@@ -56,7 +56,7 @@ try {
         iban VARCHAR(34),
         status ENUM('active', 'inactive') NOT NULL,
         type VARCHAR(20),
-        balance DECIMAL(10, 2) NOT NULL,
+        balance DECIMAL(20, 2) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         PRIMARY KEY (bank_id, account_number),
         FOREIGN KEY (bank_id) REFERENCES banks(bank_id) ON DELETE CASCADE ON UPDATE CASCADE,

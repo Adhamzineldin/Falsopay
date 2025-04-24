@@ -23,7 +23,6 @@ class BankSeeder {
                     ('Fawry', 'FAWRY001', 'FAWRYEGCXXX'),
                     ('Banque Misr', 'BM001', 'BMISEGCXXXX'),
                     ('Banque du Caire', 'BDC001', 'BDCIEGCXXXX')
-                
             ";
 
             $pdo->exec($sql);

@@ -18,6 +18,7 @@ import Profile from "@/pages/Profile";
 import LinkAccount from "@/pages/LinkAccount";
 import NotFound from "@/pages/NotFound";
 import AuthFlow from "@/pages/AuthFlow.tsx";
+import Accounts from "@/pages/Accounts.tsx";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +49,11 @@ const App = () => (
             <Route path="/transactions" element={
               <ProtectedRoute>
                 <Transactions />
+              </ProtectedRoute>
+            } />
+            <Route path="/accounts" element={
+              <ProtectedRoute>
+                <Accounts />
               </ProtectedRoute>
             } />
             <Route path="/profile" element={

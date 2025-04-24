@@ -10,18 +10,65 @@ class BankAccountSeeder {
             $database = Database::getInstance();
             $pdo = $database->getConnection();
 
-            $sql = "
-                INSERT INTO bank_accounts (bank_id, account_number, bank_user_id, iban, status, type, balance)
-                VALUES
-                    (1, '1234567890123456', 1, 'EG110000600188000012345180000', 'active', 'checking', 5000000),  -- HSBC
-                    (2, '9876543210987654', 2, 'EG370234000000000123456789012', 'active', 'savings', 2500000),  -- CIB
-                    (3, '4567890123456789', 3, 'EG500000100000000000007654321', 'inactive', 'checking', 1003),  -- NBE
-                    (4, '7890123456789012', 1, 'EG870123000000000000654321987', 'active', 'checking', 300000),  -- Arab Bank
-                    (5, '5678901234567890', 2, 'EG120001200000000000123456789', 'inactive', 'savings', 150000);  -- AAIB
-            ";
+            // We'll create 6 accounts per user: 2 accounts per bank across 3 different banks
+            // Total: 20 users * 6 accounts = 120 accounts
 
-            $pdo->exec($sql);
-            echo "Bank accounts table seeded successfully.\n";
+            $bankIds = [1, 2, 3]; // HSBC, CIB, NBE - the 3 main banks
+            $accountTypes = ['current', 'savings'];
+            $statuses = ['active', 'active', 'active', 'inactive']; // 75% active, 25% inactive
+
+            $stmt = $pdo->prepare("
+                INSERT INTO bank_accounts (bank_id, account_number, bank_user_id, iban, status, type, balance)
+                VALUES (:bank_id, :account_number, :bank_user_id, :iban, :status, :type, :balance)
+            ");
+
+            $accountsCreated = 0;
+
+            // For each of the 20 users
+            for ($userId = 1; $userId <= 20; $userId++) {
+                // For each of the 3 banks
+                foreach ($bankIds as $bankId) {
+                    // Create 2 accounts per bank
+                    for ($i = 0; $i < 2; $i++) {
+                        // Generate random but valid-looking account number (16 digits)
+                        $accountNumber = mt_rand(1000, 9999) . mt_rand(1000, 9999) . mt_rand(1000, 9999) . mt_rand(1000, 9999);
+
+                        // Generate a random IBAN (following Egyptian format: EG + 2 check digits + 29 chars)
+                        $checkDigits = sprintf("%02d", mt_rand(10, 99));
+                        $bankCode = sprintf("%04d", mt_rand(1000, 9999));
+                        $branchCode = sprintf("%04d", mt_rand(1000, 9999));
+                        // Use a random string for the account part
+                        $accountPart = '';
+                        for ($j = 0; $j < 20; $j++) {
+                            $accountPart .= mt_rand(0, 9);
+                        }
+                        $iban = "EG" . $checkDigits . $bankCode . $branchCode . $accountPart;
+
+                        // Random status (weighted toward active)
+                        $status = $statuses[array_rand($statuses)];
+
+                        // Alternate between checking and savings accounts
+                        $type = $accountTypes[$i % 2];
+
+                        // Random balance between 1,000 and 5,000,000 (in smallest currency unit)
+                        $balance = mt_rand(1000, 5000000);
+
+                        $stmt->execute([
+                            'bank_id' => $bankId,
+                            'account_number' => $accountNumber,
+                            'bank_user_id' => $userId,
+                            'iban' => $iban,
+                            'status' => $status,
+                            'type' => $type,
+                            'balance' => $balance
+                        ]);
+
+                        $accountsCreated++;
+                    }
+                }
+            }
+
+            echo "Bank accounts table seeded successfully with $accountsCreated accounts (6 per user: 2 per bank across 3 banks).\n";
         } catch (\Exception $e) {
             echo "Error seeding bank accounts table: " . $e->getMessage() . "\n";
         }

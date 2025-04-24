@@ -10,7 +10,9 @@ import {
   LogOut, 
   Menu, 
   X,
-  ArrowRight
+  ArrowRight,
+  Wallet, 
+  BarChart4
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -83,6 +85,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     { path: '/dashboard', label: 'Dashboard', icon: Home },
     { path: '/send-money', label: 'Send Money', icon: Send },
     { path: '/transactions', label: 'Transactions', icon: CreditCard },
+    { path: '/accounts', label: 'Accounts', icon: BarChart4 },
     { path: '/profile', label: 'Profile', icon: User },
   ];
 

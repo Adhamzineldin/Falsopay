@@ -98,7 +98,7 @@ $httpServer = new HttpServer(function (ServerRequestInterface $request) use ($no
 $socket = new SocketServer("$host:$httpPort", [], $loop); // HTTP server on dynamic port
 $httpServer->listen($socket);
 
-echo "✅ WebSocket server running on ws://$host:$wsPort\n";
-echo "✅ HTTP push endpoint running on http://$host:$httpPort/push\n";
+echo "✅ WebSocket server running on wss://$host:$wsPort\n";
+echo "✅ HTTP push endpoint running on https://$host:$httpPort/push\n";
 
 $loop->run();

@@ -15,7 +15,6 @@ import { useToast } from '@/hooks/use-toast';
 import { CreditCard, Lock, User, AlertTriangle, CheckCircle2, XCircle } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import {AuthService} from "@/services/auth.service.ts";
-
 // Change PIN Dialog Component
 const ChangePinDialog = ({ ipaId, ipaAddress }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -402,6 +401,7 @@ const Profile = () => {
 
     setIsUpdating(true);
     try {
+      
       await IPAService.deleteAllByUserId(user.user_id);
       await AuthService.deleteAccount(user.user_id);
 
@@ -436,6 +436,10 @@ const Profile = () => {
     // Convert both to numbers to ensure consistent comparison
     return Number(ipaId) === Number(defaultIpaId);
   };
+  
+  
+  
+  
 
   // Demo data for display purposes
   const demoAccounts = [];

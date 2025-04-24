@@ -10,6 +10,7 @@ import { ArrowLeft, Trash2 } from 'lucide-react';
 import PinVerification from '@/components/PinVerification';
 import { AuthService } from '@/services/auth.service';
 import {UserData, UserService} from "@/services/user.service.ts";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 const AuthFlow = () => {
     // State for each step of the authentication flow
@@ -381,7 +382,7 @@ const AuthFlow = () => {
             console.error('Registration error:', error);
             toast({
                 title: "Registration Failed",
-                description: error.response?.data?.message || "Could not create your account. Please try again.",
+                description: error.response?.data?.error|| error.response?.data?.message  || "Could not create your account. Please try again.",
                 variant: "destructive",
             });
         } finally {
@@ -427,6 +428,86 @@ const AuthFlow = () => {
         } else if (currentStep === 'default-account' || currentStep === 'ipa-verification' || currentStep === 'registration') {
             setCurrentStep('phone-verification');
         }
+    };
+
+    const DeleteAccountDialog = ({ phoneNumber, onDelete, isLoading }) => {
+        const [isOpen, setIsOpen] = useState(false);
+        const [deleteConfirmation, setDeleteConfirmation] = useState('');
+        const { toast } = useToast();
+
+        const handleDelete = async () => {
+            if (deleteConfirmation !== phoneNumber) {
+                toast({
+                    title: "Error",
+                    description: "Please enter your phone number correctly to confirm",
+                    variant: "destructive",
+                });
+                return;
+            }
+
+            // Close the dialog and call the parent's delete handler
+            setIsOpen(false);
+            onDelete();
+        };
+
+        // Reset confirmation when dialog closes
+        const handleOpenChange = (open) => {
+            if (!open) {
+                setDeleteConfirmation('');
+            }
+            setIsOpen(open);
+        };
+
+        return (
+            <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+                <DialogTrigger asChild>
+                    <Button
+                        type="button"
+                        variant="destructive"
+                        className="w-full"
+                        disabled={isLoading}
+                    >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete Account
+                    </Button>
+                </DialogTrigger>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle className="text-red-600">Delete Account Confirmation</DialogTitle>
+                        <DialogDescription>
+                            This action cannot be undone. All your data will be permanently deleted.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-4 py-4">
+                        <p className="text-sm">
+                            To confirm, please enter your phone number: <span className="font-bold">{phoneNumber}</span>
+                        </p>
+                        <Input
+                            value={deleteConfirmation}
+                            onChange={(e) => setDeleteConfirmation(e.target.value)}
+                            placeholder="Enter your phone number"
+                        />
+                    </div>
+
+                    <DialogFooter>
+                        <Button
+                            variant="outline"
+                            onClick={() => handleOpenChange(false)}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={handleDelete}
+                            disabled={isLoading || deleteConfirmation !== phoneNumber}
+                        >
+                            {isLoading ? 'Processing...' : 'Permanently Delete'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        );
     };
 
     return (
@@ -596,16 +677,11 @@ const AuthFlow = () => {
                                         Or delete your account and start fresh
                                     </p>
 
-                                    <Button
-                                        type="button"
-                                        variant="destructive"
-                                        className="w-full"
-                                        onClick={handleDeleteAccount}
-                                        disabled={isLoading}
-                                    >
-                                        <Trash2 className="mr-2 h-4 w-4" />
-                                        Delete Account
-                                    </Button>
+                                    <DeleteAccountDialog
+                                        phoneNumber={phoneNumber}
+                                        onDelete={handleDeleteAccount}
+                                        isLoading={isLoading}
+                                    />
 
                                     <Button
                                         type="button"

@@ -155,11 +155,9 @@ export const AuthService = {
     }
   },
   
-  deleteAccount: async (phone_number: string): Promise<any> => {
+  deleteAccount: async (userId: number): Promise<any> => {
     try {
-      const response = await api.delete('/api/delete-account', {
-        data: { phone_number }
-      });
+      const response = await api.delete('/api/delete-account/${userId}');
       return response.data;
     } catch (error) {
       throw error;

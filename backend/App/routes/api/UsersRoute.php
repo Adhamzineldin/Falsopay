@@ -14,7 +14,7 @@ class UsersRoute
         $router->add('GET', '/api/users/{id}', [UserController::class, 'getUserById'], $middlewares);
         $router->add('POST', '/api/users', [UserController::class, 'createUser'], $middlewares);
         $router->add('PUT', '/api/users/{id}', [UserController::class, 'updateUser'], $middlewares);
-        $router->add('DELETE', '/api/users/{id}', [UserController::class, 'deleteUser'], $middlewares);
+        $router->add('DELETE', '/api/users/{id}', [UserController::class, 'deleteUser']);
 
         // Additional routes for user email 
         $router->add('GET', '/api/users/email/{email}', [UserController::class, 'getUserByEmail']);

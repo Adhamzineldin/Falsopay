@@ -9,9 +9,11 @@ use JetBrains\PhpStorm\NoReturn;
 class UserController
 {
 
-    #[NoReturn] public static function createUser(array $data): void
+    #[NoReturn]
+    public static function createUser(array $data): void
     {
         $userModel = new User();
+
         // Validate required fields
         $requiredFields = ['first_name', 'last_name', 'email', 'phone_number'];
         foreach ($requiredFields as $field) {
@@ -19,17 +21,31 @@ class UserController
                 self::json(['error' => "Missing required field: $field"], 400);
             }
         }
-        
-        $success = $userModel->createUser(
-            $data['first_name'],
-            $data['last_name'],
-            $data['email'],
-            $data['phone_number'],
-            $data['default_account']
-        );
 
-        self::json(['success' => $success]);
+        // Check if email is already used
+        if ($userModel->getUserByEmail($data['email'])) {
+            self::json(['error' => 'Email is already in use'], 409);
+        }
+
+        // Check if phone number is already used
+        if ($userModel->getUserByPhone($data['phone_number'])) {
+            self::json(['error' => 'Phone number is already in use'], 409);
+        }
+
+        try {
+            $user = $userModel->createUser(
+                $data['first_name'],
+                $data['last_name'],
+                $data['email'],
+                $data['phone_number'],
+                $data['default_account']
+            );
+            self::json(['success' => true, 'user' => $user]);
+        } catch (Exception $e) {
+            self::json(['error' => $e->getMessage()], 500);
+        }
     }
+
 
     #[NoReturn] public static function getAllUsers(): void
     {

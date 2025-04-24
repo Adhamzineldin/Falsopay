@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { ArrowLeft, Trash2 } from 'lucide-react';
 import PinVerification from '@/components/PinVerification';
 import { AuthService } from '@/services/auth.service';
-import { UserService } from "@/services/user.service.ts";
+import {UserData, UserService} from "@/services/user.service.ts";
 
 const AuthFlow = () => {
     // State for each step of the authentication flow
@@ -286,7 +286,8 @@ const AuthFlow = () => {
     const handleDeleteAccount = async () => {
         setIsLoading(true);
         try {
-            await AuthService.deleteAccount(phoneNumber);
+            const user: {user_id: number} = await UserService.getUserByPhone(phoneNumber);
+            await AuthService.deleteAccount(user.user_id);
             toast({
                 title: "Account Deleted",
                 description: "Your account has been deleted. You can now register a new account.",

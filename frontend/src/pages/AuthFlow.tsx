@@ -309,7 +309,7 @@ const AuthFlow = () => {
     const handleRegistrationSubmit = async (e) => {
         e.preventDefault();
 
-        if (!firstName || !lastName || !email || !ipaAddress) {
+        if (!firstName || !lastName || !email) {
             toast({
                 title: "Error",
                 description: "Please fill in all required fields",

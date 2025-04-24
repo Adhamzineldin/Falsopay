@@ -61,43 +61,47 @@ class AuthController
     /**
      * @throws \Exception
      */
-    #[NoReturn] public static function createUser(array $data): void
+    #[NoReturn]
+    public static function createUser(array $data): void
     {
         $authMiddleware = new AuthMiddleware();
         $userModel = new User();
-        $phoneNumber = $data['phone_number'] ?? null;
 
-        $user = $userModel->getUserByPhoneNumber($phoneNumber);
-
-        if ($user) {
-            self::json(['error' => 'User already exists'], 400);
-        }
-        
+        // Validate required fields
         $fields = ['first_name', 'last_name', 'phone_number', 'email'];
-
         foreach ($fields as $field) {
-            if (!isset($data[$field])) {
+            if (empty($data[$field])) {
                 self::json(['error' => "Missing required field: $field"], 400);
             }
         }
-        
+
+        // Check for existing phone number
+        if ($userModel->getUserByPhoneNumber($data['phone_number'])) {
+            self::json(['error' => 'Phone number is already in use'], 409);
+        }
+
+        // Check for existing email
+        if ($userModel->getUserByEmail($data['email'])) {
+            self::json(['error' => 'Email is already in use'], 409);
+        }
+
+        // Attempt to create user
         $user = $userModel->createUser(
             $data['first_name'],
             $data['last_name'],
             $data['email'],
-            $data['phone_number'],
+            $data['phone_number']
         );
-        
+
         if ($user) {
             $user_token = $authMiddleware->generateToken($user['user_id']);
             self::json(['success' => true, 'user_token' => $user_token, 'user' => $user]);
         } else {
             self::json(['error' => 'Failed to create user'], 500);
         }
-        
-       
     }
-    
+
+
     #[NoReturn] public static function login(array $data): void
     {
         $userModel = new User();

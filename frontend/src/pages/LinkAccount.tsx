@@ -15,6 +15,7 @@ import PinVerification from '@/components/PinVerification';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import {CardData, CardService} from "@/services/card.service.ts";
 import {AuthService} from "@/services/auth.service.ts";
+import {UserService} from "@/services/user.service.ts";
 
 const LinkAccount = () => {
   const [step, setStep] = useState(1);
@@ -194,6 +195,10 @@ const LinkAccount = () => {
         pin: ipaPin,
         account_number: selectedAccount.account_number,
       });
+      
+      const newIpa = await IPAService.getIPAByAddress(ipaAddress);
+      
+      await UserService.setDefaultAccount(user.user_id, newIpa.ipa_id);
 
       toast({
         title: "Success",

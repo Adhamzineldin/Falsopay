@@ -27,7 +27,7 @@ class AuthController
 
     #[NoReturn] public static function sendVerificationEmail(array $data): void
     {
-        $recipient = $data['recipient'] ?? null;
+        $recipient = $data['mail'] ?? null;
         $code = $data['code'] ?? null;
 
         if ($recipient && $code) {

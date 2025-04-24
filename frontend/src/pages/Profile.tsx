@@ -851,7 +851,7 @@ const Profile = () => {
                 </CardContent>
 
                 <CardFooter>
-                  <Button className="w-full">Create New IPA Address</Button>
+                 
                 </CardFooter>
               </Card>
             </TabsContent>

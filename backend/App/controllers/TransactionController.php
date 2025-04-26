@@ -306,8 +306,7 @@ class TransactionController
                 if ($transactionData['amount'] > 1000) {
                     $message .= "⚠️ *IMPORTANT*: This was a large transaction. For security, please verify all details.\n\n";
                 }
-
-                $message .= "Need help? Reply *HELP* for support options.";
+                
 
                 $whatsAppAPI = new WhatsAppAPI();
                 $whatsAppAPI->sendMessage($senderPhone, $message);
@@ -350,14 +349,7 @@ class TransactionController
 
                 $message .= "💰 *BALANCE UPDATE*\n";
                 $message .= "Your new balance is *EGP {$formattedBalance}*\n\n";
-
-                // Add contextual tips
-                if (isset($transactionData['transfer_method']) && $transactionData['transfer_method'] == 'mobile') {
-                    $message .= "💡 *TIP*: Use your IPA address for faster future transactions.\n\n";
-                }
-
-                $message .= "Want to say thanks? Reply *THANK* to send a thank you note.";
-
+                
                 $whatsAppAPI = new WhatsAppAPI();
                 $whatsAppAPI->sendMessage($receiverPhone, $message);
             }

@@ -3,7 +3,7 @@
 <head>
     <meta charset='UTF-8'>
     <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-    <title>Payment Received</title>
+    <title>Payment Received - {{SHORT_REFERENCE}}</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
@@ -29,6 +29,7 @@
             background: linear-gradient(135deg, #2e7d32 0%, #43a047 100%);
             padding: 30px;
             text-align: center;
+            position: relative;
         }
 
         .email-header h1 {
@@ -39,6 +40,18 @@
             letter-spacing: 0.5px;
         }
 
+        .transaction-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
         .email-body {
             padding: 35px;
         }
@@ -47,6 +60,27 @@
             font-size: 18px;
             margin-bottom: 25px;
             color: #333333;
+        }
+
+        .transaction-summary {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .transaction-icon {
+            font-size: 36px;
+            margin-bottom: 5px;
+        }
+
+        .transaction-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .transaction-subtitle {
+            color: #666;
+            font-size: 15px;
         }
 
         .transaction-details {
@@ -62,6 +96,18 @@
             font-weight: 600;
             color: #2e7d32;
             margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .transaction-status {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
         }
 
         .sender-name {
@@ -77,6 +123,12 @@
             margin: 8px 0;
             display: flex;
             justify-content: space-between;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 8px;
+        }
+
+        .transaction-info p:last-child {
+            border-bottom: none;
         }
 
         .transaction-info .label {
@@ -99,10 +151,83 @@
             text-align: center;
         }
 
+        .balance-update h3 {
+            margin-top: 0;
+            color: #2e7d32;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
         .balance-amount {
             font-size: 24px;
             font-weight: 600;
             color: #2e7d32;
+        }
+
+        .purpose-box {
+            background-color: #f1f8e9;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px dashed #c5e1a5;
+        }
+
+        .purpose-text {
+            font-style: italic;
+            color: #455a64;
+        }
+
+        .security-notice {
+            background-color: #fff8e1;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 13px;
+            line-height: 1.5;
+            color: #856404;
+        }
+
+        .promo-banner {
+            background-color: #e8f5e9;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            border-left: 4px solid #4caf50;
+        }
+
+        .promo-banner h4 {
+            margin-top: 0;
+            color: #2e7d32;
+        }
+
+        .promo-content {
+            font-size: 14px;
+            color: #2e7d32;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background-color: #2e7d32;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            margin-top: 15px;
+            font-weight: 500;
+        }
+
+        .thank-you-button {
+            display: inline-block;
+            background-color: #f0f4c3;
+            color: #7cb342;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            margin-top: 15px;
+            font-weight: 500;
+            border: 1px solid #dce775;
         }
 
         .footer {
@@ -112,6 +237,31 @@
             font-size: 14px;
             color: #6c757d;
             border-top: 1px solid #eeeeee;
+        }
+
+        .social-links {
+            margin: 15px 0;
+        }
+
+        .social-icon {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            background-color: #e0e0e0;
+            border-radius: 50%;
+            margin: 0 5px;
+            text-align: center;
+            line-height: 30px;
+            font-size: 16px;
+        }
+
+        .ref-number {
+            background-color: #e8f5e9;
+            display: inline-block;
+            padding: 3px 7px;
+            border-radius: 4px;
+            font-family: monospace;
+            letter-spacing: 1px;
         }
 
         @media only screen and (max-width: 600px) {
@@ -138,22 +288,39 @@
 <body>
 <div class='email-wrapper'>
     <div class='email-header'>
+        <div class='transaction-badge'>{{TRANSACTION_TYPE}} PAYMENT</div>
         <h1>Payment Received</h1>
     </div>
 
     <div class='email-body'>
         <div class='greeting'>
-            Hello <strong>{{FIRST_NAME}} {{LAST_NAME}}</strong>,
+            Hello <strong>{{FIRST_NAME}}</strong>,
+        </div>
+
+        <div class='transaction-summary'>
+            <div class='transaction-icon'>💰</div>
+            <div class='transaction-title'>Money {{TRANSACTION_STATUS}}</div>
+            <div class='transaction-subtitle'>You have {{TRANSACTION_VERB}} a {{PURPOSE}}</div>
+        </div>
+
+        <!-- Purpose section if available -->
+        <div class='purpose-box' style='display: block'>
+            <span class='purpose-text'>"{{PURPOSE}}"</span>
         </div>
 
         <div class='transaction-details'>
             <div class='transaction-amount'>
-                EGP {{AMOUNT}} received
+                <span>EGP {{AMOUNT}}</span>
+                <span class='transaction-status'>{{TRANSACTION_STATUS}}</span>
             </div>
 
-            <p>You've received a payment from <span class='sender-name'>{{SENDER_NAME}}</span>.</p>
+            <p>You've received a payment from <span class='sender-name'>{{SENDER_NAME}}</span> {{PAYMENT_METHOD}}.</p>
 
             <div class='transaction-info'>
+                <p>
+                    <span class='label'>Reference:</span>
+                    <span class='value'><span class='ref-number'>{{SHORT_REFERENCE}}</span></span>
+                </p>
                 <p>
                     <span class='label'>Transaction ID:</span>
                     <span class='value'>{{TRANSACTION_ID}}</span>
@@ -163,21 +330,42 @@
                     <span class='value'>{{DATE_TIME}}</span>
                 </p>
                 <p>
-                    <span class='label'>Received via:</span>
-                    <span class='value'>{{PAYMENT_METHOD}}</span>
+                    <span class='label'>Method:</span>
+                    <span class='value'>{{TRANSFER_METHOD_TYPE}}</span>
+                </p>
+                <p>
+                    <span class='label'>Sender Bank:</span>
+                    <span class='value'>{{SENDER_BANK}}</span>
+                </p>
+                <p>
+                    <span class='label'>Your Bank:</span>
+                    <span class='value'>{{RECEIVER_BANK}}</span>
                 </p>
             </div>
         </div>
 
         <div class='balance-update'>
+            <h3>Balance Update</h3>
             <p>Your account balance has been updated</p>
             <div class='balance-amount'>EGP {{BALANCE}}</div>
+            <a href="#" class='thank-you-button'>Send Thank You Note</a>
+        </div>
+
+        
+        <div class='security-notice'>
+            <strong>Security Note:</strong> {{SECURITY_TIPS}} If you weren't expecting this payment or have any concerns, please contact our support team at <a href="mailto:support@example.com">support@example.com</a>.
         </div>
     </div>
 
     <div class='footer'>
-        <p>Thank you for using our service.</p>
-        <p>&copy; {{YEAR}} | This is an automated message. Please do not reply to this email.</p>
+        <p>Thank you for choosing our service</p>
+        <div class='social-links'>
+            <a href="#" class='social-icon'>f</a>
+            <a href="#" class='social-icon'>t</a>
+            <a href="#" class='social-icon'>in</a>
+        </div>
+        <p>&copy; {{YEAR}} | Quick Reference: <span class='ref-number'>{{SHORT_REFERENCE}}</span></p>
+        <p>This is an automated message. Please do not reply to this email.</p>
     </div>
 </div>
 </body>

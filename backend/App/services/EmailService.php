@@ -2,6 +2,7 @@
 
 namespace App\services;
 
+use App\models\Bank;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 use Dotenv\Dotenv;
@@ -29,79 +30,250 @@ class EmailService
         date_default_timezone_set('Africa/Cairo');
         $currentDate = date("F j, Y, g:i a");
         $currentYear = date("Y");
+        $shortRefId = substr($transactionId, 0, 8);
 
+        // Format currency values
         $formattedAmount = number_format($transactionData['amount'], 2);
         $formattedSenderBalance = number_format($senderNewBalance, 2);
         $formattedReceiverBalance = number_format($receiverNewBalance, 2);
 
-        // Infer method details from schema-compliant fields
-        $senderPaymentMethod = $transactionData['sender_ipa_address'] ?? $transactionData['sender_account_number'] ?? 'Unknown';
-        $receiverPaymentMethod = match ($transactionData['transfer_method']) {
-            'mobile' => isset($transactionData['receiver_phone'])
-                ? "via mobile number " . $transactionData['receiver_phone'] 
-                : "via mobile number",
+        // Determine transaction purpose/description
+        $purpose = $transactionData['description'] ?? '';
+        if (empty($purpose)) {
+            if ($transactionData['amount'] <= 20) {
+                $purpose = "small payment";
+            } elseif ($transactionData['amount'] >= 1000) {
+                $purpose = "large payment";
+            } else {
+                $purpose = "payment";
+            }
+        }
 
-            'card' => isset($transactionData['receiver_card'])
-                ? "to card ending in " . substr($transactionData['receiver_card'], -4)
-                : "to a card",
+        // Enhanced payment method determination
+        $senderMethod = self::getEnhancedMethodDetails($transactionData, true);
+        $receiverMethod = self::getEnhancedMethodDetails($transactionData, false);
 
-            'iban' => isset($transactionData['receiver_iban'])
-                ? "through IBAN " . $transactionData['receiver_iban'] 
-                : "through IBAN",
+        // Bank names (if we have bank_id, we could look these up)
+        $senderBank = self::getBankName($transactionData['sender_bank_id'] ?? null);
+        $receiverBank = self::getBankName($transactionData['receiver_bank_id'] ?? null);
 
-            'ipa' => isset($transactionData['receiver_ipa_address'])
-                ? "using IPA address " . $transactionData['receiver_ipa_address']
-                : "via IPA address",
-
-            'account' => isset($transactionData['receiver_account_number'])
-                ? "to account number ending in " . $transactionData['receiver_account_number']
-                : "to a bank account",
-
-            default => "via unknown method"
-        };
-
-
+        // Create enhanced replacements with more information
         $senderReplacements = [
-            '{{FIRST_NAME}}'     => $senderUser['first_name'],
-            '{{LAST_NAME}}'      => $senderUser['last_name'],
-            '{{AMOUNT}}'         => $formattedAmount,
+            '{{FIRST_NAME}}' => $senderUser['first_name'],
+            '{{LAST_NAME}}' => $senderUser['last_name'],
+            '{{FULL_NAME}}' => $senderUser['first_name'] . ' ' . $senderUser['last_name'],
+            '{{AMOUNT}}' => $formattedAmount,
             '{{RECIPIENT_NAME}}' => $receiverUser['first_name'] . ' ' . $receiverUser['last_name'],
             '{{TRANSACTION_ID}}' => $transactionId,
-            '{{DATE_TIME}}'      => $currentDate,
-            '{{PAYMENT_METHOD}}' => $senderPaymentMethod,
-            '{{BALANCE}}'        => $formattedSenderBalance,
-            '{{YEAR}}'           => $currentYear
+            '{{SHORT_REFERENCE}}' => $shortRefId,
+            '{{DATE_TIME}}' => $currentDate,
+            '{{PAYMENT_METHOD}}' => $senderMethod,
+            '{{TRANSFER_METHOD_TYPE}}' => strtoupper($transactionData['transfer_method'] ?? 'transfer'),
+            '{{PURPOSE}}' => $purpose,
+            '{{BALANCE}}' => $formattedSenderBalance,
+            '{{YEAR}}' => $currentYear,
+            '{{SENDER_BANK}}' => $senderBank,
+            '{{RECEIVER_BANK}}' => $receiverBank,
+            '{{TRANSACTION_TYPE}}' => 'SENT',
+            '{{TRANSACTION_VERB}}' => 'sent',
+            '{{TRANSACTION_STATUS}}' => 'Successful',
         ];
 
         $receiverReplacements = [
-            '{{FIRST_NAME}}'     => $receiverUser['first_name'],
-            '{{LAST_NAME}}'      => $receiverUser['last_name'],
-            '{{AMOUNT}}'         => $formattedAmount,
-            '{{SENDER_NAME}}'    => $senderUser['first_name'] . ' ' . $senderUser['last_name'],
+            '{{FIRST_NAME}}' => $receiverUser['first_name'],
+            '{{LAST_NAME}}' => $receiverUser['last_name'],
+            '{{FULL_NAME}}' => $receiverUser['first_name'] . ' ' . $receiverUser['last_name'],
+            '{{AMOUNT}}' => $formattedAmount,
+            '{{SENDER_NAME}}' => $senderUser['first_name'] . ' ' . $senderUser['last_name'],
             '{{TRANSACTION_ID}}' => $transactionId,
-            '{{DATE_TIME}}'      => $currentDate,
-            '{{PAYMENT_METHOD}}' => $receiverPaymentMethod,
-            '{{BALANCE}}'        => $formattedReceiverBalance,
-            '{{YEAR}}'           => $currentYear
+            '{{SHORT_REFERENCE}}' => $shortRefId,
+            '{{DATE_TIME}}' => $currentDate,
+            '{{PAYMENT_METHOD}}' => $receiverMethod,
+            '{{TRANSFER_METHOD_TYPE}}' => strtoupper($transactionData['transfer_method'] ?? 'transfer'),
+            '{{PURPOSE}}' => $purpose,
+            '{{BALANCE}}' => $formattedReceiverBalance,
+            '{{YEAR}}' => $currentYear,
+            '{{SENDER_BANK}}' => $senderBank,
+            '{{RECEIVER_BANK}}' => $receiverBank,
+            '{{TRANSACTION_TYPE}}' => 'RECEIVED',
+            '{{TRANSACTION_VERB}}' => 'received',
+            '{{TRANSACTION_STATUS}}' => 'Completed',
         ];
 
+        // Add security tips based on transaction type
+        $securityTips = self::getSecurityTips($transactionData);
+        $senderReplacements['{{SECURITY_TIPS}}'] = $securityTips;
+        $receiverReplacements['{{SECURITY_TIPS}}'] = $securityTips;
+
+        // Add promotional content based on transaction behavior
+        $senderReplacements['{{PROMO_CONTENT}}'] = self::getPromoContent($transactionData, $senderUser, true);
+        $receiverReplacements['{{PROMO_CONTENT}}'] = self::getPromoContent($transactionData, $receiverUser, false);
+
         try {
+            // Get templates with better subject lines
             $senderTemplate = self::getTemplate('transaction-sender-template.html');
             $senderContent = self::replaceTemplateVariables($senderTemplate, $senderReplacements);
-            self::sendEmail($senderUser['email'], "Transaction Confirmation", $senderContent);
-            echo "Transaction notification sent to {$senderUser['email']}.\n";
+            $senderSubject = "Payment Confirmation: EGP {$formattedAmount} to {$receiverUser['first_name']} - Ref #{$shortRefId}";
+            self::sendEmail($senderUser['email'], $senderSubject, $senderContent);
+
+            // Log success but don't echo in production
+            error_log("Transaction notification sent to {$senderUser['email']}");
         } catch (Exception $e) {
-            echo "Error sending email to sender: {$e->getMessage()}\n";
+            error_log("Error sending email to sender: {$e->getMessage()}");
         }
 
         try {
             $receiverTemplate = self::getTemplate('transaction-receiver-template.html');
             $receiverContent = self::replaceTemplateVariables($receiverTemplate, $receiverReplacements);
-            self::sendEmail($receiverUser['email'], "Payment Received", $receiverContent);
-            echo "Transaction notification sent to {$receiverUser['email']}.\n";
+            $receiverSubject = "Payment Received: EGP {$formattedAmount} from {$senderUser['first_name']} - Ref #{$shortRefId}";
+            self::sendEmail($receiverUser['email'], $receiverSubject, $receiverContent);
+
+            // Log success but don't echo in production
+            error_log("Transaction notification sent to {$receiverUser['email']}");
         } catch (Exception $e) {
-            echo "Error sending email to receiver: {$e->getMessage()}\n";
+            error_log("Error sending email to receiver: {$e->getMessage()}");
         }
+    }
+
+    /**
+     * Get enhanced payment method details with better descriptions
+     */
+    private static function getEnhancedMethodDetails($transactionData, $isSender): string
+    {
+        $method = $transactionData['transfer_method'] ?? 'unknown';
+
+        switch ($method) {
+            case 'mobile':
+                $phoneNumber = $transactionData['receiver_phone'] ?? null;
+                if ($phoneNumber) {
+                    // Mask mobile number for privacy
+                    $maskedPhone = substr($phoneNumber, 0, 4) . '••••' . substr($phoneNumber, -2);
+                    return $isSender ? "to mobile number {$maskedPhone}" : "via your registered mobile";
+                }
+                return $isSender ? "to mobile number" : "via mobile";
+
+            case 'ipa':
+                $ipaAddress = $isSender ?
+                    ($transactionData['receiver_ipa_address'] ?? null) :
+                    ($transactionData['sender_ipa_address'] ?? null);
+
+                if ($ipaAddress) {
+                    // Create a safer IPA display format
+                    $displayIpa = explode('@', $ipaAddress);
+                    if (count($displayIpa) > 1) {
+                        $maskedUsername = substr($displayIpa[0], 0, 2) . '••••' . substr($displayIpa[0], -2);
+                        $safeIpa = $maskedUsername . '@' . $displayIpa[1];
+                        return ($isSender ? "to" : "via") . " IPA address {$safeIpa}";
+                    }
+                    return ($isSender ? "to" : "via") . " IPA address {$ipaAddress}";
+                }
+                return ($isSender ? "to" : "via") . " IPA address";
+
+            case 'iban':
+                $iban = $transactionData['receiver_iban'] ?? null;
+                if ($iban) {
+                    // Show only first 2 and last 4 of IBAN
+                    $countryCode = substr($iban, 0, 2);
+                    $lastFour = substr($iban, -4);
+                    $maskedIban = $countryCode . '••••••••' . $lastFour;
+                    return $isSender ? "to IBAN {$maskedIban}" : "to your IBAN account";
+                }
+                return $isSender ? "to IBAN account" : "to your IBAN account";
+
+            case 'card':
+                $cardNumber = $transactionData['receiver_card'] ?? null;
+                if ($cardNumber) {
+                    $lastFour = substr($cardNumber, -4);
+                    return $isSender ? "to card ending in {$lastFour}" : "to your card ending in {$lastFour}";
+                }
+                return $isSender ? "to card account" : "to your card";
+
+            case 'account':
+                $accountNumber = $isSender ?
+                    ($transactionData['receiver_account_number'] ?? null) :
+                    ($transactionData['sender_account_number'] ?? null);
+
+                if ($accountNumber) {
+                    $lastFour = substr($accountNumber, -4);
+                    $bankId = $isSender ?
+                        ($transactionData['receiver_bank_id'] ?? null) :
+                        ($transactionData['sender_bank_id'] ?? null);
+                    $bankInfo = $bankId ? " at " . self::getBankName($bankId) : "";
+
+                    return ($isSender ? "to" : "from") . " account ending in {$lastFour}{$bankInfo}";
+                }
+                return ($isSender ? "to" : "from") . " bank account";
+
+            default:
+                return "via direct transfer";
+        }
+    }
+
+    /**
+     * Get bank name from bank ID (mock function - would connect to a database)
+     */
+    private static function getBankName($bankId): string
+    {
+        if (!$bankId) return "Unknown Bank";
+
+        $bank = new Bank();
+        $bankDetails = $bank->getBankById($bankId);
+        if ($bankDetails) {
+            return $bankDetails['name'] ?? "Unknown Bank";
+        }
+        return "Unknown Bank";
+    }
+
+    /**
+     * Get security tips based on transaction details
+     */
+    private static function getSecurityTips($transactionData): string
+    {
+        $tips = [];
+
+        // Add tips based on amount
+        if ($transactionData['amount'] >= 1000) {
+            $tips[] = "For large transactions, always verify the recipient's details before sending.";
+        }
+
+        // Add tips based on method
+        switch ($transactionData['transfer_method'] ?? '') {
+            case 'mobile':
+                $tips[] = "Always verify the mobile number before sending money.";
+                break;
+            case 'ipa':
+                $tips[] = "IPA addresses are case-sensitive. Double-check before confirming transfers.";
+                break;
+            case 'card':
+                $tips[] = "Never share your full card details with anyone, even if they claim to be from your bank.";
+                break;
+        }
+
+        // Add general tip
+        $tips[] = "Keep your PIN confidential and change it regularly for better security.";
+
+        return implode(" ", $tips);
+    }
+
+    /**
+     * Get promotional content based on user behavior
+     */
+    private static function getPromoContent($transactionData, $user, $isSender): string
+    {
+        // Determine if user is eligible for any promotions
+        if ($isSender) {
+            if ($transactionData['amount'] >= 5000) {
+                return "Thank you for your high-value transaction! Enjoy a 1% cashback on your next transaction above EGP 5000.";
+            } elseif ($transactionData['transfer_method'] === 'mobile') {
+                return "Try our IPA transfer method next time for faster processing and better security.";
+            }
+        } else {
+            if ($transactionData['transfer_method'] === 'mobile') {
+                return "Set up your IPA address now to receive future payments even faster!";
+            }
+        }
+
+        return ""; // No promo content
     }
 
 

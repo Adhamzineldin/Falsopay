@@ -218,6 +218,7 @@ class EmailService
 
         $bank = new Bank();
         $bankDetails = $bank->getBankById($bankId);
+        echo $bankDetails;
         if ($bankDetails) {
             return $bankDetails['name'] ?? "Unknown Bank";
         }

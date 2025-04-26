@@ -258,9 +258,14 @@ class TransactionController
             return number_format($amount, 2);
         }
 
-        // Generate a transaction timestamp
+        // Generate transaction timestamp and reference ID
         $timestamp = date('Y-m-d H:i:s');
         $formattedDate = date('d M Y, h:i A');
+        $shortRefId = substr($transactionId, 0, 8);
+
+        // Detect transaction purpose if available
+        $purpose = $transactionData['purpose'] ?? null;
+        $purposeText = $purpose ? "\n• Purpose: {$purpose}" : "";
 
         // Sender notification
         try {
@@ -271,22 +276,38 @@ class TransactionController
                 $transferMethod = getTransferMethodDescription($transactionData, true);
                 $receiverName = $transactionData['receiver_name'] ?? 'the recipient';
 
-                // Create a unique reference ID for easy reference
-                $shortRefId = substr($transactionId, 0, 8);
-
-                $message = "💸 *Money Sent Successfully*\n\n";
-                $message .= "You sent *EGP {$formattedAmount}* to *{$receiverName}* {$transferMethod}.\n\n";
-                $message .= "📊 *Transaction Details*\n";
-                $message .= "• Date: {$formattedDate}\n";
-                $message .= "• Reference: #{$shortRefId}\n";
-                $message .= "• New Balance: *EGP {$formattedBalance}*\n\n";
-
-                // Add custom notes based on amount
-                if ($transactionData['amount'] > 1000) {
-                    $message .= "⚠️ This was a large transaction. Please verify all details.\n\n";
+                // Identify what's being sent based on amount
+                $sentDescription = "funds";
+                if (isset($transactionData['description'])) {
+                    $sentDescription = $transactionData['description'];
+                } else if ($transactionData['amount'] <= 20) {
+                    $sentDescription = "payment";
+                } else if ($transactionData['amount'] >= 500) {
+                    $sentDescription = "large payment";
                 }
 
-//                $message .= "Reply with 'INFO' to get more details about this transaction.";
+                // Build an improved message with better styling
+                $message = "✅ *PAYMENT SENT* ✅\n";
+                $message .= "━━━━━━━━━━━━━━━━━━━━━━\n\n";
+                $message .= "You've successfully sent *{$sentDescription}* worth *EGP {$formattedAmount}* to *{$receiverName}* {$transferMethod}.\n\n";
+
+                $message .= "📋 *DETAILS*\n";
+                $message .= "• Amount: *EGP {$formattedAmount}*\n";
+                $message .= "• To: *{$receiverName}*\n";
+                $message .= "• Method: " . ucfirst($transactionData['transfer_method'] ?? 'transfer') . "\n";
+                $message .= "• Date: {$formattedDate}\n";
+                $message .= "• Reference: #{$shortRefId}{$purposeText}\n";
+                $message .= "━━━━━━━━━━━━━━━━━━━━━━\n\n";
+
+                $message .= "💰 *BALANCE UPDATE*\n";
+                $message .= "Your new balance is *EGP {$formattedBalance}*\n\n";
+
+                // Add contextual information based on transaction amount
+                if ($transactionData['amount'] > 1000) {
+                    $message .= "⚠️ *IMPORTANT*: This was a large transaction. For security, please verify all details.\n\n";
+                }
+
+                $message .= "Need help? Reply *HELP* for support options.";
 
                 $whatsAppAPI = new WhatsAppAPI();
                 $whatsAppAPI->sendMessage($senderPhone, $message);
@@ -304,22 +325,38 @@ class TransactionController
                 $transferMethod = getTransferMethodDescription($transactionData, false);
                 $senderName = $transactionData['sender_name'] ?? 'Someone';
 
-                // Create a unique reference ID for easy reference
-                $shortRefId = substr($transactionId, 0, 8);
+                // Identify what's being received based on amount or description
+                $receivedDescription = "funds";
+                if (isset($transactionData['description'])) {
+                    $receivedDescription = $transactionData['description'];
+                } else if ($transactionData['amount'] <= 20) {
+                    $receivedDescription = "payment";
+                } else if ($transactionData['amount'] >= 500) {
+                    $receivedDescription = "large payment";
+                }
 
-                $message = "💰 *Money Received!*\n\n";
-                $message .= "You received *EGP {$formattedAmount}* from *{$senderName}* {$transferMethod}.\n\n";
-                $message .= "📊 *Transaction Details*\n";
+                // Build an improved message with better styling
+                $message = "💸 *PAYMENT RECEIVED* 💸\n";
+                $message .= "━━━━━━━━━━━━━━━━━━━━━━\n\n";
+                $message .= "You've received *{$receivedDescription}* worth *EGP {$formattedAmount}* from *{$senderName}* {$transferMethod}.\n\n";
+
+                $message .= "📋 *DETAILS*\n";
+                $message .= "• Amount: *EGP {$formattedAmount}*\n";
+                $message .= "• From: *{$senderName}*\n";
+                $message .= "• Method: " . ucfirst($transactionData['transfer_method'] ?? 'transfer') . "\n";
                 $message .= "• Date: {$formattedDate}\n";
-                $message .= "• Reference: #{$shortRefId}\n";
-                $message .= "• New Balance: *EGP {$formattedBalance}*\n\n";
+                $message .= "• Reference: #{$shortRefId}{$purposeText}\n";
+                $message .= "━━━━━━━━━━━━━━━━━━━━━━\n\n";
 
-                // Add contextual messages based on transaction pattern
-//                if (isset($transactionData['transfer_method']) && $transactionData['transfer_method'] == 'mobile') {
-//                    $message .= "💡 Did you know? You can also receive money via IPA address for faster transactions.\n\n";
-//                }
+                $message .= "💰 *BALANCE UPDATE*\n";
+                $message .= "Your new balance is *EGP {$formattedBalance}*\n\n";
 
-//                $message .= "Reply with 'THANK' to send a thank you note to the sender.";
+                // Add contextual tips
+                if (isset($transactionData['transfer_method']) && $transactionData['transfer_method'] == 'mobile') {
+                    $message .= "💡 *TIP*: Use your IPA address for faster future transactions.\n\n";
+                }
+
+                $message .= "Want to say thanks? Reply *THANK* to send a thank you note.";
 
                 $whatsAppAPI = new WhatsAppAPI();
                 $whatsAppAPI->sendMessage($receiverPhone, $message);

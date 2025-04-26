@@ -207,74 +207,126 @@ class TransactionController
         }
     }
 
-    static function sendTransactionNotification($transactionData, $senderUser, $receiverUser, $transactionId, $senderNewBalance, $receiverNewBalance) {
-        // Helper function to determine the method of transaction
-        function getMethodDetails($transactionData, $isSender = true): string
+    static function sendTransactionNotification($transactionData, $senderUser, $receiverUser, $transactionId, $senderNewBalance, $receiverNewBalance): void
+    {
+        // Helper function to get proper transfer method description
+        function getTransferMethodDescription($transactionData, $isSender = true): string
         {
-            if ($isSender) {
-                if ($transactionData['phone_number_used']) {
-                    return "to phone number {$transactionData['phone_number']}.";
-                } elseif ($transactionData['card_number_used']) {
-                    return "to card number ending in " . substr($transactionData['card_number'], -4) . ".";
-                } elseif ($transactionData['iban_used']) {
-                    return "to IBAN {$transactionData['iban']}.";
-                } elseif ($transactionData['sender_account_number']) {
-                    return "to account number {$transactionData['sender_account_number']}.";
-                }
-            } else {
-                if ($transactionData['phone_number_used']) {
-                    return "to your phone number {$transactionData['phone_number']}.";
-                } elseif ($transactionData['card_number_used']) {
-                    return "to your card number ending in " . substr($transactionData['card_number'], -4) . ".";
-                } elseif ($transactionData['iban_used']) {
-                    return "to your IBAN {$transactionData['iban']}.";
-                } elseif ($transactionData['receiver_account_number']) {
-                    return "to your account number {$transactionData['receiver_account_number']}.";
-                }
+            $method = $transactionData['transfer_method'] ?? 'unknown';
+
+            switch ($method) {
+                case 'mobile':
+                    $phoneNumber = $transactionData['receiver_phone'] ?? '(unknown)';
+                    return $isSender ? "to mobile number {$phoneNumber}" : "via your registered mobile number";
+                case 'ipa':
+                    $ipaAddress = $isSender ? ($transactionData['receiver_ipa_address'] ?? null) : ($transactionData['sender_ipa_address'] ?? null);
+                    return $ipaAddress ? "via IPA address {$ipaAddress}" : "via IPA address";
+                case 'iban':
+                    $iban = $transactionData['receiver_iban'] ?? null;
+                    if ($iban && $isSender) {
+                        // Mask the IBAN for privacy, showing only last 4 digits
+                        $maskedIban = '••••' . substr($iban, -4);
+                        return "to IBAN {$maskedIban}";
+                    }
+                    return $isSender ? "to IBAN account" : "to your IBAN account";
+                case 'card':
+                    $cardNumber = $transactionData['receiver_card'] ?? null;
+                    if ($cardNumber && $isSender) {
+                        // Show only last 4 digits of card
+                        $maskedCard = '••••' . substr($cardNumber, -4);
+                        return "to card ending in {$maskedCard}";
+                    }
+                    return $isSender ? "to card account" : "to your card";
+                case 'account':
+                    $accountNumber = $isSender ? ($transactionData['receiver_account_number'] ?? null) : ($transactionData['sender_account_number'] ?? null);
+                    if ($accountNumber) {
+                        // Mask account number for privacy
+                        $maskedAccount = '••••' . substr($accountNumber, -4);
+                        $bankId = $isSender ? ($transactionData['receiver_bank_id'] ?? null) : ($transactionData['sender_bank_id'] ?? null);
+                        $bankInfo = $bankId ? " (Bank ID: {$bankId})" : "";
+                        return ($isSender ? "to" : "from") . " account {$maskedAccount}{$bankInfo}";
+                    }
+                    return ($isSender ? "to" : "from") . " bank account";
+                default:
+                    return "using direct transfer";
             }
-            return ''; // Default return if no method is matched
         }
 
-        
+        // Format currency with thousand separators
+        function formatCurrency($amount): string
+        {
+            return number_format($amount, 2);
+        }
 
-        // Sender WhatsApp notification
+        // Generate a transaction timestamp
+        $timestamp = date('Y-m-d H:i:s');
+        $formattedDate = date('d M Y, h:i A');
+
+        // Sender notification
         try {
             $senderPhone = $senderUser['phone_number'] ?? null;
             if ($senderPhone) {
-                $methodDetails = getMethodDetails($transactionData, true); // Get sender's method details
-                $message = "🔹 **Transaction Summary**\n\n";
-                $message .= "You have successfully sent *EGP {$transactionData['amount']}* to *{$receiverUser['first_name']} {$receiverUser['last_name']}*.\n";
-                $message .= "*Transaction ID*: {$transactionId}\n";
-                $message .= "*Payment Method*: {$methodDetails}\n\n";
-                $message .= "🔸 **Balance Update**\n\n";
-                $message .= "Your new balance is *EGP {$senderNewBalance}*.\n";
+                $formattedAmount = formatCurrency($transactionData['amount']);
+                $formattedBalance = formatCurrency($senderNewBalance);
+                $transferMethod = getTransferMethodDescription($transactionData, true);
+                $receiverName = $transactionData['receiver_name'] ?? 'the recipient';
+
+                // Create a unique reference ID for easy reference
+                $shortRefId = substr($transactionId, 0, 8);
+
+                $message = "💸 *Money Sent Successfully*\n\n";
+                $message .= "You sent *EGP {$formattedAmount}* to *{$receiverName}* {$transferMethod}.\n\n";
+                $message .= "📊 *Transaction Details*\n";
+                $message .= "• Date: {$formattedDate}\n";
+                $message .= "• Reference: #{$shortRefId}\n";
+                $message .= "• New Balance: *EGP {$formattedBalance}*\n\n";
+
+                // Add custom notes based on amount
+                if ($transactionData['amount'] > 1000) {
+                    $message .= "⚠️ This was a large transaction. Please verify all details.\n\n";
+                }
+
+//                $message .= "Reply with 'INFO' to get more details about this transaction.";
+
                 $whatsAppAPI = new WhatsAppAPI();
                 $whatsAppAPI->sendMessage($senderPhone, $message);
             }
         } catch (Exception $e) {
-            // Log error silently or ignore – don't block transaction for WhatsApp failures
             error_log("WhatsApp send failed (sender): " . $e->getMessage());
         }
 
-        // Receiver WhatsApp notification
+        // Receiver notification
         try {
             $receiverPhone = $receiverUser['phone_number'] ?? null;
             if ($receiverPhone) {
-                $methodDetails = getMethodDetails($transactionData, false); // Get receiver's method details
-                $message = "🔹 **Transaction Summary**\n\n";
-                $message .= "You have received *EGP {$transactionData['amount']}* from *{$senderUser['first_name']} {$senderUser['last_name']}*.\n";
-                $message .= "*Transaction ID*: {$transactionId}\n";
-                $message .= "*Received Method*: {$methodDetails}\n\n";
-                $message .= "🔸 **Balance Update**\n\n";
-                $message .= "Your new balance is *EGP {$receiverNewBalance}*.\n";
+                $formattedAmount = formatCurrency($transactionData['amount']);
+                $formattedBalance = formatCurrency($receiverNewBalance);
+                $transferMethod = getTransferMethodDescription($transactionData, false);
+                $senderName = $transactionData['sender_name'] ?? 'Someone';
+
+                // Create a unique reference ID for easy reference
+                $shortRefId = substr($transactionId, 0, 8);
+
+                $message = "💰 *Money Received!*\n\n";
+                $message .= "You received *EGP {$formattedAmount}* from *{$senderName}* {$transferMethod}.\n\n";
+                $message .= "📊 *Transaction Details*\n";
+                $message .= "• Date: {$formattedDate}\n";
+                $message .= "• Reference: #{$shortRefId}\n";
+                $message .= "• New Balance: *EGP {$formattedBalance}*\n\n";
+
+                // Add contextual messages based on transaction pattern
+//                if (isset($transactionData['transfer_method']) && $transactionData['transfer_method'] == 'mobile') {
+//                    $message .= "💡 Did you know? You can also receive money via IPA address for faster transactions.\n\n";
+//                }
+
+//                $message .= "Reply with 'THANK' to send a thank you note to the sender.";
+
                 $whatsAppAPI = new WhatsAppAPI();
                 $whatsAppAPI->sendMessage($receiverPhone, $message);
             }
         } catch (Exception $e) {
-            // Log error silently or ignore – don't block transaction for WhatsApp failures
             error_log("WhatsApp send failed (receiver): " . $e->getMessage());
         }
-
     }
 
 

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,13 +14,13 @@ interface BalanceCardProps {
 }
 
 const BalanceCard: React.FC<BalanceCardProps> = ({
-  balance,
-  currency = '€',
-  title,
-  subtitle,
-  className,
-  cardNumber
-}) => {
+                                                   balance,
+                                                   currency = '€',
+                                                   title,
+                                                   subtitle,
+                                                   className,
+                                                   cardNumber
+                                                 }) => {
   const [isBalanceHidden, setIsBalanceHidden] = useState(false);
 
   const toggleBalanceVisibility = () => {
@@ -42,45 +41,45 @@ const BalanceCard: React.FC<BalanceCardProps> = ({
   };
 
   return (
-    <Card className={cn("overflow-hidden card-shadow", className)}>
-      <CardContent className="p-6 card-pattern text-white relative">
-        <div className="absolute top-4 right-4">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={toggleBalanceVisibility}
-            className="text-white hover:text-white/80 hover:bg-white/10"
-          >
-            {isBalanceHidden ? (
-              <EyeOff className="h-5 w-5" />
-            ) : (
-              <Eye className="h-5 w-5" />
-            )}
-          </Button>
-        </div>
-        
-        <div className="space-y-6">
-          <div>
-            <h3 className="text-sm font-medium text-white/80">{title}</h3>
-            {subtitle && <p className="text-xs text-white/60 mt-1">{subtitle}</p>}
+      <Card className={cn("overflow-hidden w-full", className)}>
+        <CardContent className="p-4 sm:p-6 card-pattern text-white relative">
+          <div className="absolute top-4 right-4">
+            <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleBalanceVisibility}
+                className="text-white hover:text-white/80 hover:bg-white/10"
+            >
+              {isBalanceHidden ? (
+                  <EyeOff className="h-4 w-4 sm:h-5 sm:w-5" />
+              ) : (
+                  <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
+              )}
+            </Button>
           </div>
-          
-          <div>
-            <div className="flex items-end">
-              <span className="text-3xl font-bold">
+
+          <div className="space-y-4 sm:space-y-6">
+            <div>
+              <h3 className="text-sm font-medium text-white/80">{title}</h3>
+              {subtitle && <p className="text-xs text-white/60 mt-1">{subtitle}</p>}
+            </div>
+
+            <div>
+              <div className="flex items-end">
+              <span className="text-xl sm:text-3xl font-bold">
                 {isBalanceHidden ? '••••••' : `${currency} ${formatBalance(balance)}`}
               </span>
+              </div>
             </div>
+
+            {cardNumber && (
+                <div className="mt-2 sm:mt-4">
+                  <p className="text-xs sm:text-sm text-white/80">{formatCardNumber(cardNumber)}</p>
+                </div>
+            )}
           </div>
-          
-          {cardNumber && (
-            <div className="mt-4">
-              <p className="text-sm text-white/80">{formatCardNumber(cardNumber)}</p>
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
   );
 };
 

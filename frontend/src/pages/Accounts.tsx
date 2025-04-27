@@ -94,11 +94,11 @@ const Accounts = () => {
 
     return (
         <MainLayout>
-            <div className="space-y-6">
+            <div className="space-y-6 w-full max-w-full px-2 sm:px-4">
                 {/* Header with Button - Made responsive */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full">
                     <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Your Accounts</h1>
-                    <Link to="/link-account">
+                    <Link to="/link-account" className="w-full sm:w-auto">
                         <Button className="flex items-center w-full sm:w-auto">
                             <LinkIcon className="h-4 w-4 mr-2" />
                             Link New Account
@@ -111,33 +111,33 @@ const Accounts = () => {
                     balance={getTotalBalance()}
                     title="Total Balance"
                     subtitle="Filtered accounts"
-                    className="mb-6"
+                    className="mb-6 w-full"
                 />
 
                 {/* Filters - Made responsive */}
-                <Card>
+                <Card className="w-full overflow-hidden">
                     <CardHeader className="py-4">
                         <CardTitle className="text-lg">Filters</CardTitle>
                     </CardHeader>
                     <CardContent className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                        <div className="space-y-2">
+                        <div className="space-y-2 w-full">
                             <Label htmlFor="search">Search</Label>
-                            <div className="relative">
+                            <div className="relative w-full">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                                 <Input
                                     id="search"
                                     placeholder="Account number or IBAN"
-                                    className="pl-9"
+                                    className="pl-9 w-full"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                 />
                             </div>
                         </div>
 
-                        <div className="space-y-2">
+                        <div className="space-y-2 w-full">
                             <Label htmlFor="type">Account Type</Label>
                             <Select value={selectedType} onValueChange={setSelectedType}>
-                                <SelectTrigger id="type">
+                                <SelectTrigger id="type" className="w-full">
                                     <SelectValue placeholder="All Types" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -151,10 +151,10 @@ const Accounts = () => {
                             </Select>
                         </div>
 
-                        <div className="space-y-2">
+                        <div className="space-y-2 w-full">
                             <Label htmlFor="status">Status</Label>
                             <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                                <SelectTrigger id="status">
+                                <SelectTrigger id="status" className="w-full">
                                     <SelectValue placeholder="All Statuses" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -168,17 +168,19 @@ const Accounts = () => {
                     </CardContent>
                 </Card>
 
-                {/* Responsive Tabs - Scroll on mobile */}
-                <div className="overflow-x-auto">
-                    <Tabs defaultValue="all">
-                        <TabsList className="mb-4 w-full sm:w-auto">
-                            <TabsTrigger value="all">All Accounts</TabsTrigger>
-                            <TabsTrigger value="current">Current</TabsTrigger>
-                            <TabsTrigger value="savings">Savings</TabsTrigger>
-                            <TabsTrigger value="checking">Checking</TabsTrigger>
-                        </TabsList>
+                {/* Responsive Tabs */}
+                <div className="w-full max-w-full">
+                    <Tabs defaultValue="all" className="w-full">
+                        <div className="overflow-x-auto pb-2 w-full">
+                            <TabsList className="mb-4 w-max">
+                                <TabsTrigger value="all">All Accounts</TabsTrigger>
+                                <TabsTrigger value="current">Current</TabsTrigger>
+                                <TabsTrigger value="savings">Savings</TabsTrigger>
+                                <TabsTrigger value="checking">Checking</TabsTrigger>
+                            </TabsList>
+                        </div>
 
-                        <TabsContent value="all" className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <TabsContent value="all" className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
                             {isLoading ? (
                                 <div className="flex justify-center p-8 col-span-1 sm:col-span-2">
                                     <Loader className="h-8 w-8 animate-spin text-falsopay-primary" />
@@ -191,16 +193,17 @@ const Accounts = () => {
                                         title={account.type.charAt(0).toUpperCase() + account.type.slice(1)}
                                         subtitle={`IBAN: ${account.iban}`}
                                         cardNumber={account.account_number}
+                                        className="w-full"
                                     />
                                 ))
                             ) : (
-                                <div className="text-center py-8 bg-gray-50 rounded-lg col-span-1 sm:col-span-2">
+                                <div className="text-center py-8 bg-gray-50 rounded-lg col-span-1 sm:col-span-2 w-full">
                                     <p className="text-gray-500">No accounts found</p>
                                 </div>
                             )}
                         </TabsContent>
 
-                        <TabsContent value="current" className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <TabsContent value="current" className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
                             {isLoading ? (
                                 <div className="flex justify-center p-8 col-span-1 sm:col-span-2">
                                     <Loader className="h-8 w-8 animate-spin text-falsopay-primary" />
@@ -215,16 +218,17 @@ const Accounts = () => {
                                             title={account.type.charAt(0).toUpperCase() + account.type.slice(1)}
                                             subtitle={`IBAN: ${account.iban}`}
                                             cardNumber={account.account_number}
+                                            className="w-full"
                                         />
                                     ))
                             ) : (
-                                <div className="text-center py-8 bg-gray-50 rounded-lg col-span-1 sm:col-span-2">
+                                <div className="text-center py-8 bg-gray-50 rounded-lg col-span-1 sm:col-span-2 w-full">
                                     <p className="text-gray-500">No current accounts found</p>
                                 </div>
                             )}
                         </TabsContent>
 
-                        <TabsContent value="savings" className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <TabsContent value="savings" className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
                             {isLoading ? (
                                 <div className="flex justify-center p-8 col-span-1 sm:col-span-2">
                                     <Loader className="h-8 w-8 animate-spin text-falsopay-primary" />
@@ -239,16 +243,17 @@ const Accounts = () => {
                                             title={account.type.charAt(0).toUpperCase() + account.type.slice(1)}
                                             subtitle={`IBAN: ${account.iban}`}
                                             cardNumber={account.account_number}
+                                            className="w-full"
                                         />
                                     ))
                             ) : (
-                                <div className="text-center py-8 bg-gray-50 rounded-lg col-span-1 sm:col-span-2">
+                                <div className="text-center py-8 bg-gray-50 rounded-lg col-span-1 sm:col-span-2 w-full">
                                     <p className="text-gray-500">No savings accounts found</p>
                                 </div>
                             )}
                         </TabsContent>
 
-                        <TabsContent value="checking" className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <TabsContent value="checking" className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
                             {isLoading ? (
                                 <div className="flex justify-center p-8 col-span-1 sm:col-span-2">
                                     <Loader className="h-8 w-8 animate-spin text-falsopay-primary" />
@@ -263,10 +268,11 @@ const Accounts = () => {
                                             title={account.type.charAt(0).toUpperCase() + account.type.slice(1)}
                                             subtitle={`IBAN: ${account.iban}`}
                                             cardNumber={account.account_number}
+                                            className="w-full"
                                         />
                                     ))
                             ) : (
-                                <div className="text-center py-8 bg-gray-50 rounded-lg col-span-1 sm:col-span-2">
+                                <div className="text-center py-8 bg-gray-50 rounded-lg col-span-1 sm:col-span-2 w-full">
                                     <p className="text-gray-500">No checking accounts found</p>
                                 </div>
                             )}

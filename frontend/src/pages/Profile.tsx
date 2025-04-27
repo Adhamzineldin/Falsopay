@@ -547,7 +547,7 @@ const Profile = () => {
 
             toast({
                 title: "Success",
-                description: "Your profile has been updated",
+                description: "Your profile has been updated! Change will appear next time you log in",
             });
         } catch (error) {
             // Error handling is done in updateUserData
@@ -881,13 +881,7 @@ const Profile = () => {
                             </CardContent>
 
                             <CardFooter className="flex justify-center px-4 sm:px-6 py-4 sm:py-6">
-                                <Button
-                                    variant="outline"
-                                    className="w-full sm:w-auto"
-                                    onClick={() => window.location.href = '/create-ipa'}
-                                >
-                                    Create New IPA Address
-                                </Button>
+                               
                             </CardFooter>
                         </Card>
                     </TabsContent>

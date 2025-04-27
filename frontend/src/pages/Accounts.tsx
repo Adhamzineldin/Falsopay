@@ -94,190 +94,207 @@ const Accounts = () => {
 
     return (
         <MainLayout>
-            <div className="space-y-6 w-full max-w-full px-2 sm:px-4">
-                {/* Header with Button - Made responsive */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full">
-                    <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Your Accounts</h1>
-                    <Link to="/link-account" className="w-full sm:w-auto">
-                        <Button className="flex items-center w-full sm:w-auto">
-                            <LinkIcon className="h-4 w-4 mr-2" />
-                            Link New Account
-                        </Button>
-                    </Link>
-                </div>
+            {/* Add container div with overflow-x-hidden to prevent horizontal scrolling */}
+            <div className="overflow-x-hidden w-full">
+                <div className="space-y-6 w-full max-w-full px-4">
+                    {/* Header with Button - Made responsive */}
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full">
+                        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Your Accounts</h1>
+                        <Link to="/link-account" className="w-full sm:w-auto">
+                            <Button className="flex items-center w-full sm:w-auto">
+                                <LinkIcon className="h-4 w-4 mr-2" />
+                                Link New Account
+                            </Button>
+                        </Link>
+                    </div>
 
-                {/* Total Balance Card */}
-                <BalanceCard
-                    balance={getTotalBalance()}
-                    title="Total Balance"
-                    subtitle="Filtered accounts"
-                    className="mb-6 w-full"
-                />
+                    {/* Total Balance Card */}
+                    <BalanceCard
+                        balance={getTotalBalance()}
+                        title="Total Balance"
+                        subtitle="Filtered accounts"
+                        className="mb-6 w-full"
+                    />
 
-                {/* Filters - Made responsive */}
-                <Card className="w-full overflow-hidden">
-                    <CardHeader className="py-4">
-                        <CardTitle className="text-lg">Filters</CardTitle>
-                    </CardHeader>
-                    <CardContent className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                        <div className="space-y-2 w-full">
-                            <Label htmlFor="search">Search</Label>
-                            <div className="relative w-full">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                <Input
-                                    id="search"
-                                    placeholder="Account number or IBAN"
-                                    className="pl-9 w-full"
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                />
+                    {/* Filters - Fixed for mobile */}
+                    <div className="w-full overflow-hidden">
+                        <Card className="max-w-full">
+                            <CardHeader className="py-4">
+                                <CardTitle className="text-lg">Filters</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="grid gap-4 grid-cols-1">
+                                    <div className="space-y-2 w-full">
+                                        <Label htmlFor="search">Search</Label>
+                                        <div className="relative w-full">
+                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                            <Input
+                                                id="search"
+                                                placeholder="Account number or IBAN"
+                                                className="pl-9 w-full"
+                                                value={searchQuery}
+                                                onChange={(e) => setSearchQuery(e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2 w-full">
+                                        <Label htmlFor="type">Account Type</Label>
+                                        <Select value={selectedType} onValueChange={setSelectedType}>
+                                            <SelectTrigger id="type" className="w-full">
+                                                <SelectValue placeholder="All Types" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="all">All Types</SelectItem>
+                                                <SelectItem value="current">Current</SelectItem>
+                                                <SelectItem value="savings">Savings</SelectItem>
+                                                <SelectItem value="checking">Checking</SelectItem>
+                                                <SelectItem value="investment">Investment</SelectItem>
+                                                <SelectItem value="credit">Credit</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    <div className="space-y-2 w-full">
+                                        <Label htmlFor="status">Status</Label>
+                                        <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                                            <SelectTrigger id="status" className="w-full">
+                                                <SelectValue placeholder="All Statuses" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="all">All Statuses</SelectItem>
+                                                <SelectItem value="active">Active</SelectItem>
+                                                <SelectItem value="inactive">Inactive</SelectItem>
+                                                <SelectItem value="pending">Pending</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    {/* Responsive Tabs - Fixed overflow */}
+                    <div className="w-full">
+                        <Tabs defaultValue="all" className="w-full">
+                            <div className="overflow-x-auto pb-2 w-full -mx-4 px-4">
+                                <TabsList className="mb-4 w-max">
+                                    <TabsTrigger value="all">All Accounts</TabsTrigger>
+                                    <TabsTrigger value="current">Current</TabsTrigger>
+                                    <TabsTrigger value="savings">Savings</TabsTrigger>
+                                    <TabsTrigger value="checking">Checking</TabsTrigger>
+                                </TabsList>
                             </div>
-                        </div>
 
-                        <div className="space-y-2 w-full">
-                            <Label htmlFor="type">Account Type</Label>
-                            <Select value={selectedType} onValueChange={setSelectedType}>
-                                <SelectTrigger id="type" className="w-full">
-                                    <SelectValue placeholder="All Types" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">All Types</SelectItem>
-                                    <SelectItem value="current">Current</SelectItem>
-                                    <SelectItem value="savings">Savings</SelectItem>
-                                    <SelectItem value="checking">Checking</SelectItem>
-                                    <SelectItem value="investment">Investment</SelectItem>
-                                    <SelectItem value="credit">Credit</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
+                            <div className="w-full">
+                                <TabsContent value="all" className="w-full">
+                                    <div className="grid grid-cols-1 gap-4 w-full">
+                                        {isLoading ? (
+                                            <div className="flex justify-center p-8">
+                                                <Loader className="h-8 w-8 animate-spin text-falsopay-primary" />
+                                            </div>
+                                        ) : filteredAccounts.length > 0 ? (
+                                            filteredAccounts.map((account) => (
+                                                <BalanceCard
+                                                    key={`${account.bank_id}-${account.account_number}`}
+                                                    balance={account.balance}
+                                                    title={account.type.charAt(0).toUpperCase() + account.type.slice(1)}
+                                                    subtitle={`IBAN: ${account.iban}`}
+                                                    cardNumber={account.account_number}
+                                                    className="w-full"
+                                                />
+                                            ))
+                                        ) : (
+                                            <div className="text-center py-8 bg-gray-50 rounded-lg w-full">
+                                                <p className="text-gray-500">No accounts found</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </TabsContent>
 
-                        <div className="space-y-2 w-full">
-                            <Label htmlFor="status">Status</Label>
-                            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                                <SelectTrigger id="status" className="w-full">
-                                    <SelectValue placeholder="All Statuses" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">All Statuses</SelectItem>
-                                    <SelectItem value="active">Active</SelectItem>
-                                    <SelectItem value="inactive">Inactive</SelectItem>
-                                    <SelectItem value="pending">Pending</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </CardContent>
-                </Card>
+                                <TabsContent value="current" className="w-full">
+                                    <div className="grid grid-cols-1 gap-4 w-full">
+                                        {isLoading ? (
+                                            <div className="flex justify-center p-8">
+                                                <Loader className="h-8 w-8 animate-spin text-falsopay-primary" />
+                                            </div>
+                                        ) : filteredAccounts.filter(acc => acc.type === 'current').length > 0 ? (
+                                            filteredAccounts
+                                                .filter(acc => acc.type === 'current')
+                                                .map((account) => (
+                                                    <BalanceCard
+                                                        key={`${account.bank_id}-${account.account_number}`}
+                                                        balance={account.balance}
+                                                        title={account.type.charAt(0).toUpperCase() + account.type.slice(1)}
+                                                        subtitle={`IBAN: ${account.iban}`}
+                                                        cardNumber={account.account_number}
+                                                        className="w-full"
+                                                    />
+                                                ))
+                                        ) : (
+                                            <div className="text-center py-8 bg-gray-50 rounded-lg w-full">
+                                                <p className="text-gray-500">No current accounts found</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </TabsContent>
 
-                {/* Responsive Tabs */}
-                <div className="w-full max-w-full">
-                    <Tabs defaultValue="all" className="w-full">
-                        <div className="overflow-x-auto pb-2 w-full">
-                            <TabsList className="mb-4 w-max">
-                                <TabsTrigger value="all">All Accounts</TabsTrigger>
-                                <TabsTrigger value="current">Current</TabsTrigger>
-                                <TabsTrigger value="savings">Savings</TabsTrigger>
-                                <TabsTrigger value="checking">Checking</TabsTrigger>
-                            </TabsList>
-                        </div>
+                                <TabsContent value="savings" className="w-full">
+                                    <div className="grid grid-cols-1 gap-4 w-full">
+                                        {isLoading ? (
+                                            <div className="flex justify-center p-8">
+                                                <Loader className="h-8 w-8 animate-spin text-falsopay-primary" />
+                                            </div>
+                                        ) : filteredAccounts.filter(acc => acc.type === 'savings').length > 0 ? (
+                                            filteredAccounts
+                                                .filter(acc => acc.type === 'savings')
+                                                .map((account) => (
+                                                    <BalanceCard
+                                                        key={`${account.bank_id}-${account.account_number}`}
+                                                        balance={account.balance}
+                                                        title={account.type.charAt(0).toUpperCase() + account.type.slice(1)}
+                                                        subtitle={`IBAN: ${account.iban}`}
+                                                        cardNumber={account.account_number}
+                                                        className="w-full"
+                                                    />
+                                                ))
+                                        ) : (
+                                            <div className="text-center py-8 bg-gray-50 rounded-lg w-full">
+                                                <p className="text-gray-500">No savings accounts found</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </TabsContent>
 
-                        <TabsContent value="all" className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
-                            {isLoading ? (
-                                <div className="flex justify-center p-8 col-span-1 sm:col-span-2">
-                                    <Loader className="h-8 w-8 animate-spin text-falsopay-primary" />
-                                </div>
-                            ) : filteredAccounts.length > 0 ? (
-                                filteredAccounts.map((account) => (
-                                    <BalanceCard
-                                        key={`${account.bank_id}-${account.account_number}`}
-                                        balance={account.balance}
-                                        title={account.type.charAt(0).toUpperCase() + account.type.slice(1)}
-                                        subtitle={`IBAN: ${account.iban}`}
-                                        cardNumber={account.account_number}
-                                        className="w-full"
-                                    />
-                                ))
-                            ) : (
-                                <div className="text-center py-8 bg-gray-50 rounded-lg col-span-1 sm:col-span-2 w-full">
-                                    <p className="text-gray-500">No accounts found</p>
-                                </div>
-                            )}
-                        </TabsContent>
-
-                        <TabsContent value="current" className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
-                            {isLoading ? (
-                                <div className="flex justify-center p-8 col-span-1 sm:col-span-2">
-                                    <Loader className="h-8 w-8 animate-spin text-falsopay-primary" />
-                                </div>
-                            ) : filteredAccounts.filter(acc => acc.type === 'current').length > 0 ? (
-                                filteredAccounts
-                                    .filter(acc => acc.type === 'current')
-                                    .map((account) => (
-                                        <BalanceCard
-                                            key={`${account.bank_id}-${account.account_number}`}
-                                            balance={account.balance}
-                                            title={account.type.charAt(0).toUpperCase() + account.type.slice(1)}
-                                            subtitle={`IBAN: ${account.iban}`}
-                                            cardNumber={account.account_number}
-                                            className="w-full"
-                                        />
-                                    ))
-                            ) : (
-                                <div className="text-center py-8 bg-gray-50 rounded-lg col-span-1 sm:col-span-2 w-full">
-                                    <p className="text-gray-500">No current accounts found</p>
-                                </div>
-                            )}
-                        </TabsContent>
-
-                        <TabsContent value="savings" className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
-                            {isLoading ? (
-                                <div className="flex justify-center p-8 col-span-1 sm:col-span-2">
-                                    <Loader className="h-8 w-8 animate-spin text-falsopay-primary" />
-                                </div>
-                            ) : filteredAccounts.filter(acc => acc.type === 'savings').length > 0 ? (
-                                filteredAccounts
-                                    .filter(acc => acc.type === 'savings')
-                                    .map((account) => (
-                                        <BalanceCard
-                                            key={`${account.bank_id}-${account.account_number}`}
-                                            balance={account.balance}
-                                            title={account.type.charAt(0).toUpperCase() + account.type.slice(1)}
-                                            subtitle={`IBAN: ${account.iban}`}
-                                            cardNumber={account.account_number}
-                                            className="w-full"
-                                        />
-                                    ))
-                            ) : (
-                                <div className="text-center py-8 bg-gray-50 rounded-lg col-span-1 sm:col-span-2 w-full">
-                                    <p className="text-gray-500">No savings accounts found</p>
-                                </div>
-                            )}
-                        </TabsContent>
-
-                        <TabsContent value="checking" className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
-                            {isLoading ? (
-                                <div className="flex justify-center p-8 col-span-1 sm:col-span-2">
-                                    <Loader className="h-8 w-8 animate-spin text-falsopay-primary" />
-                                </div>
-                            ) : filteredAccounts.filter(acc => acc.type === 'checking').length > 0 ? (
-                                filteredAccounts
-                                    .filter(acc => acc.type === 'checking')
-                                    .map((account) => (
-                                        <BalanceCard
-                                            key={`${account.bank_id}-${account.account_number}`}
-                                            balance={account.balance}
-                                            title={account.type.charAt(0).toUpperCase() + account.type.slice(1)}
-                                            subtitle={`IBAN: ${account.iban}`}
-                                            cardNumber={account.account_number}
-                                            className="w-full"
-                                        />
-                                    ))
-                            ) : (
-                                <div className="text-center py-8 bg-gray-50 rounded-lg col-span-1 sm:col-span-2 w-full">
-                                    <p className="text-gray-500">No checking accounts found</p>
-                                </div>
-                            )}
-                        </TabsContent>
-                    </Tabs>
+                                <TabsContent value="checking" className="w-full">
+                                    <div className="grid grid-cols-1 gap-4 w-full">
+                                        {isLoading ? (
+                                            <div className="flex justify-center p-8">
+                                                <Loader className="h-8 w-8 animate-spin text-falsopay-primary" />
+                                            </div>
+                                        ) : filteredAccounts.filter(acc => acc.type === 'checking').length > 0 ? (
+                                            filteredAccounts
+                                                .filter(acc => acc.type === 'checking')
+                                                .map((account) => (
+                                                    <BalanceCard
+                                                        key={`${account.bank_id}-${account.account_number}`}
+                                                        balance={account.balance}
+                                                        title={account.type.charAt(0).toUpperCase() + account.type.slice(1)}
+                                                        subtitle={`IBAN: ${account.iban}`}
+                                                        cardNumber={account.account_number}
+                                                        className="w-full"
+                                                    />
+                                                ))
+                                        ) : (
+                                            <div className="text-center py-8 bg-gray-50 rounded-lg w-full">
+                                                <p className="text-gray-500">No checking accounts found</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </TabsContent>
+                            </div>
+                        </Tabs>
+                    </div>
                 </div>
             </div>
         </MainLayout>

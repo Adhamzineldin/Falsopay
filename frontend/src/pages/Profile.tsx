@@ -404,6 +404,9 @@ const Profile = () => {
     const [verificationValue, setVerificationValue] = useState('');
     const [pendingUpdate, setPendingUpdate] = useState(null);
 
+    const [deleteIpaDialogOpen, setDeleteIpaDialogOpen] = useState(false);
+    const [selectedIpaToDelete, setSelectedIpaToDelete] = useState(null);
+
     const {toast} = useToast();
 
     useEffect(() => {
@@ -436,6 +439,12 @@ const Profile = () => {
         });
     }, [defaultIpaId, ipas]);
 
+
+
+    const handleOpenDeleteDialog = (ipa) => {
+        setSelectedIpaToDelete(ipa);
+        setDeleteIpaDialogOpen(true);
+    };
     const fetchUserData = async () => {
         if (!user) return;
 
@@ -640,6 +649,77 @@ const Profile = () => {
     const isDefaultIpa = (ipaId) => {
         // Convert both to numbers to ensure consistent comparison
         return Number(ipaId) === Number(defaultIpaId);
+    };
+
+    const DeleteIPADialog = ({ isOpen, onClose, ipaAddress, ipaId, onDelete }) => {
+        const [isDeleting, setIsDeleting] = useState(false);
+        const { toast } = useToast();
+
+        const handleDelete = async () => {
+            setIsDeleting(true);
+            try {
+                // Use the existing service pattern
+                const ipaDetails = await IPAService.getIPAByAddress(ipaAddress);
+                await IPAService.deleteIPAById(ipaDetails.bank_id, ipaDetails.account_number);
+
+                toast({
+                    title: "Success",
+                    description: "Your IPA address has been deleted successfully",
+                });
+
+                // Call the callback to refresh the data
+                if (onDelete) {
+                    onDelete();
+                }
+
+                // Close the dialog
+                onClose();
+            } catch (error) {
+                console.error('Error deleting IPA:', error);
+                toast({
+                    title: "Error",
+                    description: "Failed to delete your IPA address",
+                    variant: "destructive",
+                });
+            } finally {
+                setIsDeleting(false);
+            }
+        };
+
+        return (
+            <Dialog open={isOpen} onOpenChange={onClose}>
+                <DialogContent className="w-[95%] max-w-md mx-auto">
+                    <DialogHeader>
+                        <DialogTitle className="text-red-600">Delete IPA Address</DialogTitle>
+                        <DialogDescription className="break-words">
+                            Are you sure you want to delete your IPA address: <span className="font-medium">{ipaAddress}</span>?
+                            This action cannot be undone.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="bg-amber-50 p-3 rounded-md flex items-center gap-2 text-amber-700 text-sm">
+                        <AlertTriangle className="h-4 w-4 flex-shrink-0"/>
+                        <span className="text-xs sm:text-sm">
+            Deleting this IPA address means you won't be able to receive payments to it anymore.
+          </span>
+                    </div>
+
+                    <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0">
+                        <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={handleDelete}
+                            disabled={isDeleting}
+                            className="w-full sm:w-auto"
+                        >
+                            {isDeleting ? 'Deleting...' : 'Delete IPA'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        );
     };
 
     // Demo data for display purposes
@@ -848,8 +928,7 @@ const Profile = () => {
                                                                 Created: {new Date(ipa.created_at).toLocaleDateString()}
                                                             </p>
                                                         </div>
-                                                        <div
-                                                            className="flex flex-wrap gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+                                                        <div className="flex flex-wrap gap-2 w-full sm:w-auto mt-2 sm:mt-0">
                                                             <ChangePinDialog
                                                                 ipaId={ipaId}
                                                                 ipaAddress={ipa.ipa_address}
@@ -865,6 +944,14 @@ const Profile = () => {
                                                                     {settingDefaultIpa ? 'Setting...' : 'Set Default'}
                                                                 </Button>
                                                             )}
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                className="text-xs sm:text-sm w-full sm:w-auto text-red-600 hover:bg-red-50"
+                                                                onClick={() => handleOpenDeleteDialog(ipa)}
+                                                            >
+                                                                Delete
+                                                            </Button>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -959,6 +1046,17 @@ const Profile = () => {
                     </TabsContent>
                 </Tabs>
             </div>
+            
+            {selectedIpaToDelete && (
+                <DeleteIPADialog
+                    isOpen={deleteIpaDialogOpen}
+                    onClose={() => setDeleteIpaDialogOpen(false)}
+                    ipaAddress={selectedIpaToDelete.ipa_address}
+                    ipaId={selectedIpaToDelete.ipa_id !== undefined ? selectedIpaToDelete.ipa_id : selectedIpaToDelete.id}
+                    onDelete={fetchUserData} // This will refresh the data after deletion
+                />
+            )}
+            
         </MainLayout>
     );
 };

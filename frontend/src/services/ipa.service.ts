@@ -89,5 +89,14 @@ export const IPAService = {
     } catch (error) {
       throw error;
     }
+  },
+
+  async deleteIPAById(bank_id: any, account_number: any) {
+    try {
+      const response = await api.delete(`/api/ipa/${bank_id}/${account_number}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   }
 };

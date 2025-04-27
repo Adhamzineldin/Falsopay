@@ -433,25 +433,24 @@ const SendMoney = () => {
             setSelectedAccount(account);
         }
     };
-    
-    
 
     return (
         <MainLayout>
-            <div className="max-w-lg mx-auto">
-                <h1 className="text-2xl font-bold text-gray-900 mb-8">Send Money</h1>
+            {/* Responsive container - Adjusted for multiple screen sizes */}
+            <div className="w-full max-w-lg mx-auto px-4 sm:px-0">
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-8">Send Money</h1>
 
                 <Card className="shadow-md">
                     {step === 1 && (
                         <>
-                            <CardHeader>
-                                <CardTitle>Find Recipient</CardTitle>
+                            <CardHeader className="p-4 sm:p-6">
+                                <CardTitle className="text-lg sm:text-xl">Find Recipient</CardTitle>
                                 <CardDescription>Select how you want to send money</CardDescription>
                             </CardHeader>
 
-                            <CardContent className="space-y-6">
+                            <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
                                 {linkedAccounts.length === 0 && !isLoadingAccounts ? (
-                                    <div className="p-4 bg-amber-50 text-amber-800 rounded-md">
+                                    <div className="p-3 sm:p-4 bg-amber-50 text-amber-800 rounded-md text-sm sm:text-base">
                                         You don't have any linked accounts. Please link an account first to send money.
                                     </div>
                                 ) : (
@@ -462,7 +461,7 @@ const SendMoney = () => {
                                                 name="sourceIpaAddress"
                                                 render={({field}) => (
                                                     <FormItem>
-                                                        <FormLabel>Send from</FormLabel>
+                                                        <FormLabel className="text-sm sm:text-base">Send from</FormLabel>
                                                         <Select
                                                             onValueChange={(value) => {
                                                                 field.onChange(value);
@@ -472,7 +471,7 @@ const SendMoney = () => {
                                                             disabled={isLoadingAccounts}
                                                         >
                                                             <FormControl>
-                                                                <SelectTrigger>
+                                                                <SelectTrigger className="text-sm sm:text-base">
                                                                     <SelectValue
                                                                         placeholder={isLoadingAccounts ? "Loading accounts..." : "Select account"}/>
                                                                 </SelectTrigger>
@@ -482,26 +481,27 @@ const SendMoney = () => {
                                                                     <SelectItem
                                                                         key={account.ipa_address}
                                                                         value={account.ipa_address}
+                                                                        className="text-sm sm:text-base"
                                                                     >
-                                                                        {account.ipa_address} 
+                                                                        {account.ipa_address}
                                                                     </SelectItem>
                                                                 ))}
                                                             </SelectContent>
                                                         </Select>
-                                                        <FormMessage/>
+                                                        <FormMessage className="text-xs sm:text-sm"/>
                                                     </FormItem>
                                                 )}
                                             />
 
                                             {/* Display account balance information */}
                                             {selectedAccount && (
-                                                <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 mb-4">
-                                                    <h3 className="font-medium text-gray-900 mb-1">Account Details</h3>
+                                                <div className="p-3 sm:p-4 bg-gray-50 rounded-lg border border-gray-200 mb-4">
+                                                    <h3 className="font-medium text-gray-900 mb-1 text-sm sm:text-base">Account Details</h3>
                                                     <div className="flex justify-between items-center">
-                                                        <span className="text-sm text-gray-600">Available balance</span>
-                                                        <span className="text-lg font-bold text-gray-900">
-                              {formatCurrency(selectedAccount.balance, selectedAccount.currency)}
-                            </span>
+                                                        <span className="text-xs sm:text-sm text-gray-600">Available balance</span>
+                                                        <span className="text-base sm:text-lg font-bold text-gray-900">
+                                                          {formatCurrency(selectedAccount.balance, selectedAccount.currency)}
+                                                        </span>
                                                     </div>
                                                 </div>
                                             )}
@@ -510,39 +510,39 @@ const SendMoney = () => {
                                                 control={form.control}
                                                 name="method"
                                                 render={({field}) => (
-                                                    <FormItem className="space-y-3">
-                                                        <FormLabel>Send using</FormLabel>
+                                                    <FormItem className="space-y-2 sm:space-y-3">
+                                                        <FormLabel className="text-sm sm:text-base">Send using</FormLabel>
                                                         <FormControl>
                                                             <RadioGroup
                                                                 onValueChange={field.onChange}
                                                                 defaultValue={field.value}
-                                                                className="grid grid-cols-2 md:grid-cols-3 gap-3"
+                                                                className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3"
                                                             >
                                                                 {[
                                                                     {
                                                                         value: 'ipa',
                                                                         label: 'IPA Address',
-                                                                        icon: <User className="h-5 w-5"/>
+                                                                        icon: <User className="h-4 w-4 sm:h-5 sm:w-5"/>
                                                                     },
                                                                     {
                                                                         value: 'mobile',
                                                                         label: 'Mobile Number',
-                                                                        icon: <Phone className="h-5 w-5"/>
+                                                                        icon: <Phone className="h-4 w-4 sm:h-5 sm:w-5"/>
                                                                     },
                                                                     {
                                                                         value: 'card',
                                                                         label: 'Card Number',
-                                                                        icon: <CreditCard className="h-5 w-5"/>
+                                                                        icon: <CreditCard className="h-4 w-4 sm:h-5 sm:w-5"/>
                                                                     },
                                                                     {
                                                                         value: 'account',
                                                                         label: 'Account Number',
-                                                                        icon: <Banknote className="h-5 w-5"/>
+                                                                        icon: <Banknote className="h-4 w-4 sm:h-5 sm:w-5"/>
                                                                     },
                                                                     {
                                                                         value: 'iban',
                                                                         label: 'IBAN',
-                                                                        icon: <Banknote className="h-5 w-5"/>
+                                                                        icon: <Banknote className="h-4 w-4 sm:h-5 sm:w-5"/>
                                                                     },
                                                                 ].map((option) => (
                                                                     <div key={option.value} className="relative">
@@ -553,23 +553,23 @@ const SendMoney = () => {
                                                                         />
                                                                         <Label
                                                                             htmlFor={option.value}
-                                                                            className={`flex flex-col items-center justify-center rounded-md border-2 border-muted bg-white p-4 hover:bg-gray-50 hover:border-gray-300 
-                  ${field.value === option.value ? 'border-falsopay-primary bg-falsopay-primary/5' : ''}
-                  peer-focus:ring-1 peer-focus:ring-falsopay-primary peer-focus:border-falsopay-primary
-                  cursor-pointer text-center h-full transition-all`}
+                                                                            className={`flex flex-col items-center justify-center rounded-md border-2 border-muted bg-white p-2 sm:p-4 hover:bg-gray-50 hover:border-gray-300 
+                                                                              ${field.value === option.value ? 'border-falsopay-primary bg-falsopay-primary/5' : ''}
+                                                                              peer-focus:ring-1 peer-focus:ring-falsopay-primary peer-focus:border-falsopay-primary
+                                                                              cursor-pointer text-center h-full transition-all`}
                                                                         >
                                                                             <div
-                                                                                className={`mb-2 rounded-full p-2 ${field.value === option.value ? 'bg-falsopay-primary text-white' : 'bg-gray-100 text-gray-500'}`}>
+                                                                                className={`mb-1 sm:mb-2 rounded-full p-1 sm:p-2 ${field.value === option.value ? 'bg-falsopay-primary text-white' : 'bg-gray-100 text-gray-500'}`}>
                                                                                 {option.icon}
                                                                             </div>
                                                                             <span
-                                                                                className="font-medium text-sm">{option.label}</span>
+                                                                                className="font-medium text-xs sm:text-sm">{option.label}</span>
                                                                         </Label>
                                                                     </div>
                                                                 ))}
                                                             </RadioGroup>
                                                         </FormControl>
-                                                        <FormMessage/>
+                                                        <FormMessage className="text-xs sm:text-sm"/>
                                                     </FormItem>
                                                 )}
                                             />
@@ -581,7 +581,7 @@ const SendMoney = () => {
                                                     name="bank_id"
                                                     render={({field}) => (
                                                         <FormItem>
-                                                            <FormLabel>Bank</FormLabel>
+                                                            <FormLabel className="text-sm sm:text-base">Bank</FormLabel>
                                                             <FormControl>
                                                                 <BankSelect
                                                                     value={field.value}
@@ -589,7 +589,7 @@ const SendMoney = () => {
                                                                     disabled={searchLoading}
                                                                 />
                                                             </FormControl>
-                                                            <FormMessage/>
+                                                            <FormMessage className="text-xs sm:text-sm"/>
                                                         </FormItem>
                                                     )}
                                                 />
@@ -601,13 +601,13 @@ const SendMoney = () => {
                                                 name="identifier"
                                                 render={({field}) => (
                                                     <FormItem>
-                                                        <FormLabel>{getMethodName(form.watch("method") as TransferMethod)}</FormLabel>
+                                                        <FormLabel className="text-sm sm:text-base">{getMethodName(form.watch("method") as TransferMethod)}</FormLabel>
                                                         <div className="flex">
                                                             <FormControl>
                                                                 <Input
                                                                     placeholder={`Enter ${getMethodName(form.watch("method") as TransferMethod).toLowerCase()}`}
                                                                     {...field}
-                                                                    className="rounded-r-none"
+                                                                    className="rounded-r-none text-sm sm:text-base"
                                                                 />
                                                             </FormControl>
                                                             <Button
@@ -619,7 +619,7 @@ const SendMoney = () => {
                                                                     <Search className="h-4 w-4"/>}
                                                             </Button>
                                                         </div>
-                                                        <FormMessage/>
+                                                        <FormMessage className="text-xs sm:text-sm"/>
                                                     </FormItem>
                                                 )}
                                             />
@@ -632,27 +632,27 @@ const SendMoney = () => {
 
                     {step === 2 && recipient && selectedAccount && (
                         <>
-                            <CardHeader>
-                                <CardTitle>Enter Amount</CardTitle>
-                                <CardDescription>You're sending money to {recipient.name}</CardDescription>
+                            <CardHeader className="p-4 sm:p-6">
+                                <CardTitle className="text-lg sm:text-xl">Enter Amount</CardTitle>
+                                <CardDescription className="text-sm sm:text-base">You're sending money to {recipient.name}</CardDescription>
                             </CardHeader>
 
-                            <CardContent className="space-y-6">
+                            <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
                                 <div
-                                    className="flex items-center justify-center p-4 bg-gray-50 rounded-lg border border-dashed border-gray-200">
-                                    <div className="flex items-center space-x-4">
+                                    className="flex items-center justify-center p-3 sm:p-4 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+                                    <div className="flex items-center space-x-3 sm:space-x-4">
                                         <div
-                                            className="w-12 h-12 rounded-full bg-falsopay-primary flex items-center justify-center text-white">
-                                            <User className="h-6 w-6"/>
+                                            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-falsopay-primary flex items-center justify-center text-white">
+                                            <User className="h-5 w-5 sm:h-6 sm:w-6"/>
                                         </div>
                                         <div>
-                                            <h3 className="font-medium">{recipient.name}</h3>
-                                            <p className="text-sm text-gray-500 flex items-center">
+                                            <h3 className="font-medium text-sm sm:text-base">{recipient.name}</h3>
+                                            <p className="text-xs sm:text-sm text-gray-500 flex items-center">
                                                 {getMethodIcon(form.getValues("method") as TransferMethod)}
                                                 <span className="ml-1">{recipient.identifier}</span>
                                             </p>
                                             {recipient.bank_name && (
-                                                <p className="text-sm text-gray-500">
+                                                <p className="text-xs sm:text-sm text-gray-500">
                                                     {recipient.bank_name}
                                                 </p>
                                             )}
@@ -661,16 +661,16 @@ const SendMoney = () => {
                                 </div>
 
                                 {/* Account Balance Card */}
-                                <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                                    <h3 className="font-medium text-gray-900 mb-1">Source Account</h3>
-                                    <div className="flex justify-between items-center">
-                                        <div>
-                                            <p className="text-sm text-gray-500">{selectedAccount.ipa_address}</p>
-                                            <p className="text-sm text-gray-500">Bank ID: {selectedAccount.bank_id}</p>
+                                <div className="p-3 sm:p-4 bg-gray-50 rounded-lg border border-gray-200">
+                                    <h3 className="font-medium text-gray-900 mb-1 text-sm sm:text-base">Source Account</h3>
+                                    <div className="flex justify-between items-center flex-wrap">
+                                        <div className="text-xs sm:text-sm">
+                                            <p className="text-gray-500">{selectedAccount.ipa_address}</p>
+                                            <p className="text-gray-500">Bank ID: {selectedAccount.bank_id}</p>
                                         </div>
-                                        <div>
-                                            <p className="text-sm text-gray-500">Available Balance</p>
-                                            <p className="font-bold text-right">{formatCurrency(selectedAccount.balance, selectedAccount.currency)}</p>
+                                        <div className="text-right mt-1 sm:mt-0">
+                                            <p className="text-xs sm:text-sm text-gray-500">Available Balance</p>
+                                            <p className="font-bold text-sm sm:text-base">{formatCurrency(selectedAccount.balance, selectedAccount.currency)}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -682,7 +682,7 @@ const SendMoney = () => {
                                             name="amount"
                                             render={({field}) => (
                                                 <FormItem>
-                                                    <FormLabel>Amount (€)</FormLabel>
+                                                    <FormLabel className="text-sm sm:text-base">Amount (€)</FormLabel>
                                                     <FormControl>
                                                         <Input
                                                             type="number"
@@ -690,6 +690,7 @@ const SendMoney = () => {
                                                             {...field}
                                                             min="0"
                                                             step="0.01"
+                                                            className="text-sm sm:text-base"
                                                             onChange={(e) => {
                                                                 field.onChange(e);
                                                                 // Show warning if amount exceeds balance
@@ -705,19 +706,19 @@ const SendMoney = () => {
                                                         />
                                                     </FormControl>
                                                     {parseFloat(field.value) > selectedAccount.balance && (
-                                                        <div className="flex items-center mt-1 text-red-500 text-sm">
-                                                            <AlertCircle className="h-4 w-4 mr-1"/>
+                                                        <div className="flex items-center mt-1 text-red-500 text-xs sm:text-sm">
+                                                            <AlertCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1"/>
                                                             Insufficient funds. Your maximum available amount
                                                             is {formatCurrency(selectedAccount.balance, selectedAccount.currency)}
                                                         </div>
                                                     )}
-                                                    <FormMessage/>
+                                                    <FormMessage className="text-xs sm:text-sm"/>
                                                 </FormItem>
                                             )}
                                         />
 
-                                        <div className="flex justify-between mt-4">
-                                            <Button variant="outline" onClick={() => setStep(1)}>Back</Button>
+                                        <div className="flex justify-between mt-4 pt-2">
+                                            <Button variant="outline" onClick={() => setStep(1)} className="text-xs sm:text-sm">Back</Button>
                                             <Button
                                                 type="submit"
                                                 disabled={
@@ -725,8 +726,9 @@ const SendMoney = () => {
                                                     parseFloat(form.getValues("amount")) <= 0 ||
                                                     parseFloat(form.getValues("amount")) > selectedAccount.balance
                                                 }
+                                                className="text-xs sm:text-sm"
                                             >
-                                                Continue <ArrowRight className="ml-2 h-4 w-4"/>
+                                                Continue <ArrowRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4"/>
                                             </Button>
                                         </div>
                                     </form>
@@ -737,34 +739,34 @@ const SendMoney = () => {
 
                     {step === 3 && recipient && selectedAccount && (
                         <>
-                            <CardHeader>
-                                <CardTitle>Verify PIN</CardTitle>
-                                <CardDescription>Enter your IPA PIN to complete the transfer</CardDescription>
+                            <CardHeader className="p-4 sm:p-6">
+                                <CardTitle className="text-lg sm:text-xl">Verify PIN</CardTitle>
+                                <CardDescription className="text-sm sm:text-base">Enter your IPA PIN to complete the transfer</CardDescription>
                             </CardHeader>
 
-                            <CardContent className="space-y-4">
-                                <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 space-y-3">
-                                    <div className="flex justify-between">
+                            <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+                                <div className="p-3 sm:p-4 bg-gray-50 rounded-lg border border-gray-200 space-y-2 sm:space-y-3">
+                                    <div className="flex justify-between flex-wrap">
                                         <div>
-                                            <p className="text-sm text-gray-500">Sending from</p>
-                                            <p className="font-medium">{selectedAccount.ipa_address}</p>
+                                            <p className="text-xs sm:text-sm text-gray-500">Sending from</p>
+                                            <p className="text-sm sm:text-base font-medium">{selectedAccount.ipa_address}</p>
                                         </div>
-                                        <div>
-                                            <p className="text-sm text-gray-500">Available Balance</p>
-                                            <p className="font-medium text-right">{formatCurrency(selectedAccount.balance, selectedAccount.currency)}</p>
+                                        <div className="mt-1 sm:mt-0">
+                                            <p className="text-xs sm:text-sm text-gray-500">Available Balance</p>
+                                            <p className="text-sm sm:text-base font-medium text-right">{formatCurrency(selectedAccount.balance, selectedAccount.currency)}</p>
                                         </div>
                                     </div>
-                                    <div className="border-t border-gray-200 pt-3 flex justify-between">
+                                    <div className="border-t border-gray-200 pt-2 sm:pt-3 flex justify-between flex-wrap">
                                         <div>
-                                            <p className="text-sm text-gray-500">Sending to</p>
-                                            <p className="font-medium">{recipient.name}</p>
+                                            <p className="text-xs sm:text-sm text-gray-500">Sending to</p>
+                                            <p className="text-sm sm:text-base font-medium">{recipient.name}</p>
                                             {form.getValues("method") === "account" && recipient.bank_name && (
-                                                <p className="text-sm text-gray-500">{recipient.bank_name}</p>
+                                                <p className="text-xs sm:text-sm text-gray-500">{recipient.bank_name}</p>
                                             )}
                                         </div>
-                                        <div>
-                                            <p className="text-sm text-gray-500">Amount</p>
-                                            <p className="font-medium text-right">{formatCurrency(parseFloat(form.getValues("amount")))}</p>
+                                        <div className="mt-1 sm:mt-0">
+                                            <p className="text-xs sm:text-sm text-gray-500">Amount</p>
+                                            <p className="text-sm sm:text-base font-medium text-right">{formatCurrency(parseFloat(form.getValues("amount")))}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -778,8 +780,8 @@ const SendMoney = () => {
                                 />
                             </CardContent>
 
-                            <CardFooter>
-                                <Button variant="outline" onClick={() => setStep(2)} className="w-full">
+                            <CardFooter className="px-4 pb-4 sm:px-6 sm:pb-6">
+                                <Button variant="outline" onClick={() => setStep(2)} className="w-full text-xs sm:text-sm">
                                     Back
                                 </Button>
                             </CardFooter>
@@ -788,57 +790,57 @@ const SendMoney = () => {
 
                     {step === 4 && success && recipient && selectedAccount && (
                         <>
-                            <CardHeader className="text-center">
-                                <div className="flex justify-center mb-4">
+                            <CardHeader className="text-center p-4 sm:p-6">
+                                <div className="flex justify-center mb-3 sm:mb-4">
                                     <div
-                                        className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
-                                        <CheckCircle className="h-8 w-8 text-green-600"/>
+                                        className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-green-100 flex items-center justify-center">
+                                        <CheckCircle className="h-6 w-6 sm:h-8 sm:w-8 text-green-600"/>
                                     </div>
                                 </div>
-                                <CardTitle>Transfer Complete!</CardTitle>
-                                <CardDescription>
+                                <CardTitle className="text-lg sm:text-xl">Transfer Complete!</CardTitle>
+                                <CardDescription className="text-sm sm:text-base">
                                     You've successfully
                                     sent {formatCurrency(parseFloat(form.getValues("amount")))} to {recipient.name}
                                 </CardDescription>
                             </CardHeader>
 
-                            <CardContent className="space-y-4">
-                                <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                            <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+                                <div className="bg-gray-50 p-3 sm:p-4 rounded-lg space-y-2 sm:space-y-3">
                                     <div className="flex justify-between">
-                                        <span className="text-gray-500">From Account</span>
-                                        <span className="font-medium">{selectedAccount.ipa_address}</span>
+                                        <span className="text-xs sm:text-sm text-gray-500">From Account</span>
+                                        <span className="text-xs sm:text-sm font-medium">{selectedAccount.ipa_address}</span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-gray-500">Amount</span>
+                                        <span className="text-xs sm:text-sm text-gray-500">Amount</span>
                                         <span
-                                            className="font-medium">{formatCurrency(parseFloat(form.getValues("amount")))}</span>
+                                            className="text-xs sm:text-sm font-medium">{formatCurrency(parseFloat(form.getValues("amount")))}</span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-gray-500">Recipient</span>
-                                        <span className="font-medium">{recipient.name}</span>
+                                        <span className="text-xs sm:text-sm text-gray-500">Recipient</span>
+                                        <span className="text-xs sm:text-sm font-medium">{recipient.name}</span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span
-                                            className="text-gray-500">{getMethodName(form.getValues("method") as TransferMethod)}</span>
-                                        <span className="font-medium">{recipient.identifier}</span>
+                                            className="text-xs sm:text-sm text-gray-500">{getMethodName(form.getValues("method") as TransferMethod)}</span>
+                                        <span className="text-xs sm:text-sm font-medium">{recipient.identifier}</span>
                                     </div>
                                     {recipient.bank_name && (
                                         <div className="flex justify-between">
-                                            <span className="text-gray-500">Bank</span>
-                                            <span className="font-medium">{recipient.bank_name}</span>
+                                            <span className="text-xs sm:text-sm text-gray-500">Bank</span>
+                                            <span className="text-xs sm:text-sm font-medium">{recipient.bank_name}</span>
                                         </div>
                                     )}
                                     <div className="flex justify-between">
-                                        <span className="text-gray-500">Date</span>
-                                        <span className="font-medium">{new Date().toLocaleDateString()}</span>
+                                        <span className="text-xs sm:text-sm text-gray-500">Date</span>
+                                        <span className="text-xs sm:text-sm font-medium">{new Date().toLocaleDateString()}</span>
                                     </div>
                                 </div>
                             </CardContent>
 
-                            <CardFooter className="flex justify-between">
-                                <Button variant="outline" onClick={resetForm}>Send Another</Button>
-                                <Button onClick={() => navigate('/dashboard')}>
-                                    Back to Dashboard <ArrowRight className="ml-2 h-4 w-4"/>
+                            <CardFooter className="flex justify-between px-4 pb-4 sm:px-6 sm:pb-6">
+                                <Button variant="outline" onClick={resetForm} className="text-xs sm:text-sm">Send Another</Button>
+                                <Button onClick={() => navigate('/dashboard')} className="text-xs sm:text-sm">
+                                    Back to Dashboard <ArrowRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4"/>
                                 </Button>
                             </CardFooter>
                         </>

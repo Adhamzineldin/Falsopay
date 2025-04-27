@@ -94,11 +94,12 @@ const Accounts = () => {
 
     return (
         <MainLayout>
-            <div className="space-y-8">
-                <div className="flex justify-between items-center">
-                    <h1 className="text-2xl font-bold text-gray-900">Your Accounts</h1>
+            <div className="space-y-6">
+                {/* Header with Button - Made responsive */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Your Accounts</h1>
                     <Link to="/link-account">
-                        <Button className="flex items-center">
+                        <Button className="flex items-center w-full sm:w-auto">
                             <LinkIcon className="h-4 w-4 mr-2" />
                             Link New Account
                         </Button>
@@ -110,22 +111,22 @@ const Accounts = () => {
                     balance={getTotalBalance()}
                     title="Total Balance"
                     subtitle="Filtered accounts"
-                    className="mb-8"
+                    className="mb-6"
                 />
 
-                {/* Filters */}
+                {/* Filters - Made responsive */}
                 <Card>
-                    <CardHeader>
-                        <CardTitle>Filters</CardTitle>
+                    <CardHeader className="py-4">
+                        <CardTitle className="text-lg">Filters</CardTitle>
                     </CardHeader>
-                    <CardContent className="grid gap-6 md:grid-cols-3">
+                    <CardContent className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                         <div className="space-y-2">
                             <Label htmlFor="search">Search</Label>
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                                 <Input
                                     id="search"
-                                    placeholder="Search account number or IBAN"
+                                    placeholder="Account number or IBAN"
                                     className="pl-9"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -167,45 +168,23 @@ const Accounts = () => {
                     </CardContent>
                 </Card>
 
-                <Tabs defaultValue="all">
-                    <TabsList className="mb-4">
-                        <TabsTrigger value="all">All Accounts</TabsTrigger>
-                        <TabsTrigger value="current">Current</TabsTrigger>
-                        <TabsTrigger value="savings">Savings</TabsTrigger>
-                        <TabsTrigger value="checking">Checking</TabsTrigger>
-                    </TabsList>
+                {/* Responsive Tabs - Scroll on mobile */}
+                <div className="overflow-x-auto">
+                    <Tabs defaultValue="all">
+                        <TabsList className="mb-4 w-full sm:w-auto">
+                            <TabsTrigger value="all">All Accounts</TabsTrigger>
+                            <TabsTrigger value="current">Current</TabsTrigger>
+                            <TabsTrigger value="savings">Savings</TabsTrigger>
+                            <TabsTrigger value="checking">Checking</TabsTrigger>
+                        </TabsList>
 
-                    <TabsContent value="all" className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {isLoading ? (
-                            <div className="flex justify-center p-12 col-span-2">
-                                <Loader className="h-8 w-8 animate-spin text-falsopay-primary" />
-                            </div>
-                        ) : filteredAccounts.length > 0 ? (
-                            filteredAccounts.map((account) => (
-                                <BalanceCard
-                                    key={`${account.bank_id}-${account.account_number}`}
-                                    balance={account.balance}
-                                    title={account.type.charAt(0).toUpperCase() + account.type.slice(1)}
-                                    subtitle={`IBAN: ${account.iban}`}
-                                    cardNumber={account.account_number}
-                                />
-                            ))
-                        ) : (
-                            <div className="text-center py-12 bg-gray-50 rounded-lg col-span-2">
-                                <p className="text-gray-500">No accounts found</p>
-                            </div>
-                        )}
-                    </TabsContent>
-
-                    <TabsContent value="current" className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {isLoading ? (
-                            <div className="flex justify-center p-12 col-span-2">
-                                <Loader className="h-8 w-8 animate-spin text-falsopay-primary" />
-                            </div>
-                        ) : filteredAccounts.filter(acc => acc.type === 'current').length > 0 ? (
-                            filteredAccounts
-                                .filter(acc => acc.type === 'current')
-                                .map((account) => (
+                        <TabsContent value="all" className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {isLoading ? (
+                                <div className="flex justify-center p-8 col-span-1 sm:col-span-2">
+                                    <Loader className="h-8 w-8 animate-spin text-falsopay-primary" />
+                                </div>
+                            ) : filteredAccounts.length > 0 ? (
+                                filteredAccounts.map((account) => (
                                     <BalanceCard
                                         key={`${account.bank_id}-${account.account_number}`}
                                         balance={account.balance}
@@ -214,37 +193,86 @@ const Accounts = () => {
                                         cardNumber={account.account_number}
                                     />
                                 ))
-                        ) : (
-                            <div className="text-center py-12 bg-gray-50 rounded-lg col-span-2">
-                                <p className="text-gray-500">No current accounts found</p>
-                            </div>
-                        )}
-                    </TabsContent>
+                            ) : (
+                                <div className="text-center py-8 bg-gray-50 rounded-lg col-span-1 sm:col-span-2">
+                                    <p className="text-gray-500">No accounts found</p>
+                                </div>
+                            )}
+                        </TabsContent>
 
-                    <TabsContent value="savings" className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {isLoading ? (
-                            <div className="flex justify-center p-12 col-span-2">
-                                <Loader className="h-8 w-8 animate-spin text-falsopay-primary" />
-                            </div>
-                        ) : filteredAccounts.filter(acc => acc.type === 'savings').length > 0 ? (
-                            filteredAccounts
-                                .filter(acc => acc.type === 'savings')
-                                .map((account) => (
-                                    <BalanceCard
-                                        key={`${account.bank_id}-${account.account_number}`}
-                                        balance={account.balance}
-                                        title={account.type.charAt(0).toUpperCase() + account.type.slice(1)}
-                                        subtitle={`IBAN: ${account.iban}`}
-                                        cardNumber={account.account_number}
-                                    />
-                                ))
-                        ) : (
-                            <div className="text-center py-12 bg-gray-50 rounded-lg col-span-2">
-                                <p className="text-gray-500">No savings accounts found</p>
-                            </div>
-                        )}
-                    </TabsContent>
-                </Tabs>
+                        <TabsContent value="current" className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {isLoading ? (
+                                <div className="flex justify-center p-8 col-span-1 sm:col-span-2">
+                                    <Loader className="h-8 w-8 animate-spin text-falsopay-primary" />
+                                </div>
+                            ) : filteredAccounts.filter(acc => acc.type === 'current').length > 0 ? (
+                                filteredAccounts
+                                    .filter(acc => acc.type === 'current')
+                                    .map((account) => (
+                                        <BalanceCard
+                                            key={`${account.bank_id}-${account.account_number}`}
+                                            balance={account.balance}
+                                            title={account.type.charAt(0).toUpperCase() + account.type.slice(1)}
+                                            subtitle={`IBAN: ${account.iban}`}
+                                            cardNumber={account.account_number}
+                                        />
+                                    ))
+                            ) : (
+                                <div className="text-center py-8 bg-gray-50 rounded-lg col-span-1 sm:col-span-2">
+                                    <p className="text-gray-500">No current accounts found</p>
+                                </div>
+                            )}
+                        </TabsContent>
+
+                        <TabsContent value="savings" className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {isLoading ? (
+                                <div className="flex justify-center p-8 col-span-1 sm:col-span-2">
+                                    <Loader className="h-8 w-8 animate-spin text-falsopay-primary" />
+                                </div>
+                            ) : filteredAccounts.filter(acc => acc.type === 'savings').length > 0 ? (
+                                filteredAccounts
+                                    .filter(acc => acc.type === 'savings')
+                                    .map((account) => (
+                                        <BalanceCard
+                                            key={`${account.bank_id}-${account.account_number}`}
+                                            balance={account.balance}
+                                            title={account.type.charAt(0).toUpperCase() + account.type.slice(1)}
+                                            subtitle={`IBAN: ${account.iban}`}
+                                            cardNumber={account.account_number}
+                                        />
+                                    ))
+                            ) : (
+                                <div className="text-center py-8 bg-gray-50 rounded-lg col-span-1 sm:col-span-2">
+                                    <p className="text-gray-500">No savings accounts found</p>
+                                </div>
+                            )}
+                        </TabsContent>
+
+                        <TabsContent value="checking" className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {isLoading ? (
+                                <div className="flex justify-center p-8 col-span-1 sm:col-span-2">
+                                    <Loader className="h-8 w-8 animate-spin text-falsopay-primary" />
+                                </div>
+                            ) : filteredAccounts.filter(acc => acc.type === 'checking').length > 0 ? (
+                                filteredAccounts
+                                    .filter(acc => acc.type === 'checking')
+                                    .map((account) => (
+                                        <BalanceCard
+                                            key={`${account.bank_id}-${account.account_number}`}
+                                            balance={account.balance}
+                                            title={account.type.charAt(0).toUpperCase() + account.type.slice(1)}
+                                            subtitle={`IBAN: ${account.iban}`}
+                                            cardNumber={account.account_number}
+                                        />
+                                    ))
+                            ) : (
+                                <div className="text-center py-8 bg-gray-50 rounded-lg col-span-1 sm:col-span-2">
+                                    <p className="text-gray-500">No checking accounts found</p>
+                                </div>
+                            )}
+                        </TabsContent>
+                    </Tabs>
+                </div>
             </div>
         </MainLayout>
     );

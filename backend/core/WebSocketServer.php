@@ -19,45 +19,56 @@ use Psr\Http\Message\ServerRequestInterface;
 class NotificationServer implements MessageComponentInterface {
     protected $clients = [];
     protected $userConnections = [];
+    protected $pendingMessages = []; // Store messages for offline users
 
     public function onOpen(ConnectionInterface $conn) {
-        // Parse query param: ws://localhost:8080?userId=123
         parse_str(parse_url($conn->httpRequest->getUri(), PHP_URL_QUERY), $query);
         $userId = $query['userId'] ?? null;
 
         if ($userId) {
             $this->userConnections[$userId] = $conn;
             $conn->userId = $userId;
+
+            // 🔥 Deliver pending messages if any
+            if (isset($this->pendingMessages[$userId])) {
+                foreach ($this->pendingMessages[$userId] as $message) {
+                    $conn->send(json_encode($message));
+                }
+                unset($this->pendingMessages[$userId]); // Clear after sending
+                echo "✅ Delivered pending messages to user {$userId}\n";
+            }
         }
 
         $this->clients[$conn->resourceId] = $conn;
-        echo "New connection: {$conn->resourceId}, user: {$userId}\n";
+        echo "🔌 New connection: {$conn->resourceId}, user: {$userId}\n";
     }
 
     public function onMessage(ConnectionInterface $from, $msg) {
-        echo "Message from {$from->userId}: $msg\n";
+        echo "📩 Message from {$from->userId}: $msg\n";
+        // You can add server-side command handling here if needed
     }
 
     public function onClose(ConnectionInterface $conn) {
         unset($this->clients[$conn->resourceId]);
         if (isset($conn->userId)) {
             unset($this->userConnections[$conn->userId]);
+            echo "❌ Connection {$conn->resourceId} (User {$conn->userId}) closed\n";
         }
-        echo "Connection {$conn->resourceId} With User ID {$conn->userId} closed\n";
     }
 
     public function onError(ConnectionInterface $conn, \Exception $e) {
-        echo "Error: {$e->getMessage()}\n";
+        echo "⚠️ Error: {$e->getMessage()}\n";
         $conn->close();
     }
 
-    // Sends a JSON notification to a specific user
     public function notifyUser($userId, $data) {
         if (isset($this->userConnections[$userId])) {
             $this->userConnections[$userId]->send(json_encode($data));
-            echo "Sent notification to user {$userId}\n";
+            echo "📤 Sent notification to user {$userId}\n";
         } else {
-            echo "User {$userId} not connected\n";
+            // Cache if user is offline
+            $this->pendingMessages[$userId][] = $data;
+            echo "🗂️ Cached message for offline user {$userId}\n";
         }
     }
 }
@@ -95,10 +106,11 @@ $httpServer = new HttpServer(function (ServerRequestInterface $request) use ($no
     return new Response(404, [], 'Not found');
 });
 
-$socket = new SocketServer("$host:$httpPort", [], $loop); // HTTP server on dynamic port
+$socket = new SocketServer("$host:$httpPort", [], $loop); // HTTP server socket
 $httpServer->listen($socket);
 
-echo "✅ WebSocket server running on wss://$host:$wsPort\n";
-echo "✅ HTTP push endpoint running on https://$host:$httpPort/push\n";
+// Final startup logs
+echo "✅ WebSocket server running at wss://$host:$wsPort\n";
+echo "✅ HTTP push endpoint running at https://$host:$httpPort/push\n";
 
 $loop->run();

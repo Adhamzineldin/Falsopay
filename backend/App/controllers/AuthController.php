@@ -107,17 +107,17 @@ class AuthController
         $userModel = new User();
         $authMiddleware = new AuthMiddleware();
         $ipaModel = new InstantPaymentAddress();
-        
+
         $fields = ['phone_number', 'ipa_address'];
-        
+
         foreach ($fields as $field) {
             if (!isset($data[$field])) {
                 self::json(['error' => "Missing required field: $field"], 400);
             }
         }
-        
+
         $user = $userModel->getUserByPhoneNumber($data['phone_number']);
-        
+
         if (!$user) {
             self::json(['error' => 'User not found'], 404);
         }
@@ -130,12 +130,13 @@ class AuthController
         } else {
             $ipaExists = false;
             foreach ($ipa_accounts as $ipa_account) {
-                if ($ipa_account['ipa_address'] === $data['ipa_address']) {
+                // Compare IPA addresses in lowercase
+                if (strtolower($ipa_account['ipa_address']) === strtolower($data['ipa_address'])) {
                     $ipaExists = true;
                     break;
                 }
             }
-            
+
             if ($ipaExists) {
                 $user_token = $authMiddleware->generateToken($user['user_id']);
                 self::json(['success' => true, 'user_token' => $user_token, 'user' => $user]);
@@ -144,7 +145,8 @@ class AuthController
             }
         }
     }
-    
+
+
     #[NoReturn] public static function deleteAccount(array $data): void
     {
         $authMiddleware = new AuthMiddleware();

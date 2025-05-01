@@ -1,4 +1,4 @@
-import React, { Suspense } from "react"; // import Suspense
+import React, { Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppProvider } from "@/contexts/AppContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 // Lazy load components
 const Landing = React.lazy(() => import("@/pages/Landing"));
@@ -27,7 +28,7 @@ const App = () => (
           <AppProvider>
             <Toaster />
             <Sonner />
-            <Suspense fallback={<div>Loading...</div>}> {/* Fallback UI while loading */}
+            <Suspense fallback={<LoadingSpinner />}> {/* Using custom LoadingSpinner component */}
               <Routes>
                 {/* Public Routes */}
                 <Route path="/" element={<Landing />} />

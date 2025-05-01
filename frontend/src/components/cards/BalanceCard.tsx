@@ -15,7 +15,7 @@ interface BalanceCardProps {
 
 const BalanceCard: React.FC<BalanceCardProps> = ({
                                                    balance,
-                                                   currency = '€',
+                                                   currency = '£',
                                                    title,
                                                    subtitle,
                                                    className,

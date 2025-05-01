@@ -67,7 +67,7 @@ interface FormValues {
 }
 
 // Format number with commas and 2 decimal places
-const formatCurrency = (value: number, currency = '€') => {
+const formatCurrency = (value: number, currency = '£') => {
     return `${currency} ${value.toLocaleString('en-US', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
@@ -682,7 +682,7 @@ const SendMoney = () => {
                                             name="amount"
                                             render={({field}) => (
                                                 <FormItem>
-                                                    <FormLabel className="text-sm sm:text-base">Amount (€)</FormLabel>
+                                                    <FormLabel className="text-sm sm:text-base">Amount (£)</FormLabel>
                                                     <FormControl>
                                                         <Input
                                                             type="number"

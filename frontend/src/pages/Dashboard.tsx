@@ -63,7 +63,7 @@ const Dashboard = () => {
       return transactionsData.map((tx) => ({
         transaction_id: tx.transaction_id,
         amount: tx.amount,
-        currency: tx.currency || '€',
+        currency: tx.currency || '£',
         sender: {
           name: tx.sender_name || 'Unknown',
           user_id: tx.sender_user_id?.toString() || '0'

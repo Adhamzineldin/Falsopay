@@ -56,7 +56,7 @@ try {
         iban VARCHAR(34),
         status ENUM('active', 'inactive') NOT NULL,
         type VARCHAR(20),
-        balance DECIMAL(20, 2) NOT NULL,
+        balance DECIMAL(25, 2) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         PRIMARY KEY (bank_id, account_number),
         FOREIGN KEY (bank_id) REFERENCES banks(bank_id) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -98,7 +98,7 @@ try {
         receiver_user_id INT,
         sender_name VARCHAR(255),  -- Added for sender's name
         receiver_name VARCHAR(255),  -- Added for receiver's name
-        amount DECIMAL(10, 2) NOT NULL,
+        amount DECIMAL(25, 2) NOT NULL,
         sender_bank_id INT,
         receiver_bank_id INT,
         sender_account_number VARCHAR(30),

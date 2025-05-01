@@ -12,6 +12,7 @@ class BankAccountsRoute
         $router->add('GET', '/api/bank-accounts/iban/{iban}', [BankAccountController::class, 'getByIBAN'], $middlewares);
         $router->add('GET', '/api/bank-accounts/user/{bank_user_id}/bank/{bank_id}', [BankAccountController::class, 'getByUserAndBank'], $middlewares);
         $router->add('GET', '/api/bank-accounts/user/{bank_user_id}', [BankAccountController::class, 'getByUserId'], $middlewares);
+        $router->add('GET', '/api/bank-accounts/phone/{phone_number}', [BankAccountController::class, 'getByUserPhoneNumber'], $middlewares);
         $router->add('GET', '/api/bank-accounts/{bank_id}/{account_number}/balance', [BankAccountController::class, 'getBalance'], $middlewares);
         
         $router->add('PATCH', '/api/bank-accounts/{bank_id}/{account_number}/add-balance', [BankAccountController::class, 'addBalance'], $middlewares);

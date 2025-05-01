@@ -58,7 +58,7 @@ class BankAccount {
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-
+    
     public function getAllByUserAndBankId(int $userId, int $bankId): array {
         $sql = "SELECT * FROM bank_accounts WHERE bank_user_id = :user_id AND bank_id = :bank_id";
         $stmt = $this->pdo->prepare($sql);

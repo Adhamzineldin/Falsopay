@@ -37,7 +37,7 @@ const Dashboard = () => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const accountsResponse = await BankAccountService.getAccountsByUserId(user.user_id);
+        const accountsResponse = await BankAccountService.getAccountsByUserPhoneNumber(user.phone_number);
         setAccounts(accountsResponse);
 
         // Calculate and set total balance

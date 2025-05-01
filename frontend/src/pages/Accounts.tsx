@@ -39,7 +39,7 @@ const Accounts = () => {
         const fetchAccounts = async () => {
             setIsLoading(true);
             try {
-                const response = await BankAccountService.getAccountsByUserId(user.user_id);
+                const response = await BankAccountService.getAccountsByUserPhoneNumber(user.phone_number);
                 setAccounts(response);
                 setFilteredAccounts(response);
             } catch (error) {

@@ -42,6 +42,16 @@ class BankUser {
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
+    public function getByPhoneNumber(int $phoneNumber): ?array {
+        $sql = "SELECT * FROM bank_users WHERE phone_number = :phoneNumber";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->bindParam(':phoneNumber', $phoneNumber);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    }
+    
+    
+
     public function update(int $id, array $fields): bool {
         $columns = [];
         foreach ($fields as $key => $value) {

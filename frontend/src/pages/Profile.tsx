@@ -451,7 +451,7 @@ const Profile = () => {
         setIsLoading(true);
         try {
             // Fetch bank accounts
-            const accountsResponse = await BankAccountService.getAccountsByUserId(user.user_id);
+            const accountsResponse = await BankAccountService.getAccountsByUserPhoneNumber(user.phone_number);
             setAccounts(accountsResponse);
 
             // Fetch IPAs

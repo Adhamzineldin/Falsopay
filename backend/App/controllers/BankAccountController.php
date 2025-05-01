@@ -75,6 +75,20 @@ class BankAccountController
         self::json($accounts);
     }
 
+    #[NoReturn] public static function getByUserPhoneNumber(int $phoneNumber): void
+    {
+        $bankUsersModel = new BankUser();
+        $model = new BankAccount();
+        $user = $bankUsersModel->getByPhoneNumber($phoneNumber); // Fixed method name
+        if (!$user) {
+            self::json(['error' => 'User not found'], 404);
+        }
+        $accounts = $model->getAllByUserId($user["bank_user_id"]); // Fixed method name
+        self::json($accounts);
+    }
+    
+    
+
     #[NoReturn] public static function getByUserAndBank(int $bankUserId, int $bankId): void
     {
         $model = new BankAccount();

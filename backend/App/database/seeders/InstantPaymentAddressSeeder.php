@@ -101,7 +101,7 @@ class InstantPaymentAddressSeeder
                 $typeCode = isset($accountTypeMapping[$accountType]) ? $accountTypeMapping[$accountType] : $accountTypeMapping['default'];
 
                 // Create IPA address with format: firstname_bankcode_accounttype
-                $ipaAddress = $bankUsers[$bankUserId]['first_name'] . '_' . $bankCodes[$bankId] . '_' . $typeCode;
+                $ipaAddress = $bankUsers[$bankUserId]['first_name'] . '_' . $bankUsers[$bankUserId]['last_name']. '_' . $bankCodes[$bankId] . '_' . $typeCode;
 
                 $stmt->execute([
                     'bank_id' => $bankId,

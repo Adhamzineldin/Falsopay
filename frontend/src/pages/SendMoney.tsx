@@ -111,7 +111,7 @@ const SendMoney = () => {
                         const balanceData = await BankAccountService.getAccountBalance(account.bank_id, account.account_number);
                         return {
                             ...account,
-                            balance: balanceData?.balance || Math.random() * 10000, // Fallback to random balance for demo
+                            balance: balanceData?.balance || 0, // Fallback to random balance for demo
                             currency: balanceData?.currency || 'EGP'
                         };
                     } catch (error) {

@@ -16,7 +16,7 @@ class UserSeeder {
                 ['Ayman', 'Abdel Aziz', 'aywork73@gmail.com', '201067107331'],
                 ['Mohamed', 'Mansour', 'alhamood040@gmail.com', '201114592417'],
                 ['Ahmed', 'Magdy', 'am4474646@gmail.com', '201119854524'],
-                ['Fatima', 'Ali', 'fatima.ali@gmail.com', '201234567890'],
+                ['Mohamed', 'Ali', 'mooomali15@gmail.com', '201023707284'],
                 ['Sara', 'Ibrahim', 'sara.ibrahim@gmail.com', '201345678901'],
                 ['Omar', 'Khaled', 'omar.khaled@gmail.com', '201456789012'],
                 ['Layla', 'Mostafa', 'layla.mostafa@gmail.com', '201567890123'],

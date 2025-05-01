@@ -17,7 +17,7 @@ class BankUserSeeder {
                 ['Ayman', 'Abdel Aziz', 'aywork73@gmail.com', '201067107331', '2005-03-15'],
                 ['Mohamed', 'Mansour', 'alhamood040@gmail.com', '201114592417', '1990-05-12'],
                 ['Ahmed', 'Magdy', 'am4474646@gmail.com', '201119854524', '1985-08-23'],
-                ['Fatima', 'Ali', 'fatima.ali@gmail.com', '201234567890', '1992-12-05'],
+                ['Mohamed', 'Ali', 'mooomali15@gmail.com', '201023707284', '1992-12-05'],
                 ['Sara', 'Ibrahim', 'sara.ibrahim@gmail.com', '201345678901', '1988-03-17'],
                 ['Omar', 'Khaled', 'omar.khaled@gmail.com', '201456789012', '1995-07-09'],
                 ['Layla', 'Mostafa', 'layla.mostafa@gmail.com', '201567890123', '1993-04-28'],

@@ -5,13 +5,26 @@ namespace App\database;
 use Exception;
 use PDO;
 
-require_once 'Database.php';  // If both files are in the same folder
+/**
+ * Database schema creation script
+ *
+ * This file is used both directly and by the migration script
+ */
 
-try {
-    // Get the singleton instance of the Database
+// Only instantiate the database if this file is called directly
+$isDirectCall = (basename(__FILE__) == basename($_SERVER['SCRIPT_FILENAME']));
+
+// If called directly, we need to get the database instance
+if ($isDirectCall) {
+    require_once 'Database.php';
     $database = Database::getInstance();
     $pdo = $database->getConnection();
+} else {
+    // If called from migration, use the existing PDO instance
+    $pdo = $this->pdo;
+}
 
+try {
     // Start by disabling foreign key checks to avoid circular reference issues during table creation
     $pdo->exec("SET FOREIGN_KEY_CHECKS = 0;");
 
@@ -83,7 +96,7 @@ try {
         card_number VARCHAR(19) NOT NULL,
         expiration_date DATE NOT NULL,
         cvv VARCHAR(4) NOT NULL,
-        pin VARCHAR(255) DEFAULT NULL , -- Hashed card PIN
+        pin VARCHAR(255) DEFAULT NULL, -- Hashed card PIN
         card_type ENUM('debit', 'prepaid') NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (bank_user_id) REFERENCES bank_users(bank_user_id) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -115,10 +128,6 @@ try {
         FOREIGN KEY (sender_bank_id, sender_account_number) REFERENCES bank_accounts(bank_id, account_number) ON DELETE CASCADE ON UPDATE CASCADE,
         FOREIGN KEY (receiver_bank_id, receiver_account_number) REFERENCES bank_accounts(bank_id, account_number) ON DELETE CASCADE ON UPDATE CASCADE
     );
-
-
-
-
     ";
 
     // Execute the query to create the tables
@@ -138,8 +147,21 @@ try {
     // Re-enable foreign key checks
     $pdo->exec("SET FOREIGN_KEY_CHECKS = 1;");
 
-    echo "Database schema created successfully.";
+    // Only show success message if called directly
+    if ($isDirectCall) {
+        echo "Database schema created successfully.";
+    }
 
 } catch (Exception $e) {
-    echo "Error creating database schema: " . $e->getMessage();
+    $errorMsg = "Error creating database schema: " . $e->getMessage();
+
+    // If called directly, output the error
+    if ($isDirectCall) {
+        echo $errorMsg;
+    }
+
+    // If called from migration, propagate the error
+    if (!$isDirectCall) {
+        throw new Exception($errorMsg, 0, $e);
+    }
 }

@@ -13,7 +13,7 @@ class UserSeeder {
             $users = [
                 ['Adham', 'Zineldin', 'Mohalya3@gmail.com', '201157000509'],
                 ['Eyad', 'Smith', 'eyadgamal18@gmail.com', '201099139550'],
-                ['Ayman', 'Abdel Aziz', 'aywork73@gmail.com', '201067107331'],
+                ['Ayman', 'AbdelAziz', 'aywork73@gmail.com', '201067107331'],
                 ['Mohamed', 'Mansour', 'alhamood040@gmail.com', '201114592417'],
                 ['Ahmed', 'Magdy', 'am4474646@gmail.com', '201119854524'],
                 ['Mohamed', 'Ali', 'mooomali15@gmail.com', '201023707284'],

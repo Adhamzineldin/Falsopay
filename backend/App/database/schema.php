@@ -144,6 +144,51 @@ try {
         REFERENCES users(user_id) 
         ON DELETE CASCADE ON UPDATE CASCADE;");
 
+    $pdo->exec(" CREATE INDEX idx_bank_code ON banks(bank_code);
+            CREATE INDEX idx_swift_code ON banks(swift_code);
+            
+            -- Indexes for bank_users table
+            CREATE INDEX idx_bank_user_email ON bank_users(email);
+            CREATE INDEX  idx_bank_user_name ON bank_users(last_name, first_name);
+            CREATE INDEX  idx_bank_user_phone ON bank_users(phone_number);
+            
+            -- Indexes for users table
+            CREATE INDEX  idx_user_email ON users(email);
+            CREATE INDEX  idx_user_name ON users(last_name, first_name);
+            CREATE INDEX  idx_user_phone ON users(phone_number);
+            CREATE INDEX  idx_default_account ON users(default_account);
+            
+            -- Indexes for bank_accounts table
+            CREATE INDEX  idx_bank_account_user ON bank_accounts(bank_user_id);
+            CREATE INDEX  idx_bank_account_iban ON bank_accounts(iban);
+            CREATE INDEX  idx_bank_account_status ON bank_accounts(status);
+            CREATE INDEX  idx_bank_account_type ON bank_accounts(type);
+            
+            -- Indexes for instant_payment_addresses table
+            CREATE INDEX  idx_ipa_address ON instant_payment_addresses(ipa_address);
+            CREATE INDEX  idx_ipa_user ON instant_payment_addresses(user_id);
+            CREATE INDEX  idx_ipa_bank_account ON instant_payment_addresses(bank_id, account_number);
+            
+            -- Indexes for cards table
+            CREATE INDEX  idx_card_bank_user ON cards(bank_user_id);
+            CREATE INDEX  idx_card_bank ON cards(bank_id);
+            CREATE INDEX  idx_card_number ON cards(card_number);
+            CREATE INDEX  idx_card_type ON cards(card_type);
+            
+            -- Indexes for transactions table
+            CREATE INDEX  idx_transaction_sender_user ON transactions(sender_user_id);
+            CREATE INDEX  idx_transaction_receiver_user ON transactions(receiver_user_id);
+            CREATE INDEX  idx_transaction_sender_account ON transactions(sender_bank_id, sender_account_number);
+            CREATE INDEX  idx_transaction_receiver_account ON transactions(receiver_bank_id, receiver_account_number);
+            CREATE INDEX  idx_transaction_sender_ipa ON transactions(sender_ipa_address);
+            CREATE INDEX  idx_transaction_receiver_ipa ON transactions(receiver_ipa_address);
+            CREATE INDEX  idx_transaction_receiver_phone ON transactions(receiver_phone);
+            CREATE INDEX  idx_transaction_receiver_card ON transactions(receiver_card);
+            CREATE INDEX  idx_transaction_receiver_iban ON transactions(receiver_iban);
+            CREATE INDEX  idx_transaction_method ON transactions(transfer_method);
+            CREATE INDEX  idx_transaction_time ON transactions(transaction_time);
+");
+
     // Re-enable foreign key checks
     $pdo->exec("SET FOREIGN_KEY_CHECKS = 1;");
 

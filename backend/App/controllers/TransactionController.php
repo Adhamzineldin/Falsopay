@@ -303,7 +303,7 @@ class TransactionController
                 $message .= "Your new balance is *EGP {$formattedBalance}*\n\n";
 
                 // Add contextual information based on transaction amount
-                if ($transactionData['amount'] > 1000) {
+                if ($transactionData['amount'] > 100000) {
                     $message .= "⚠️ *IMPORTANT*: This was a large transaction. For security, please verify all details.\n\n";
                 }
                 
@@ -328,9 +328,9 @@ class TransactionController
                 $receivedDescription = "funds";
                 if (isset($transactionData['description'])) {
                     $receivedDescription = $transactionData['description'];
-                } else if ($transactionData['amount'] <= 20) {
+                } else if ($transactionData['amount'] <= 20000) {
                     $receivedDescription = "payment";
-                } else if ($transactionData['amount'] >= 500) {
+                } else if ($transactionData['amount'] >= 100000) {
                     $receivedDescription = "large payment";
                 }
 

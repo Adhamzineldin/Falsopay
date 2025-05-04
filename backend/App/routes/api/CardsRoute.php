@@ -4,8 +4,9 @@ namespace App\routes\api;
 
 use App\controllers\CardController;
 use App\middleware\AuthMiddleware;
+use App\routes\Route;
 
-class CardsRoute {
+class CardsRoute extends Route{
     public static function define($router, array $middlewares = []): void {
         // Route to create a new card
         $router->add('POST', '/api/cards', [CardController::class, 'createCard'], $middlewares);

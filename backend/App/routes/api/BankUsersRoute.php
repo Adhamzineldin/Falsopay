@@ -4,8 +4,9 @@ namespace App\routes\api;
 
 use App\controllers\BankUserController;
 use App\middleware\AuthMiddleware;
+use App\routes\Route;
 
-class BankUsersRoute {
+class BankUsersRoute extends Route {
     public static function define($router, array $middlewares = []): void {
         // Route to create a new bank user
         $router->add('POST', '/api/bank-users', [BankUserController::class, 'createBankUser'], $middlewares);

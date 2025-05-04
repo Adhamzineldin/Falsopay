@@ -4,8 +4,9 @@ namespace App\routes\api;
 
 use App\controllers\UserController;
 use App\middleware\AuthMiddleware;
+use App\routes\Route;
 
-class UsersRoute
+class UsersRoute extends Route
 {
     public static function define($router, array $middlewares = []): void
     {

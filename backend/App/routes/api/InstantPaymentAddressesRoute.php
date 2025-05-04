@@ -4,9 +4,11 @@ namespace App\routes\api;
 
 use App\controllers\InstantPaymentAddressController;
 use App\middleware\AuthMiddleware;
+use App\routes\Route;
 
-class InstantPaymentAddressesRoute {
-    public static function define($router, array $middlewares = []) {
+class InstantPaymentAddressesRoute extends Route{
+    public static function define($router, array $middlewares = []): void
+    {
 
         $router->add('GET', '/api/ipa/by-ipa/{ipa_address}', [InstantPaymentAddressController::class, 'getByIpaAddress'], $middlewares);
         $router->add('GET', '/api/ipa/by-bank/{bank_id}', [InstantPaymentAddressController::class, 'getAllByBank'], $middlewares);

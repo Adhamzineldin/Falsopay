@@ -3,8 +3,9 @@
 namespace App\routes\api;
 
 use App\controllers\TransactionController;
+use App\routes\Route;
 
-class TransactionRoutes {
+class TransactionRoutes  extends Route{
     public static function define($router, array $middlewares = []): void
     {
         $router->add('POST', '/api/transactions', [TransactionController::class, 'createTransaction'], $middlewares);

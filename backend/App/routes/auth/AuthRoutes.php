@@ -3,8 +3,9 @@
 namespace App\routes\auth;
 
 use App\controllers\AuthController;
+use App\routes\Route;
 
-class AuthRoutes
+class AuthRoutes extends Route
 {
     public static function define($router, array $middlewares = []): void
     {

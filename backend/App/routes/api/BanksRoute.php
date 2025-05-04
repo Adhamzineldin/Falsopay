@@ -4,8 +4,9 @@ namespace App\routes\api;
 
 use App\controllers\BankController;
 use App\middleware\AuthMiddleware;
+use App\routes\Route;
 
-class BanksRoute
+class BanksRoute extends Route
 {
     public static function define($router, array $middlewares = []): void
     {

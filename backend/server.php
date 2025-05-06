@@ -28,7 +28,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
     header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
     exit(0);
-}
+} 
+
 
 // Check WebSocket status (running on localhost:4100)
 function checkWebSocketStatus(): array {

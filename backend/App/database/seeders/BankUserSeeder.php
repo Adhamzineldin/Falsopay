@@ -13,7 +13,7 @@ class BankUserSeeder {
 
             $users = [
                 ['Adham', 'Zineldin', 'Mohalya3@gmail.com', '201157000509', '2006-01-25'],
-                ['Eyad', 'Smith', 'eyadgamal18@gmail.com', '201099139550', '2006-01-26'],
+                ['Eyad', 'Gamal', 'eyadgamal18@gmail.com', '201099139550', '2006-01-26'],
                 ['Ayman', 'AbdelAziz', 'aywork73@gmail.com', '201067107331', '2005-03-15'],
                 ['Mohamed', 'Mansour', 'alhamood040@gmail.com', '201114592417', '1990-05-12'],
                 ['Ahmed', 'Magdy', 'am4474646@gmail.com', '201119854524', '1985-08-23'],

@@ -68,7 +68,16 @@ class SystemController
             $updateData = [];
             foreach ($validKeys as $key) {
                 if (isset($data[$key])) {
-                    $updateData[$key] = $data[$key];
+                    // Convert JavaScript/JSON booleans and strings to proper PHP types
+                    if (in_array($key, ['transfer_limit_enabled', 'transactions_blocked', 'maintenance_mode'])) {
+                        $updateData[$key] = $data[$key] === true || $data[$key] === 'true' || $data[$key] === 1 || $data[$key] === '1' ? true : false;
+                    } else if ($key === 'transfer_limit_amount') {
+                        $updateData[$key] = floatval($data[$key]);
+                    } else if (($key === 'block_message' || $key === 'maintenance_message') && ($data[$key] === null || $data[$key] === '')) {
+                        $updateData[$key] = null;
+                    } else {
+                        $updateData[$key] = $data[$key];
+                    }
                 }
             }
             
@@ -93,6 +102,15 @@ class SystemController
                 }
                 $updateData['transfer_limit_amount'] = $amount;
             }
+
+            // Handle block_message when transactions_blocked is false
+            if (isset($updateData['transactions_blocked']) && $updateData['transactions_blocked'] === false) {
+                // If transactions are not blocked, set block_message to null
+                $updateData['block_message'] = null;
+            }
+
+            // Log the update data for debugging
+            $this->logger->info("Updating system settings with user ID: " . ($userId ?? 'null') . ", body: " . json_encode($updateData));
 
             // Update settings
             $result = $this->systemSettingsModel->updateSettings($updateData, $userId);
@@ -133,6 +151,13 @@ class SystemController
         try {
             // Try to get system settings
             $publicInfo = $this->systemSettingsModel->getPublicStatus();
+            
+            // Add detailed logging for debugging transfer limit issues
+            if (isset($publicInfo['transfer_limit'])) {
+                $this->logger->info("Transfer limit is active: " . $publicInfo['transfer_limit']);
+            } else {
+                $this->logger->info("No transfer limit is set");
+            }
             
             // Log successful status check
             $this->logger->info("Public system status retrieved successfully");

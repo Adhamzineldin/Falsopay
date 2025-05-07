@@ -149,7 +149,7 @@ const SendMoney = () => {
                             return {
                                 ...account,
                                 balance: balance?.balance || 0,
-                                currency: balance?.currency || 'EGO'
+                                currency: balance?.currency || 'EGP'
                             };
                         } catch (e) {
                             console.error(`Error fetching balance for ${account.bank_id}:${account.account_number}:`, e);
@@ -233,6 +233,7 @@ const SendMoney = () => {
         setIsLoadingSystemStatus(true);
         try {
             const status = await SystemService.getPublicSystemStatus();
+            console.log('System status fetched successfully:', status);
             setSystemStatus(status);
         } catch (error) {
             console.error('Error fetching system status:', error);
@@ -416,24 +417,33 @@ const SendMoney = () => {
         const identifier = form.getValues('identifier');
         const bankId = form.getValues('bank_id');
 
-        // Re-check system status - transactions might have been blocked
-        if (systemStatus && !systemStatus.transactions_enabled) {
-            toast({
-                title: "Transactions Blocked",
-                description: systemStatus.message || "Transactions are currently disabled by the administrator",
-                variant: "destructive",
-            });
-            return;
-        }
+        // Refetch system status to ensure we have the latest
+        try {
+            const freshStatus = await SystemService.getPublicSystemStatus();
+            setSystemStatus(freshStatus);
+            
+            // Re-check system status - transactions might have been blocked
+            if (!freshStatus.transactions_enabled) {
+                toast({
+                    title: "Transactions Blocked",
+                    description: freshStatus.message || "Transactions are currently disabled by the administrator",
+                    variant: "destructive",
+                });
+                return;
+            }
 
-        // Re-check transfer limit if enabled
-        if (systemStatus && systemStatus.transfer_limit && amount > systemStatus.transfer_limit) {
-            toast({
-                title: "Transfer Limit Exceeded",
-                description: `Transaction amount exceeds the current transfer limit of ${formatCurrency(systemStatus.transfer_limit)}`,
-                variant: "destructive",
-            });
-            return;
+            // Re-check transfer limit if enabled
+            if (freshStatus.transfer_limit && amount > freshStatus.transfer_limit) {
+                toast({
+                    title: "Transfer Limit Exceeded",
+                    description: `Transaction amount exceeds the current transfer limit of ${formatCurrency(freshStatus.transfer_limit)}`,
+                    variant: "destructive",
+                });
+                return;
+            }
+        } catch (error) {
+            console.error('Error refreshing system status:', error);
+            // Continue with the cached status
         }
 
         // Final check to ensure amount doesn't exceed balance
@@ -493,8 +503,10 @@ const SendMoney = () => {
                     break;
             }
 
-            console.log(transactionData);
-            await TransactionService.sendMoney(transactionData);
+            console.log('Sending money with data:', transactionData);
+            // Use the TransactionService.sendMoney method which calls the /api/transactions/send-money endpoint
+            const result = await TransactionService.sendMoney(transactionData);
+            console.log('Transaction result:', result);
 
             setSuccess(true);
             setStep(4);
@@ -503,11 +515,22 @@ const SendMoney = () => {
                 title: "Success",
                 description: `You've sent ${formatCurrency(amount)} to ${recipient.name}`,
             });
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error sending money:', error);
+            
+            let errorMessage = "Could not complete the transaction. Please try again.";
+            
+            // Check for transfer limit error in the response
+            if (error.response?.data?.code === 'TRANSFER_LIMIT_EXCEEDED') {
+                const limit = error.response.data.limit || systemStatus?.transfer_limit;
+                errorMessage = `Transaction amount exceeds the current transfer limit of ${formatCurrency(limit || 0)}.`;
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+            
             toast({
                 title: "Transaction Failed",
-                description: "Could not complete the transaction. Please try again.",
+                description: errorMessage,
                 variant: "destructive",
             });
         } finally {
@@ -899,11 +922,11 @@ const SendMoney = () => {
                                 )}
                                 
                                 {systemStatus && systemStatus.transfer_limit && (
-                                    <Alert variant="default">
+                                    <Alert variant="default" className="bg-blue-50 text-blue-700 border-blue-200">
                                         <Info className="h-4 w-4" />
-                                        <AlertTitle>Transfer Limit Active</AlertTitle>
+                                        <AlertTitle>Transfer Limit: {formatCurrency(systemStatus.transfer_limit)}</AlertTitle>
                                         <AlertDescription>
-                                            Maximum transaction amount is limited to {formatCurrency(systemStatus.transfer_limit)}.
+                                            The maximum amount you can transfer in a single transaction is {formatCurrency(systemStatus.transfer_limit)}.
                                         </AlertDescription>
                                     </Alert>
                                 )}

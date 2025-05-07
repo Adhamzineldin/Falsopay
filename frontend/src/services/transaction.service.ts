@@ -62,7 +62,7 @@ export const TransactionService = {
       if (systemStatus.transfer_limit && amount > systemStatus.transfer_limit) {
         return {
           allowed: false,
-          message: `Transaction amount exceeds the current transfer limit of $${systemStatus.transfer_limit}`,
+          message: `Transaction amount exceeds the current transfer limit of ${systemStatus.transfer_limit}`,
           errorCode: 'TRANSFER_LIMIT_EXCEEDED',
           limit: systemStatus.transfer_limit
         };
@@ -168,6 +168,7 @@ export const TransactionService = {
         throw new Error(statusCheck.message);
       }
       
+      // Use the correct API endpoint for sending money
       const response = await api.post('/api/transactions/send-money', sendData);
       return response.data;
     } catch (error) {

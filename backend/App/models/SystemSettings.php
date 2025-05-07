@@ -130,7 +130,23 @@ class SystemSettings
                     'maintenance_message'
                 ])) {
                     $updateFields[] = "{$key} = :{$key}";
-                    $params[$key] = $value;
+                    
+                    // Special handling for null values in message fields
+                    if (($key === 'block_message' || $key === 'maintenance_message') && ($value === null || $value === '')) {
+                        $params[$key] = null;
+                    }
+                    // Properly cast boolean values to integers for boolean fields
+                    else if (in_array($key, ['transfer_limit_enabled', 'transactions_blocked', 'maintenance_mode'])) {
+                        $params[$key] = $value === true || $value === 'true' || $value === 1 || $value === '1' ? 1 : 0;
+                    }
+                    // Handle numeric values
+                    else if ($key === 'transfer_limit_amount') {
+                        $params[$key] = floatval($value);
+                    }
+                    // All other fields
+                    else {
+                        $params[$key] = $value;
+                    }
                 }
             }
             
@@ -176,12 +192,18 @@ class SystemSettings
         try {
             $settings = $this->getSettings();
             
+            // Create transfer_limit only if it's enabled
+            $transferLimit = null;
+            if (isset($settings['transfer_limit_enabled']) && $settings['transfer_limit_enabled'] === true) {
+                $transferLimit = (float) $settings['transfer_limit_amount'];
+            }
+            
             $result = [
                 'transactions_enabled' => !$settings['transactions_blocked'] && !$settings['maintenance_mode'],
                 'message' => $settings['transactions_blocked'] 
                     ? $settings['block_message'] 
                     : ($settings['maintenance_mode'] ? $settings['maintenance_message'] : null),
-                'transfer_limit' => $settings['transfer_limit_enabled'] ? $settings['transfer_limit_amount'] : null
+                'transfer_limit' => $transferLimit
             ];
             
             $this->logger->info("Public system status retrieved: " . json_encode($result));

@@ -119,14 +119,27 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             setUser(parsedUser);
             setIsAuthenticated(true);
             
+            // Set admin status immediately from local data
+            const localIsAdmin = parsedUser.role === 'admin';
+            setIsAdmin(localIsAdmin);
+            console.log('Setting initial admin status from localStorage:', localIsAdmin);
+            
             // Fetch user role from backend to prevent tampering
             if (parsedUser.user_id) {
-              const role = await UserService.getUserRole(parsedUser.user_id);
-              setIsAdmin(role === 'admin');
-              // Update local user data with fresh role from backend
-              if (role) {
-                parsedUser.role = role;
-                localStorage.setItem('falsopay_user', JSON.stringify(parsedUser));
+              try {
+                const role = await UserService.getUserRole(parsedUser.user_id);
+                const backendIsAdmin = role === 'admin';
+                setIsAdmin(backendIsAdmin);
+                console.log('Updated admin status from backend:', backendIsAdmin);
+                
+                // Update local user data with fresh role from backend
+                if (role) {
+                  parsedUser.role = role;
+                  localStorage.setItem('falsopay_user', JSON.stringify(parsedUser));
+                }
+              } catch (roleError) {
+                console.error('Error fetching user role:', roleError);
+                // Keep using the role from localStorage if backend request fails
               }
               
               WebSocketService.connect(parsedUser.user_id.toString());
@@ -238,12 +251,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         AuthService.saveAuthToken(token);
       }
 
+      // Set admin status based on role immediately
+      const isUserAdmin = userData.role === 'admin';
+      setIsAdmin(isUserAdmin);
+      
       setUser(userData);
       setIsAuthenticated(true);
       setPendingLoginData(null);
 
       localStorage.setItem('falsopay_user', JSON.stringify(userData));
-      console.log('User verified and logged in:', userData.user_id);
+      console.log('User verified and logged in:', userData.user_id, 'Is admin:', isUserAdmin);
 
       WebSocketService.connect(userData.user_id.toString());
     } catch (error: any) {
@@ -282,8 +299,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const mergedUser = { ...user, ...updatedUser };
       setUser(mergedUser);
       
-      if (data.role) {
-        setIsAdmin(data.role === 'admin');
+      // Set admin status if role is included in the update
+      if (updatedUser.role !== undefined) {
+        const updatedIsAdmin = updatedUser.role === 'admin';
+        setIsAdmin(updatedIsAdmin);
+        console.log('Updated admin status based on profile update:', updatedIsAdmin);
       }
 
       localStorage.setItem('falsopay_user', JSON.stringify(mergedUser));

@@ -26,6 +26,10 @@ class SystemRoute extends Route
             return $controller->getSettings();
         }, $adminMiddlewares);
         
+        $router->add('GET', '/api/admin/system/status', function() use ($controller) {
+            return $controller->getAdminSystemStatus();
+        }, $adminMiddlewares);
+        
         $router->add('PUT', '/api/admin/system/settings', function($body) use ($controller) {
             // Check if user_id is provided and ensure it's a valid integer
             $userId = null;

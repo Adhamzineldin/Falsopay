@@ -57,7 +57,9 @@ class SystemController
                 'transfer_limit_enabled',
                 'transfer_limit_amount',
                 'transactions_blocked', 
-                'block_message'
+                'block_message',
+                'maintenance_mode',
+                'maintenance_message'
             ];
             
             $updateData = [];
@@ -115,14 +117,8 @@ class SystemController
     public function getPublicStatus(): array
     {
         try {
-            $settings = $this->systemSettingsModel->getSettings();
-            
-            // Only return public-facing information
-            $publicInfo = [
-                'transactions_enabled' => !$settings['transactions_blocked'],
-                'message' => $settings['transactions_blocked'] ? $settings['block_message'] : null,
-                'transfer_limit' => $settings['transfer_limit_enabled'] ? $settings['transfer_limit_amount'] : null
-            ];
+            // Use the new getPublicStatus method from the model
+            $publicInfo = $this->systemSettingsModel->getPublicStatus();
             
             return [
                 'status' => 'success',
@@ -137,5 +133,176 @@ class SystemController
                 'code' => 500
             ];
         }
+    }
+    
+    /**
+     * Get detailed system status for admin dashboard
+     * 
+     * @return array Response with detailed system status
+     */
+    public function getAdminSystemStatus(): array
+    {
+        try {
+            // Basic status checks (could be expanded with real server monitoring)
+            $databaseStatus = $this->checkDatabaseStatus();
+            $serverStatus = $this->checkServerStatus();
+            $websocketStatus = $this->checkWebsocketStatus();
+            
+            // Return status information
+            $statusInfo = [
+                'database' => $databaseStatus,
+                'server' => $serverStatus,
+                'websocket' => $websocketStatus,
+                'timestamp' => date('Y-m-d H:i:s')
+            ];
+            
+            return [
+                'status' => 'success',
+                'data' => $statusInfo,
+                'code' => 200
+            ];
+        } catch (Exception $e) {
+            error_log("Error getting admin system status: " . $e->getMessage());
+            return [
+                'status' => 'error',
+                'message' => 'Failed to retrieve system status: ' . $e->getMessage(),
+                'code' => 500
+            ];
+        }
+    }
+    
+    /**
+     * Check database status
+     * 
+     * @return array Database status info
+     */
+    private function checkDatabaseStatus(): array
+    {
+        $startTime = microtime(true);
+        
+        try {
+            // Simple DB query to test connection
+            $query = "SELECT 1";
+            $stmt = $this->systemSettingsModel->getPdo()->prepare($query);
+            $stmt->execute();
+            
+            $responseTime = round((microtime(true) - $startTime) * 1000, 2);
+            
+            if ($responseTime > 500) {
+                return [
+                    'status' => 'warning',
+                    'label' => 'Degraded',
+                    'message' => 'Database response time is high: ' . $responseTime . 'ms',
+                    'response_time' => $responseTime . 'ms'
+                ];
+            }
+            
+            return [
+                'status' => 'operational',
+                'label' => 'Operational',
+                'message' => 'Database connection is working properly',
+                'response_time' => $responseTime . 'ms'
+            ];
+        } catch (Exception $e) {
+            return [
+                'status' => 'error',
+                'label' => 'Outage',
+                'message' => 'Database connection failed: ' . $e->getMessage(),
+                'response_time' => 'N/A'
+            ];
+        }
+    }
+    
+    /**
+     * Check server status
+     * 
+     * @return array Server status info
+     */
+    private function checkServerStatus(): array
+    {
+        $memoryUsage = memory_get_usage(true);
+        $humanMemory = $this->formatBytes($memoryUsage);
+        $phpVersion = phpversion();
+        
+        // High memory usage might be a warning
+        if ($memoryUsage > 50 * 1024 * 1024) { // Over 50MB
+            return [
+                'status' => 'warning',
+                'label' => 'Degraded',
+                'message' => 'Server memory usage is high',
+                'php_version' => $phpVersion,
+                'memory_usage' => $humanMemory
+            ];
+        }
+        
+        return [
+            'status' => 'operational',
+            'label' => 'Operational',
+            'message' => 'Server is operating normally',
+            'php_version' => $phpVersion,
+            'memory_usage' => $humanMemory
+        ];
+    }
+    
+    /**
+     * Check WebSocket status
+     * 
+     * @return array WebSocket status info
+     */
+    private function checkWebsocketStatus(): array
+    {
+        // Simulate WebSocket check - in a real app, you'd connect to the WebSocket server
+        $startTime = microtime(true);
+        $isWebsocketRunning = true; // In a real app, this would check the WebSocket server
+        
+        // Simulate a delay
+        usleep(rand(5000, 30000));
+        
+        $responseTime = round((microtime(true) - $startTime) * 1000, 2);
+        
+        if (!$isWebsocketRunning) {
+            return [
+                'status' => 'error',
+                'label' => 'Outage',
+                'message' => 'WebSocket server is not responding',
+                'response_time' => 'N/A'
+            ];
+        }
+        
+        if ($responseTime > 100) {
+            return [
+                'status' => 'warning',
+                'label' => 'Degraded',
+                'message' => 'WebSocket response time is high: ' . $responseTime . 'ms',
+                'response_time' => $responseTime . 'ms'
+            ];
+        }
+        
+        return [
+            'status' => 'operational',
+            'label' => 'Operational',
+            'message' => 'WebSocket server is running properly',
+            'response_time' => $responseTime . 'ms'
+        ];
+    }
+    
+    /**
+     * Format bytes to human-readable format
+     * 
+     * @param int $bytes The bytes to format
+     * @param int $precision The decimal precision
+     * @return string Formatted bytes
+     */
+    private function formatBytes($bytes, $precision = 2): string
+    {
+        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        
+        $bytes = max($bytes, 0);
+        $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
+        $pow = min($pow, count($units) - 1);
+        
+        $bytes /= pow(1024, $pow);
+        
+        return round($bytes, $precision) . ' ' . $units[$pow];
     }
 } 

@@ -166,6 +166,21 @@ try {
         FOREIGN KEY (ticket_id) REFERENCES support_tickets(ticket_id) ON DELETE CASCADE ON UPDATE CASCADE,
         FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE ON UPDATE CASCADE
     );
+    
+    -- System Settings Table
+    CREATE TABLE IF NOT EXISTS system_settings (
+        setting_id INT AUTO_INCREMENT PRIMARY KEY,
+        transfer_limit_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+        transfer_limit_amount DECIMAL(25, 2) NOT NULL DEFAULT 5000.00,
+        transactions_blocked BOOLEAN NOT NULL DEFAULT FALSE,
+        block_message TEXT NULL,
+        maintenance_mode BOOLEAN NOT NULL DEFAULT FALSE,
+        maintenance_message TEXT NULL,
+        updated_by INT NULL,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (updated_by) REFERENCES users(user_id) ON DELETE SET NULL ON UPDATE CASCADE
+    );
     ";
 
     // Execute the query to create the tables
@@ -238,10 +253,26 @@ try {
             -- Indexes for support replies
             CREATE INDEX idx_reply_ticket ON support_replies(ticket_id);
             CREATE INDEX idx_reply_user ON support_replies(user_id);
+            
+            -- Indexes for system settings
+            CREATE INDEX idx_system_settings_maintenance ON system_settings(maintenance_mode);
+            CREATE INDEX idx_system_settings_transactions ON system_settings(transactions_blocked);
 ");
 
     // Re-enable foreign key checks
     $pdo->exec("SET FOREIGN_KEY_CHECKS = 1;");
+
+    // Insert default system settings
+    $checkSettings = $pdo->query("SELECT COUNT(*) FROM system_settings");
+    $settingsCount = $checkSettings->fetchColumn();
+    
+    if ($settingsCount == 0) {
+        $pdo->exec("INSERT INTO system_settings 
+            (transfer_limit_enabled, transfer_limit_amount, transactions_blocked, maintenance_mode) 
+            VALUES 
+            (FALSE, 5000.00, FALSE, FALSE)"
+        );
+    }
 
     // Only show success message if called directly
     if ($isDirectCall) {

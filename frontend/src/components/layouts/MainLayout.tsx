@@ -211,7 +211,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       <div className="flex-1 flex">
         <aside className="hidden md:block w-64 bg-white border-r border-gray-200 h-[calc(100vh-64px)] sticky top-16">
           <div className="py-6 flex flex-col h-full">
-            <nav className="space-y-1 px-3 flex-1">
+            <nav className="space-y-1 px-3 flex-1" key={`nav-${isAdmin ? 'admin' : 'user'}`}>
               {navigationItems.map((item) => (
                 <Link
                   key={item.path}
@@ -312,7 +312,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 </div>
               </div>
               
-              <nav className="flex-1 p-4 space-y-1">
+              <nav className="flex-1 p-4 space-y-1" key={`mobile-nav-${isAdmin ? 'admin' : 'user'}`}>
                 {navigationItems.map((item) => (
                   <Link
                     key={item.path}

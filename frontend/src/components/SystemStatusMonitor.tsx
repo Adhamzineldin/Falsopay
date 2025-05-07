@@ -14,15 +14,12 @@ const SystemStatusMonitor = ({
 }: SystemStatusMonitorProps) => {
   const { checkMaintenanceStatus, maintenance } = useApp();
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-
+  const checkMaintenanceRef = useRef(checkMaintenanceStatus);
+  
+  // Update ref when function changes
   useEffect(() => {
-    // Clear any existing timer when unmounting or when dependencies change
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-    };
-  }, []);
+    checkMaintenanceRef.current = checkMaintenanceStatus;
+  }, [checkMaintenanceStatus]);
 
   useEffect(() => {
     // Don't start polling immediately if already in maintenance mode
@@ -34,7 +31,7 @@ const SystemStatusMonitor = ({
     }
 
     return () => stopStatusPolling();
-  }, [maintenance.isInMaintenance]);
+  }, [maintenance.isInMaintenance, checkInterval]);
 
   const startStatusPolling = () => {
     // Clear any existing timer
@@ -44,7 +41,8 @@ const SystemStatusMonitor = ({
     timerRef.current = setInterval(() => {
       // Only check if we're not already checking and not in maintenance mode
       if (!maintenance.isChecking) {
-        checkMaintenanceStatus();
+        // Use the ref to the function to avoid stale closures
+        checkMaintenanceRef.current();
       }
     }, checkInterval);
   };

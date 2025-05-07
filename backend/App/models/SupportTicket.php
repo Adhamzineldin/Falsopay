@@ -174,6 +174,13 @@ class SupportTicket
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute(['id' => $id]);
         $reply = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        // Fix admin name display if needed
+        if ($reply && $reply['is_admin']) {
+            $reply['first_name'] = trim($reply['first_name']);
+            $reply['last_name'] = trim($reply['last_name']);
+        }
+        
         return $reply ?: null;
     }
 
@@ -182,14 +189,24 @@ class SupportTicket
      */
     public function getRepliesByTicketId(int $ticketId): array
     {
-        $sql = "SELECT r.*, u.first_name, u.last_name 
+        $sql = "SELECT r.*, u.first_name, u.last_name, u.email 
                 FROM support_replies r
                 JOIN users u ON r.user_id = u.user_id
                 WHERE r.ticket_id = :ticket_id
                 ORDER BY r.created_at ASC";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute(['ticket_id' => $ticketId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $replies = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Fix admin name display
+        foreach ($replies as &$reply) {
+            if ($reply['is_admin']) {
+                $reply['first_name'] = trim($reply['first_name']);
+                $reply['last_name'] = trim($reply['last_name']);
+            }
+        }
+        
+        return $replies;
     }
 
     /**

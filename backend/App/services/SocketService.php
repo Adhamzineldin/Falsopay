@@ -46,6 +46,36 @@ class SocketService
     }
 
     /**
+     * Send a support ticket notification to a user
+     * 
+     * @param int $userId The user ID to send the notification to
+     * @param int $ticketId The ticket ID
+     * @param string $subject The ticket subject
+     * @param string $message A custom message about the ticket activity
+     * @param string $action The action that occurred (new_ticket, new_reply, status_change)
+     * @return void
+     */
+    public function sendTicketNotification(
+        int $userId,
+        int $ticketId,
+        string $subject,
+        string $message,
+        string $action = 'new_reply'
+    ): void {
+        $payload = [
+            'to' => $userId,
+            'type' => 'ticket_notification',
+            'ticket_id' => $ticketId,
+            'subject' => $subject,
+            'action' => $action,
+            'timestamp' => time(),
+            'message' => $message
+        ];
+
+        $this->postToWebSocketServer($payload);
+    }
+
+    /**
      * Send a generic notification to a user
      * 
      * @param int $userId The user ID to send the notification to

@@ -48,6 +48,25 @@ class SupportController
                 $data['message']
             );
 
+            // Get admin users to notify them about the new ticket
+            $adminUsers = $this->userModel->getAdminUsers();
+            if (!empty($adminUsers)) {
+                $socketService = new \App\services\SocketService();
+                $userName = $this->userModel->getUserById((int)$data['user_id']);
+                $userFullName = $userName['first_name'] . ' ' . $userName['last_name'];
+                
+                // Notify each admin about the new ticket
+                foreach ($adminUsers as $admin) {
+                    $socketService->sendTicketNotification(
+                        $admin['user_id'],
+                        $ticket['ticket_id'],
+                        $ticket['subject'],
+                        "New support ticket from {$userFullName}",
+                        "new_ticket"
+                    );
+                }
+            }
+
             return [
                 'status' => 'success',
                 'message' => 'Support ticket created successfully',
@@ -193,18 +212,19 @@ class SupportController
                 ];
             }
 
-            // For admin replies, always use the dedicated Support Team user
+            // Get actual user info for admin replies
+            $replyUserId = $userId;
+            $adminUserInfo = null;
+            
             if ($isAdmin) {
-                $adminUser = $this->userModel->getAdminUser();
-                if ($adminUser) {
-                    $userId = $adminUser['user_id'];
-                }
+                // Use the actual admin's user info, not a generic account
+                $adminUserInfo = $this->userModel->getUserById($userId);
             }
 
             // Add the reply
             $reply = $this->supportTicketModel->addReply(
                 $ticketId,
-                $userId,
+                $replyUserId,
                 $data['message'],
                 $isAdmin
             );
@@ -212,6 +232,35 @@ class SupportController
             // If admin is replying, update the ticket status to "in_progress" if it's not already closed
             if ($isAdmin && $ticket['status'] !== 'closed') {
                 $this->supportTicketModel->updateTicketStatus($ticketId, 'in_progress');
+            }
+
+            // Send socket notification about the new reply
+            $socketService = new \App\services\SocketService();
+            
+            if ($isAdmin) {
+                // If admin is replying, notify the ticket owner
+                $socketService->sendTicketNotification(
+                    (int)$ticket['user_id'],
+                    $ticketId,
+                    $ticket['subject'],
+                    "The support team has replied to your ticket",
+                    "new_reply"
+                );
+            } else {
+                // If user is replying, notify admins
+                $adminUsers = $this->userModel->getAdminUsers();
+                $userInfo = $this->userModel->getUserById($userId);
+                $userName = $userInfo['first_name'] . ' ' . $userInfo['last_name'];
+                
+                foreach ($adminUsers as $admin) {
+                    $socketService->sendTicketNotification(
+                        $admin['user_id'],
+                        $ticketId,
+                        $ticket['subject'],
+                        "New reply from {$userName} on ticket #{$ticketId}",
+                        "new_reply"
+                    );
+                }
             }
 
             return [
@@ -261,6 +310,20 @@ class SupportController
             $result = $this->supportTicketModel->updateTicketStatus($ticketId, $status);
 
             if ($result) {
+                // Send notification about status change
+                if (isset($ticket['user_id']) && $ticket['user_id']) {
+                    $socketService = new \App\services\SocketService();
+                    $statusText = ucfirst(str_replace('_', ' ', $status));
+                    
+                    $socketService->sendTicketNotification(
+                        (int)$ticket['user_id'],
+                        $ticketId,
+                        $ticket['subject'],
+                        "Your ticket status has been updated to: {$statusText}",
+                        "status_change"
+                    );
+                }
+                
                 return [
                     'status' => 'success',
                     'message' => 'Ticket status updated successfully',
@@ -446,20 +509,26 @@ class SupportController
                 ];
             }
 
-            // For public tickets, always use the dedicated Support Team admin user
-            $adminUser = $this->userModel->getAdminUser();
-            if (!$adminUser) {
-                return [
-                    'status' => 'error',
-                    'message' => 'No admin user available for creating the reply',
-                    'code' => 500
-                ];
+            // For public tickets, use the actual admin's user ID
+            $adminUserId = $data['admin_user_id'] ?? null;
+            
+            if (!$adminUserId) {
+                // If no admin ID provided, use the first admin
+                $adminUser = $this->userModel->getAdminUser();
+                if (!$adminUser) {
+                    return [
+                        'status' => 'error',
+                        'message' => 'No admin user available for creating the reply',
+                        'code' => 500
+                    ];
+                }
+                $adminUserId = $adminUser['user_id'];
             }
 
             // Add the reply using admin user ID
             $reply = $this->supportTicketModel->addReply(
                 $ticketId,
-                $adminUser['user_id'],
+                $adminUserId,
                 $data['message'],
                 true // is admin
             );
@@ -467,6 +536,18 @@ class SupportController
             // Update the ticket status to "in_progress" if it's not already closed
             if ($ticket['status'] !== 'closed') {
                 $this->supportTicketModel->updateTicketStatus($ticketId, 'in_progress');
+            }
+
+            // If the ticket has a user ID, send a notification
+            if (isset($ticket['user_id']) && $ticket['user_id']) {
+                $socketService = new \App\services\SocketService();
+                $socketService->sendTicketNotification(
+                    (int)$ticket['user_id'],
+                    $ticketId,
+                    $ticket['subject'],
+                    "The support team has replied to your ticket",
+                    "new_reply"
+                );
             }
 
             return [

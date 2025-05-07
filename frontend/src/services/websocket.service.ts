@@ -45,6 +45,16 @@ class WebSocketService {
           this.notifySubscribers('money_request', data);
         }
 
+        // Handle support ticket notifications
+        if (data.type === 'ticket_notification') {
+          this.notifySubscribers('ticket_notification', data);
+          
+          // Show a toast notification
+          toast("Support Ticket Update", {
+            description: data.message || "You have a new update on your support ticket",
+          });
+        }
+
         // General fallback for any other notification type
         if (data.type === 'notification') {
           toast(data.title, {

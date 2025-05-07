@@ -22,6 +22,14 @@ const AdminSystemStatus = () => {
 
   useEffect(() => {
     fetchSystemStatus();
+    
+    // Set up interval to refresh every 60 seconds
+    const interval = setInterval(() => {
+      fetchSystemStatus();
+    }, 60000);
+    
+    // Clean up interval on component unmount
+    return () => clearInterval(interval);
   }, []);
 
   const fetchSystemStatus = async () => {

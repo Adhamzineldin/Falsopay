@@ -54,7 +54,14 @@ class SupportRoute extends Route
         
         // Admin reply to ticket
         $router->add('POST', '/api/admin/support/replies', function($body) use ($controller) {
-            return $controller->addReply($body, $body['user_id'] ?? 0, true); // Is admin = true
+            // Use ticket creator's user_id as the replying user ID
+            // This ensures we have a valid user_id that exists in the users table
+            $ticketId = (int)$body['ticket_id'];
+            $ticket = (new \App\models\SupportTicket())->getTicketById($ticketId);
+            $userId = $ticket ? (int)$ticket['user_id'] : 0;
+            
+            // Pass the ticket creator's user_id and set isAdmin flag to true
+            return $controller->addReply($body, $userId, true);
         }, $adminMiddlewares);
     }
 } 

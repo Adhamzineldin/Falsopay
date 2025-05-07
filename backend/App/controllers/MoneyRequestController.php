@@ -203,6 +203,15 @@ class MoneyRequestController {
                 $userId = $_SERVER['AUTHENTICATED_USER_ID'] ?? null;
                 $pin = $request['pin'] ?? null;
                 $senderIpaAddress = $request['sender_ipa_address'] ?? null;
+            } else if (is_string($request) && is_numeric($request)) {
+                // Handle string request (request ID as string)
+                $requestId = intval($request);
+                // Attempt to get other parameters from POST data
+                $postData = json_decode(file_get_contents('php://input'), true) ?: [];
+                $action = $postData['action'] ?? null;
+                $userId = $_SERVER['AUTHENTICATED_USER_ID'] ?? null;
+                $pin = $postData['pin'] ?? null;
+                $senderIpaAddress = $postData['sender_ipa_address'] ?? null;
             } else {
                 // Handle object request
                 $requestBody = $request->getBody();
@@ -215,6 +224,11 @@ class MoneyRequestController {
 
             if (!$requestId || !$action || !$userId) {
                 return ['success' => false, 'message' => 'Missing required parameters'];
+            }
+
+            // Convert request ID to integer if it's a string
+            if (is_string($requestId)) {
+                $requestId = intval($requestId);
             }
 
             // Get the money request

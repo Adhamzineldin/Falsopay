@@ -26,7 +26,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import WebSocketService from '@/services/websocket.service';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/sonner';
 import moneyRequestService from '@/services/money-request.service';
 import { Badge } from '@/components/ui/badge';
 
@@ -64,7 +64,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const [showPendingRequests, setShowPendingRequests] = useState(false);
   const [isLoadingRequests, setIsLoadingRequests] = useState(false);
   const [processingRequestId, setProcessingRequestId] = useState<number | null>(null);
-  const { toast } = useToast();
 
   useEffect(() => {
     setIsMobileMenuOpen(false);

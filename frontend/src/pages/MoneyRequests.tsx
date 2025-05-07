@@ -6,18 +6,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2, RefreshCw, Clock, Send, Download, Calendar, DollarSign, ListFilter, X, Check, Lock } from 'lucide-react';
 import WebSocketService from '@/services/websocket.service';
 import moneyRequestService from '@/services/money-request.service';
-import { MoneyRequests } from '@/components/money-requests/MoneyRequests';
 import { RequestMoney } from '@/components/money-requests/RequestMoney';
 import { formatCurrency } from '@/lib/utils';
 import { toast } from '@/components/ui/sonner';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { IPAService } from '@/services/ipa.service';
+import PinVerification from '@/components/PinVerification';
 
 interface MoneyRequest {
   request_id: number;
@@ -175,8 +174,8 @@ export default function MoneyRequestsPage() {
   };
   
   // Process the request with the PIN
-  const processRequest = async () => {
-    if (!selectedRequest || !pin || !selectedIpa) {
+  const processRequest = async (pin: string) => {
+    if (!selectedRequest || !selectedIpa) {
       toast.error('Please provide all required information');
       return;
     }
@@ -300,15 +299,10 @@ export default function MoneyRequestsPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Left column - Request Money & Active Requests */}
+          {/* Left column - Request Money */}
           <div className="md:col-span-1 space-y-6">
             {/* Request Money Form */}
             <RequestMoney onRequestSent={loadAllRequests} />
-            
-            {/* Pending Money Requests */}
-            <div>
-              <MoneyRequests />
-            </div>
           </div>
 
           {/* Right column - Money Request History */}
@@ -505,27 +499,13 @@ export default function MoneyRequestsPage() {
                 </div>
                 
                 <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <Label htmlFor="pin" className="text-sm">Enter your PIN:</Label>
-                  </div>
-                  <div className="relative">
-                    <Lock className="h-4 w-4 absolute left-3 top-3 text-muted-foreground" />
-                    <Input
-                      id="pin"
-                      ref={pinInputRef}
-                      type="password"
-                      placeholder="Enter your PIN"
-                      className="pl-10"
-                      value={pin}
-                      onChange={(e) => setPin(e.target.value)}
-                      disabled={isProcessing}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && pin) {
-                          processRequest();
-                        }
-                      }}
-                    />
-                  </div>
+                  <Label htmlFor="pin-input" className="text-sm">Enter your PIN:</Label>
+                  <PinVerification
+                    onPinSubmit={processRequest}
+                    isLoading={isProcessing}
+                    title=""
+                    maxLength={4}
+                  />
                 </div>
               </div>
             </div>
@@ -542,14 +522,6 @@ export default function MoneyRequestsPage() {
               disabled={isProcessing}
             >
               Cancel
-            </Button>
-            <Button 
-              onClick={processRequest} 
-              disabled={!pin || isProcessing || !selectedIpa || currentUserIpas.length === 0}
-              className="min-w-24"
-            >
-              {isProcessing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              Confirm Payment
             </Button>
           </DialogFooter>
         </DialogContent>

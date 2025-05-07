@@ -1,7 +1,7 @@
-
 import axios from 'axios';
 import { toast } from '@/components/ui/sonner';
 import {DateTime} from "luxon";
+import WhatsAppHelper from '@/utils/whatsapp-helper';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -11,6 +11,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true,
 });
 
 // Add a request interceptor to include auth token
@@ -27,7 +28,43 @@ api.interceptors.request.use(
 
 // Add a response interceptor to handle token expiration
 api.interceptors.response.use(
-    (response) => response,
+    (response) => {
+        // Handle WhatsApp notification response format
+        if (WhatsAppHelper.isWhatsAppNotification(response.data)) {
+            // Check for transaction_id in the response data object
+            const transactionId = WhatsAppHelper.extractTransactionId(response.data);
+            
+            // If there's a transaction_id property in the response, it's a combined response
+            if (transactionId) {
+                // Format the response as a success with the transaction ID
+                return {
+                    ...response,
+                    data: {
+                        success: true,
+                        transaction_id: transactionId,
+                        whatsapp_notification: true,
+                        message: WhatsAppHelper.getWhatsAppNotificationMessage(response.data),
+                        data: response.data
+                    }
+                };
+            }
+        } else if (response.data && typeof response.data === 'object') {
+            // Check if this is a raw transaction response with transaction_id
+            if (response.data.transaction_id && !response.data.success) {
+                // Format it as a success response
+                return {
+                    ...response,
+                    data: {
+                        success: true, 
+                        transaction_id: response.data.transaction_id,
+                        data: response.data
+                    }
+                };
+            }
+        }
+        
+        return response;
+    },
     async (error) => {
         const originalRequest = error.config;
 

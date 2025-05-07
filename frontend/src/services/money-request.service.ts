@@ -1,4 +1,5 @@
 import ApiService from '@/services/api';
+import WhatsAppHelper from '@/utils/whatsapp-helper';
 
 interface AcceptRequestOptions {
   pin: string;
@@ -79,8 +80,59 @@ class MoneyRequestService {
       };
       
       const response = await ApiService.post(`/api/money-requests/${requestId}/process`, payload);
-      return response.data;
+      let responseData = response.data;
+      
+      // Ensure we're working with a proper object
+      if (typeof responseData === 'string') {
+        try {
+          responseData = JSON.parse(responseData);
+        } catch (e) {
+          // If we can't parse, keep the original
+        }
+      }
+      
+      // Check if we received the WhatsApp notification response format
+      if (WhatsAppHelper.isWhatsAppNotification(responseData)) {
+        // Extract transaction_id from the data
+        const transactionId = WhatsAppHelper.extractTransactionId(responseData);
+        const notificationMessage = WhatsAppHelper.getWhatsAppNotificationMessage(responseData);
+        
+        return {
+          success: true,
+          transaction_id: transactionId,
+          whatsapp_notification: true,
+          message: notificationMessage,
+          data: responseData
+        };
+      }
+      
+      // Check for direct transaction_id in response (simple format)
+      if (responseData && responseData.transaction_id && typeof responseData.transaction_id === 'number') {
+        return {
+          success: true,
+          transaction_id: responseData.transaction_id,
+          message: 'Transaction completed successfully',
+          data: responseData
+        };
+      }
+      
+      // Return the original response if not in WhatsApp format
+      return responseData;
     } catch (error) {
+      console.error('Error accepting request:', error);
+      
+      // If the transaction went through but we got a network error, return partial success
+      const errorResponse = error.response?.data;
+      if (errorResponse && errorResponse.transaction_id) {
+        return {
+          success: true,
+          transaction_id: errorResponse.transaction_id,
+          message: 'Payment completed but notification may have failed',
+          partial_success: true,
+          error: error
+        };
+      }
+      
       throw error;
     }
   }

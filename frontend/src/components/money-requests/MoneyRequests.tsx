@@ -78,11 +78,21 @@ export function MoneyRequests() {
       const response = await moneyRequestService.acceptRequest(requestId);
       
       if (response.success) {
+        // Handle WhatsApp notification response
+        if (response.whatsapp_notification) {
+          // If we received a WhatsApp notification response
+          toast.success('Money request accepted', {
+            description: response.message || 'Payment was sent successfully with notification.'
+          });
+        } else {
+          // Original success handling
+          toast.success('Money request accepted', {
+            description: `Payment of ${formatCurrency(response.data?.request?.amount)} was sent successfully`
+          });
+        }
+        
         // Remove the request from the list
         setPendingRequests(prev => prev.filter(req => req.request_id !== requestId));
-        toast.success('Money request accepted', {
-          description: `Payment of ${formatCurrency(response.data.request.amount)} was sent successfully`
-        });
       } else {
         toast.error('Failed to accept request', {
           description: response.message

@@ -17,6 +17,7 @@ import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { IPAService } from '@/services/ipa.service';
 import PinVerification from '@/components/PinVerification';
+import WhatsAppHelper from '@/utils/whatsapp-helper';
 
 interface MoneyRequest {
   request_id: number;
@@ -191,20 +192,38 @@ export default function MoneyRequestsPage() {
         sender_ipa_address: selectedIpa
       });
       
-      if (response.success) {
-        // Show success message
-        toast.success('Money request accepted', {
-          description: `Payment of ${formatCurrency(selectedRequest.amount)} was sent successfully`
-        });
-        
-        // Always update the UI to show the request as accepted
-        setAllRequests(prev => 
-          prev.map(req => 
-            req.request_id === selectedRequest.request_id 
-              ? { ...req, status: 'accepted', transaction_id: response.data.transaction.transaction_id } 
-              : req
-          )
-        );
+      // Handle success response in any form (normal or WhatsApp)
+      if (response && (response.success === true || (response.transaction_id && response.transaction_id > 0))) {
+        // Check for WhatsApp notification response
+        if (response.whatsapp_notification) {
+          // If we received a WhatsApp notification response
+          toast.success('Money request accepted', {
+            description: response.message || `Payment of ${formatCurrency(selectedRequest.amount)} was sent successfully with notification.`
+          });
+
+          // Update the UI to show the request as accepted
+          setAllRequests(prev => 
+            prev.map(req => 
+              req.request_id === selectedRequest.request_id 
+                ? { ...req, status: 'accepted', transaction_id: response.transaction_id } 
+                : req
+            )
+          );
+        } else {
+          // Original success handling if we don't get the WhatsApp notification structure
+          toast.success('Money request accepted', {
+            description: `Payment of ${formatCurrency(selectedRequest.amount)} was sent successfully`
+          });
+          
+          // Update the UI to show the request as accepted
+          setAllRequests(prev => 
+            prev.map(req => 
+              req.request_id === selectedRequest.request_id 
+                ? { ...req, status: 'accepted', transaction_id: response.data?.transaction?.transaction_id } 
+                : req
+            )
+          );
+        }
         
         // Always do a refresh after a short delay to get the latest data
         setTimeout(() => {
@@ -481,7 +500,7 @@ export default function MoneyRequestsPage() {
           <DialogHeader>
             <DialogTitle>Confirm Payment</DialogTitle>
             <DialogDescription>
-              Please enter your PIN to accept this money request
+              Please enter your PIN to accept this money request. A WhatsApp notification will be sent to the requester.
             </DialogDescription>
           </DialogHeader>
           
@@ -496,45 +515,53 @@ export default function MoneyRequestsPage() {
                   <span className="text-sm font-medium">From:</span>
                   <span className="text-sm">{selectedRequest.requester_name}</span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">IPA Address:</span>
-                  <span className="text-sm text-muted-foreground">{selectedRequest.requester_ipa_address}</span>
-                </div>
+                {selectedRequest.message && (
+                  <div className="flex justify-between items-start pt-2">
+                    <span className="text-sm font-medium">Message:</span>
+                    <span className="text-sm text-right max-w-[200px]">{selectedRequest.message}</span>
+                  </div>
+                )}
               </div>
               
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="select-ipa">Select your IPA to pay from:</Label>
-                  <select 
-                    id="select-ipa"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    value={selectedIpa}
-                    onChange={(e) => setSelectedIpa(e.target.value)}
-                    disabled={isLoadingIpas || isProcessing}
-                  >
-                    {isLoadingIpas ? (
-                      <option>Loading IPA addresses...</option>
-                    ) : currentUserIpas.length === 0 ? (
-                      <option value="">No IPA addresses found</option>
-                    ) : (
-                      currentUserIpas.map((ipa) => (
-                        <option key={ipa.ipa_id} value={ipa.ipa_address}>
-                          {ipa.ipa_address} {ipa.bank_name ? `(${ipa.bank_name})` : ''}
-                        </option>
-                      ))
-                    )}
-                  </select>
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="ipa-select">Send money from</Label>
+                <select 
+                  id="ipa-select"
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                  value={selectedIpa}
+                  onChange={(e) => setSelectedIpa(e.target.value)}
+                  disabled={isLoadingIpas || isProcessing}
+                >
+                  {isLoadingIpas ? (
+                    <option>Loading accounts...</option>
+                  ) : currentUserIpas.length === 0 ? (
+                    <option>No IPA addresses available</option>
+                  ) : (
+                    currentUserIpas.map((ipa) => (
+                      <option key={ipa.ipa_id} value={ipa.ipa_address}>
+                        {ipa.ipa_address} - {ipa.bank_name || 'Unknown Bank'}
+                      </option>
+                    ))
+                  )}
+                </select>
                 
-                <div className="space-y-2">
-                  <Label htmlFor="pin-input" className="text-sm">Enter your PIN:</Label>
-                  <PinVerification
+                <div className="mt-4">
+                  <div className="flex justify-between">
+                    <Label htmlFor="pin">Security PIN</Label>
+                  </div>
+                  <PinVerification 
                     onPinSubmit={processRequest}
                     isLoading={isProcessing}
-                    title=""
+                    loading={!selectedIpa}
                     maxLength={6}
+                    title="Enter your PIN"
+                    hideVerifyButton={true}
+                    autoSubmit={true}
                   />
                 </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  After confirming payment, the requester will receive a WhatsApp notification about the completed transaction.
+                </p>
               </div>
             </div>
           )}
@@ -551,6 +578,13 @@ export default function MoneyRequestsPage() {
             >
               Cancel
             </Button>
+            {/* Only show loading indicator if processing */}
+            {isProcessing && (
+              <div className="flex items-center text-primary">
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                Processing...
+              </div>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

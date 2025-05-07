@@ -14,6 +14,8 @@ interface PinVerificationProps {
   maxLength?: number;
   expectedPin?: string;
   ipaAddress?: string;
+  hideVerifyButton?: boolean;
+  autoSubmit?: boolean;
 }
 
 const PinVerification: React.FC<PinVerificationProps> = ({
@@ -26,6 +28,8 @@ const PinVerification: React.FC<PinVerificationProps> = ({
   maxLength = 4,
   expectedPin,
   ipaAddress,
+  hideVerifyButton = false,
+  autoSubmit = false,
 }) => {
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
@@ -38,6 +42,13 @@ const PinVerification: React.FC<PinVerificationProps> = ({
     setError('');
   }, [expectedPin]);
 
+  // Auto-submit when PIN is complete and autoSubmit is true
+  useEffect(() => {
+    if (autoSubmit && pin.length === maxLength && onPinSubmit && !verifying && !loading && !isLoading) {
+      handleVerify();
+    }
+  }, [pin, autoSubmit, maxLength]);
+
   const handleVerify = async () => {
     if (pin.length !== maxLength) {
       setError(`PIN must be ${maxLength} digits`);
@@ -45,11 +56,9 @@ const PinVerification: React.FC<PinVerificationProps> = ({
     }
     
     setVerifying(true);
-    console.log('Submitting PIN:', pin);
     
     // If we have an expected PIN, verify locally
     if (expectedPin) {
-      console.log(`Verifying PIN: ${pin}, Expected: ${expectedPin}`);
       setTimeout(() => {
         if (pin === expectedPin) {
           setError('');
@@ -105,20 +114,24 @@ const PinVerification: React.FC<PinVerificationProps> = ({
           )}
         />
         {error && <p className="text-sm text-red-500 text-center">{error}</p>}
-        <Button 
-          onClick={handleVerify} 
-          disabled={pin.length !== maxLength || loading || isLoading || verifying}
-          className="w-full"
-        >
-          {verifying || loading || isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Verifying...
-            </>
-          ) : (
-            'Verify Code'
-          )}
-        </Button>
+        
+        {!hideVerifyButton && (
+          <Button 
+            onClick={handleVerify} 
+            disabled={pin.length !== maxLength || loading || isLoading || verifying}
+            className="w-full"
+          >
+            {verifying || loading || isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Verifying...
+              </>
+            ) : (
+              'Verify Code'
+            )}
+          </Button>
+        )}
+        
         {onResend && (
           <Button
             type="button"

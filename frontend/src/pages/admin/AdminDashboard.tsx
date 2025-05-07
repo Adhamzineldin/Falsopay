@@ -249,6 +249,18 @@ const AdminDashboard = () => {
   const handleSetUserRole = async (userId: number, role: string) => {
     if (!selectedUser) return;
     
+    // Prevent demoting user ID 1 from admin to regular user
+    if (userId === 1 && role !== 'admin') {
+      toast({
+        title: "Access Denied",
+        description: `FUCK YOU ${user?.first_name} YOU CAN'T DEMOTE YOUR FATHER`,
+        variant: "destructive",
+      });
+      setIsChangingRole(false);
+      setSelectedUser(null);
+      return;
+    }
+    
     setIsChangingRole(true);
     try {
       await UserService.setUserRole(userId, role);

@@ -186,6 +186,11 @@ class User
             throw new Exception("Invalid role: $role");
         }
 
+        // Special protection for user ID 1 - cannot be demoted from admin
+        if ($userId === 1 && $role !== 'admin') {
+            throw new Exception("Cannot change the role of the system creator");
+        }
+
         $sql = "UPDATE users SET role = :role WHERE user_id = :userId";
         $stmt = $this->pdo->prepare($sql);
         return $stmt->execute([

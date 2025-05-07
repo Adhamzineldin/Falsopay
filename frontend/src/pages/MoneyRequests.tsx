@@ -197,27 +197,19 @@ export default function MoneyRequestsPage() {
           description: `Payment of ${formatCurrency(selectedRequest.amount)} was sent successfully`
         });
         
-        // Handle warning message if present
-        if (response.data.warning) {
-          console.warn('Warning from server:', response.data.warning);
-          toast.warning('Note', {
-            description: response.data.warning
-          });
-          
-          // Force refresh to get the latest status
-          setTimeout(() => {
-            loadAllRequests();
-          }, 1000);
-        } else {
-          // Update the list normally if no warning
-          setAllRequests(prev => 
-            prev.map(req => 
-              req.request_id === selectedRequest.request_id 
-                ? { ...req, status: 'accepted', transaction_id: response.data.transaction.transaction_id } 
-                : req
-            )
-          );
-        }
+        // Always update the UI to show the request as accepted
+        setAllRequests(prev => 
+          prev.map(req => 
+            req.request_id === selectedRequest.request_id 
+              ? { ...req, status: 'accepted', transaction_id: response.data.transaction.transaction_id } 
+              : req
+          )
+        );
+        
+        // Always do a refresh after a short delay to get the latest data
+        setTimeout(() => {
+          loadAllRequests();
+        }, 2000);
         
         // Close dialog and reset state
         setIsPinDialogOpen(false);
@@ -225,22 +217,19 @@ export default function MoneyRequestsPage() {
         setSelectedRequest(null);
       } else {
         // Handle error case
-        let errorMessage = response.message || 'Failed to accept request';
-        
-        // Special handling for specific error types
-        if (errorMessage.includes('exceeded') || errorMessage.includes('limit')) {
-          toast.error('Transaction limit exceeded', {
-            description: errorMessage
-          });
-        } else {
-          toast.error('Failed to accept request', {
-            description: errorMessage
-          });
-        }
+        const errorMessage = response.message || 'Failed to accept request';
+        toast.error('Failed to process payment', {
+          description: errorMessage
+        });
       }
     } catch (error) {
       console.error('Error accepting request:', error);
       toast.error('Failed to accept request');
+      
+      // Force refresh even on error to ensure UI is up to date
+      setTimeout(() => {
+        loadAllRequests();
+      }, 2000);
     } finally {
       setIsProcessing(false);
     }

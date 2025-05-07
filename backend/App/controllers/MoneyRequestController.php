@@ -462,8 +462,8 @@ class MoneyRequestController {
         $notificationData = array_merge(['to' => $userId], $data);
         
         // Send the notification via the WebSocket server's HTTP push endpoint
-        $curl = curl_init();
-        curl_setopt_array($curl, [
+        $curl = \curl_init();
+        \curl_setopt_array($curl, [
             CURLOPT_URL => $pushEndpoint,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POST => true,
@@ -471,10 +471,10 @@ class MoneyRequestController {
             CURLOPT_HTTPHEADER => ['Content-Type: application/json']
         ]);
         
-        $response = curl_exec($curl);
-        $error = curl_error($curl);
-        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-        curl_close($curl);
+        $response = \curl_exec($curl);
+        $error = \curl_error($curl);
+        $httpCode = \curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        \curl_close($curl);
         
         if ($httpCode !== 200 || $error) {
             error_log("Error sending WebSocket notification: $error, HTTP code: $httpCode, Response: $response");

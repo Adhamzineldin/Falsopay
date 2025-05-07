@@ -106,12 +106,12 @@ const Support = () => {
     
     setIsSubmitting(true);
     try {
-      // Add SupportService implementation
-      // await SupportService.createTicket({
-      //   user_id: user.user_id,
-      //   subject,
-      //   message
-      // });
+      // Call SupportService to create the ticket
+      await SupportService.createTicket({
+        user_id: user.user_id,
+        subject,
+        message
+      });
       
       toast({
         title: "Success",

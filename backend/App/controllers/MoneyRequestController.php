@@ -319,7 +319,17 @@ class MoneyRequestController {
                     // Update the money request status
                     $this->moneyRequestModel->updateRequestStatus($requestId, 'accepted', $transactionId);
                     
-                    // Send notifications
+                    // Get new balances for notifications
+                    $senderNewBalance = $bankAccountModel->getBalance($senderIpa['bank_id'], $senderIpa['account_number']);
+                    $receiverNewBalance = $bankAccountModel->getBalance($receiverIpa['bank_id'], $receiverIpa['account_number']);
+                    
+                    // Get full user objects
+                    $userModel = new \App\models\User();
+                    $senderUser = $userModel->getUserById($userId);
+                    $receiverUser = $userModel->getUserById($request['requester_user_id']);
+                    
+                    // Send notifications exactly like SendMoney does
+                    // 1. Socket notification
                     $socketService = new \App\services\SocketService();
                     $socketService->sendTransactionStatus(
                         fromUserId: $userId,
@@ -328,6 +338,26 @@ class MoneyRequestController {
                         fromName: $request['requested_name'],
                         toName: $request['requester_name'],
                         transactionId: $transactionId
+                    );
+                    
+                    // 2. WhatsApp notifications - use the TransactionController's method
+                    \App\controllers\TransactionController::sendTransactionNotification(
+                        $transactionData,
+                        $senderUser,
+                        $receiverUser,
+                        $transactionId,
+                        $senderNewBalance,
+                        $receiverNewBalance
+                    );
+                    
+                    // 3. Email notifications
+                    \App\services\EmailService::sendTransactionNotification(
+                        $transactionData,
+                        $senderUser,
+                        $receiverUser,
+                        $transactionId,
+                        $senderNewBalance,
+                        $receiverNewBalance
                     );
                     
                     // Notify the requester through WebSocket
@@ -341,10 +371,6 @@ class MoneyRequestController {
                             ]
                         ]
                     ]);
-                    
-                    // Get new balances for response
-                    $senderNewBalance = $bankAccountModel->getBalance($senderIpa['bank_id'], $senderIpa['account_number']);
-                    $receiverNewBalance = $bankAccountModel->getBalance($receiverIpa['bank_id'], $receiverIpa['account_number']);
                     
                     // Prepare response data
                     $responseData = [

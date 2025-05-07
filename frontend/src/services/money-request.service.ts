@@ -85,9 +85,32 @@ class MoneyRequestService {
       // Ensure we're working with a proper object
       if (typeof responseData === 'string') {
         try {
+          // First check if it's JSON with WhatsApp data inside of it
+          if (responseData.includes('"messaging_product":"whatsapp"') || 
+              responseData.includes('"messaging_product": "whatsapp"')) {
+            
+            // It's a WhatsApp notification embedded in the response
+            // Extract the transaction data that should be at the end of the response
+            const transactionDataMatch = responseData.match(/\{[\s\n]*"success"[\s\n]*:[\s\n]*true.*\}/s);
+            if (transactionDataMatch) {
+              const transactionJson = transactionDataMatch[0];
+              const transactionData = JSON.parse(transactionJson);
+              
+              return {
+                success: true,
+                whatsapp_notification: true,
+                transaction_id: transactionData.data?.transaction?.transaction_id || 0,
+                message: 'Money request accepted with WhatsApp notification sent',
+                data: transactionData.data
+              };
+            }
+          }
+          
+          // Regular JSON parsing if no WhatsApp data found
           responseData = JSON.parse(responseData);
         } catch (e) {
           // If we can't parse, keep the original
+          console.error('Error parsing response:', e);
         }
       }
       

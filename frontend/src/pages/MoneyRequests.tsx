@@ -192,24 +192,12 @@ export default function MoneyRequestsPage() {
         sender_ipa_address: selectedIpa
       });
       
-      // Handle success response in any form
-      if (
-        response && 
-        (response.success === true || 
-         (response.transaction_id && response.transaction_id > 0))
-      ) {
-        // Check for WhatsApp notification response
-        if (response.whatsapp_notification) {
-          // If we received a WhatsApp notification response
-          toast.success('Money request accepted', {
-            description: response.message || `Payment of ${formatCurrency(selectedRequest.amount)} was sent successfully with notification.`
-          });
-        } else {
-          // Standard success response
-          toast.success('Money request accepted', {
-            description: response.message || `Payment of ${formatCurrency(selectedRequest.amount)} was sent successfully`
-          });
-        }
+      // First check if the response contains a WhatsApp notification
+      if (response && response.whatsapp_notification) {
+        // We received a WhatsApp notification response
+        toast.success('Money request accepted', {
+          description: response.message || `Payment of ${formatCurrency(selectedRequest.amount)} was sent successfully with notification.`
+        });
         
         // Update the UI to show the request as accepted
         setAllRequests(prev => 
@@ -218,7 +206,33 @@ export default function MoneyRequestsPage() {
               ? { 
                   ...req, 
                   status: 'accepted', 
-                  transaction_id: response.transaction_id || response.data?.transaction?.transaction_id
+                  transaction_id: response.transaction_id || 0
+                } 
+              : req
+          )
+        );
+        
+        // Close the dialogs
+        setIsPinDialogOpen(false);
+        setPin('');
+        setSelectedRequest(null);
+        return;
+      }
+      
+      // Handle regular success response
+      if (response && response.success === true) {
+        toast.success('Money request accepted', {
+          description: response.message || `Payment of ${formatCurrency(selectedRequest.amount)} was sent successfully`
+        });
+        
+        // Update the UI to show the request as accepted
+        setAllRequests(prev => 
+          prev.map(req => 
+            req.request_id === selectedRequest.request_id 
+              ? { 
+                  ...req, 
+                  status: 'accepted', 
+                  transaction_id: response.data?.transaction?.transaction_id || response.transaction_id || 0
                 } 
               : req
           )
@@ -228,12 +242,39 @@ export default function MoneyRequestsPage() {
         setIsPinDialogOpen(false);
         setPin('');
         setSelectedRequest(null);
-      } else {
-        // Handle error response
-        toast.error('Failed to process the request', {
-          description: response.message || 'An unexpected error occurred'
-        });
+        return;
       }
+      
+      // Handle success response with just a transaction ID
+      if (response && response.transaction_id > 0) {
+        toast.success('Money request accepted', {
+          description: `Payment of ${formatCurrency(selectedRequest.amount)} was processed successfully`
+        });
+        
+        // Update the UI to show the request as accepted
+        setAllRequests(prev => 
+          prev.map(req => 
+            req.request_id === selectedRequest.request_id 
+              ? { 
+                  ...req, 
+                  status: 'accepted', 
+                  transaction_id: response.transaction_id
+                } 
+              : req
+          )
+        );
+        
+        // Close the dialog
+        setIsPinDialogOpen(false);
+        setPin('');
+        setSelectedRequest(null);
+        return;
+      }
+      
+      // If we get here, something went wrong
+      toast.error('Failed to process the request', {
+        description: response?.message || 'An unexpected error occurred'
+      });
     } catch (error) {
       console.error('Error processing request:', error);
       toast.error('Failed to process the request', {

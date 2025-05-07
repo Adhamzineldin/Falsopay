@@ -7,6 +7,7 @@ use App\models\Card;
 use App\models\InstantPaymentAddress;
 use App\models\Transaction;
 use App\models\User;
+use App\models\SystemSettings;
 use App\services\EmailService;
 use App\services\SocketService;
 use App\services\WhatsAppAPI;
@@ -55,7 +56,7 @@ class TransactionController
         self::json($transactions);
     }
 
-    public static function sendMoney(array $data): void
+    #[NoReturn] public static function sendMoney(array $data): void
     {
         $transactionModel = new Transaction();
         $socketService = new SocketService();
@@ -75,6 +76,33 @@ class TransactionController
         }
 
         try {
+            // Check system settings for transaction status
+            $systemSettings = (new SystemSettings())->getSettings();
+            
+            // Check if transactions are blocked
+            if (isset($systemSettings['transactions_blocked']) && $systemSettings['transactions_blocked']) {
+                $message = $systemSettings['block_message'] ?: 'Transactions are temporarily disabled by the administrator';
+                self::json([
+                    'error' => $message,
+                    'code' => 'TRANSACTIONS_BLOCKED'
+                ], 403);
+                return;
+            }
+            
+            // Check transfer limit if enabled
+            if (isset($systemSettings['transfer_limit_enabled']) && 
+                $systemSettings['transfer_limit_enabled'] && 
+                isset($data['amount']) && 
+                $data['amount'] > $systemSettings['transfer_limit_amount']) {
+                
+                self::json([
+                    'error' => "Transaction amount exceeds the current transfer limit of {$systemSettings['transfer_limit_amount']}",
+                    'code' => 'TRANSFER_LIMIT_EXCEEDED',
+                    'limit' => $systemSettings['transfer_limit_amount']
+                ], 403);
+                return;
+            }
+
             // Sender account retrieval (can use bank_id + account_number or IPA details)
             $senderAccount = null;
             if (isset($data['sender_bank_id'], $data['sender_account_number'])) {

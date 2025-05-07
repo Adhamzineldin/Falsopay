@@ -37,7 +37,12 @@ import {
     RadioGroupItem,
 } from "@/components/ui/radio-group";
 import {useToast} from '@/hooks/use-toast';
-import {ArrowRight, CheckCircle, Search, User, Send, CreditCard, Phone, Banknote, AlertCircle, Star} from 'lucide-react';
+import {ArrowRight, CheckCircle, Search, User, Send, CreditCard, Phone, Banknote, AlertCircle, Star, AlertTriangle, Info} from 'lucide-react';
+import {
+    Alert,
+    AlertTitle,
+    AlertDescription
+} from "@/components/ui/alert";
 import PinVerification from '@/components/PinVerification';
 import {useForm} from 'react-hook-form';
 import BankSelect from '@/components/BankSelect';
@@ -45,6 +50,7 @@ import {BankService} from "@/services/bank.service.ts";
 import {CardService} from "@/services/card.service.ts";
 import SendMoneyFavorites from '@/components/SendMoneyFavorites';
 import {FavoritesService, Favorite} from '@/services/favorites.service';
+import {SystemService, PublicSystemStatus} from '@/services/system.service';
 import {
     Tooltip,
     TooltipContent,
@@ -108,6 +114,8 @@ const SendMoney = () => {
     const [showRemoveDialog, setShowRemoveDialog] = useState(false);
     const {toast} = useToast();
     const navigate = useNavigate();
+    const [systemStatus, setSystemStatus] = useState<PublicSystemStatus | null>(null);
+    const [isLoadingSystemStatus, setIsLoadingSystemStatus] = useState(false);
 
     const form = useForm<FormValues>({
         defaultValues: {
@@ -120,67 +128,88 @@ const SendMoney = () => {
     });
 
     useEffect(() => {
-        const fetchLinkedAccounts = async () => {
-            if (!user?.user_id) return;
+        if (!user) {
+            navigate('/login');
+            return;
+        }
 
+        // Fetch linked accounts
+        const fetchAccounts = async () => {
             setIsLoadingAccounts(true);
             try {
-                const accounts = await IPAService.getIPAsByUserId(user.user_id);
-
-                // Enhance accounts with balance data
-                const enhancedAccounts = await Promise.all(accounts.map(async (account) => {
-                    try {
-                        const balanceData = await BankAccountService.getAccountBalance(account.bank_id, account.account_number);
-                        return {
-                            ...account,
-                            balance: balanceData?.balance || 0, // Fallback to random balance for demo
-                            currency: balanceData?.currency || 'EGP'
-                        };
-                    } catch (error) {
-                        console.error(`Error fetching balance for ${account.ipa_address}:`, error);
-                        return {
-                            ...account,
-                            balance: Math.random() * 10000, // Random balance between 0-10000 for demo
-                            currency: 'EUR'
-                        };
-                    }
-                }));
-
-                setLinkedAccounts(enhancedAccounts);
-
-                if (enhancedAccounts.length > 0) {
-                    form.setValue('sourceIpaAddress', enhancedAccounts[0].ipa_address);
-                    setSelectedAccount(enhancedAccounts[0]);
+                if (!user) return;
+                
+                const ipaAccounts = await IPAService.getIPAsByUserId(user.user_id);
+                
+                // Fetch balances for each IPA
+                const accountsWithBalances = await Promise.all(
+                    ipaAccounts.map(async (account) => {
+                        try {
+                            const balance = await BankAccountService.getAccountBalance(account.bank_id, account.account_number);
+                            return {
+                                ...account,
+                                balance: balance?.balance || 0,
+                                currency: balance?.currency || 'GBP'
+                            };
+                        } catch (e) {
+                            console.error(`Error fetching balance for ${account.bank_id}:${account.account_number}:`, e);
+                            return {
+                                ...account,
+                                balance: 0,
+                                currency: 'GBP'
+                            };
+                        }
+                    })
+                );
+                
+                setLinkedAccounts(accountsWithBalances);
+                
+                // Set first account as default if available
+                if (accountsWithBalances.length > 0) {
+                    setSelectedAccount(accountsWithBalances[0]);
+                    form.setValue('sourceIpaAddress', accountsWithBalances[0].ipa_address);
                 }
             } catch (error) {
-                console.error('Error fetching linked accounts:', error);
+                console.error('Error fetching IPA accounts:', error);
                 toast({
                     title: "Error",
-                    description: "Could not load your linked accounts",
+                    description: "Failed to load your accounts",
                     variant: "destructive",
                 });
             } finally {
                 setIsLoadingAccounts(false);
             }
         };
-
-        fetchLinkedAccounts();
-    }, [user, form, toast]);
+        
+        // Load user's accounts
+        fetchAccounts();
+        
+        // Load user's favorites
+        const fetchFavorites = async () => {
+            try {
+                if (!user) return;
+                const userFavorites = await FavoritesService.getUserFavorites(user.user_id);
+                setFavorites(userFavorites);
+            } catch (error) {
+                console.error('Error fetching favorites:', error);
+            }
+        };
+        
+        fetchFavorites();
+        
+        // Fetch system status
+        fetchSystemStatus();
+    }, [user, navigate, toast, form]);
 
     useEffect(() => {
         const fetchFavorites = async () => {
-            if (!user?.user_id) return;
-
+            if (!user) return;
+            
             try {
-                const favorites = await FavoritesService.getUserFavorites(user.user_id);
-                setFavorites(favorites);
+                const userFavorites = await FavoritesService.getUserFavorites(user.user_id);
+                setFavorites(userFavorites);
             } catch (error) {
                 console.error('Error fetching favorites:', error);
-                toast({
-                    title: "Error",
-                    description: "Could not load your favorites",
-                    variant: "destructive",
-                });
             }
         };
 
@@ -193,6 +222,24 @@ const SendMoney = () => {
             setCustomFavoriteName(recipient.name);
         }
     }, [recipient]);
+
+    // Fetch system status
+    useEffect(() => {
+        fetchSystemStatus();
+    }, []);
+
+    // Fetch system status to check for transfer limits and blocked transactions
+    const fetchSystemStatus = async () => {
+        setIsLoadingSystemStatus(true);
+        try {
+            const status = await SystemService.getPublicSystemStatus();
+            setSystemStatus(status);
+        } catch (error) {
+            console.error('Error fetching system status:', error);
+        } finally {
+            setIsLoadingSystemStatus(false);
+        }
+    };
 
     const searchRecipient = async (data: FormValues) => {
         if (!data.identifier) {
@@ -320,6 +367,26 @@ const SendMoney = () => {
             return;
         }
 
+        // Check system status - transactions might be blocked
+        if (systemStatus && !systemStatus.transactions_enabled) {
+            toast({
+                title: "Transactions Blocked",
+                description: systemStatus.message || "Transactions are currently disabled by the administrator",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        // Check transfer limit if enabled
+        if (systemStatus && systemStatus.transfer_limit && amount > systemStatus.transfer_limit) {
+            toast({
+                title: "Transfer Limit Exceeded",
+                description: `Transaction amount exceeds the current transfer limit of ${formatCurrency(systemStatus.transfer_limit)}`,
+                variant: "destructive",
+            });
+            return;
+        }
+
         // Check if amount exceeds balance
         if (amount > selectedAccount.balance) {
             toast({
@@ -348,6 +415,26 @@ const SendMoney = () => {
         const transferMethod = form.getValues('method') as TransferMethod;
         const identifier = form.getValues('identifier');
         const bankId = form.getValues('bank_id');
+
+        // Re-check system status - transactions might have been blocked
+        if (systemStatus && !systemStatus.transactions_enabled) {
+            toast({
+                title: "Transactions Blocked",
+                description: systemStatus.message || "Transactions are currently disabled by the administrator",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        // Re-check transfer limit if enabled
+        if (systemStatus && systemStatus.transfer_limit && amount > systemStatus.transfer_limit) {
+            toast({
+                title: "Transfer Limit Exceeded",
+                description: `Transaction amount exceeds the current transfer limit of ${formatCurrency(systemStatus.transfer_limit)}`,
+                variant: "destructive",
+            });
+            return;
+        }
 
         // Final check to ensure amount doesn't exceed balance
         if (amount > selectedAccount.balance) {
@@ -800,8 +887,30 @@ const SendMoney = () => {
                             </CardHeader>
 
                             <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+                                {/* System status alerts */}
+                                {systemStatus && !systemStatus.transactions_enabled && (
+                                    <Alert variant="destructive">
+                                        <AlertTriangle className="h-4 w-4" />
+                                        <AlertTitle>Transactions Temporarily Blocked</AlertTitle>
+                                        <AlertDescription>
+                                            {systemStatus.message || "Money transfers are currently disabled by the administrator."}
+                                        </AlertDescription>
+                                    </Alert>
+                                )}
+                                
+                                {systemStatus && systemStatus.transfer_limit && (
+                                    <Alert variant="default">
+                                        <Info className="h-4 w-4" />
+                                        <AlertTitle>Transfer Limit Active</AlertTitle>
+                                        <AlertDescription>
+                                            Maximum transaction amount is limited to {formatCurrency(systemStatus.transfer_limit)}.
+                                        </AlertDescription>
+                                    </Alert>
+                                )}
+
                                 <div
-                                    className="flex items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+                                    className="flex items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-lg border border-dashed border-gray-200"
+                                >
                                     <div className="flex items-center space-x-3 sm:space-x-4">
                                         <div
                                             className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-falsopay-primary flex items-center justify-center text-white">

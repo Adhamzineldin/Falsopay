@@ -1,5 +1,5 @@
-
 import api from './api';
+import { SystemService } from './system.service';
 
 // Use backend schema for field names
 export interface TransactionData {
@@ -43,8 +43,50 @@ export interface SendMoneyData {
 }
 
 export const TransactionService = {
+  // Check if transactions are allowed and respect the transfer limit
+  checkTransactionStatus: async (amount: number) => {
+    try {
+      // Get public system status
+      const systemStatus = await SystemService.getPublicSystemStatus();
+      
+      // If transactions are not enabled, return error with message
+      if (!systemStatus.transactions_enabled) {
+        return {
+          allowed: false,
+          message: systemStatus.message || 'Transactions are currently disabled by the administrator',
+          errorCode: 'TRANSACTIONS_BLOCKED'
+        };
+      }
+      
+      // If there's a transfer limit, check if the amount exceeds it
+      if (systemStatus.transfer_limit && amount > systemStatus.transfer_limit) {
+        return {
+          allowed: false,
+          message: `Transaction amount exceeds the current transfer limit of $${systemStatus.transfer_limit}`,
+          errorCode: 'TRANSFER_LIMIT_EXCEEDED',
+          limit: systemStatus.transfer_limit
+        };
+      }
+      
+      // All checks passed
+      return {
+        allowed: true
+      };
+    } catch (error) {
+      console.error('Error checking transaction status:', error);
+      // Default to allowing transactions if we can't check status
+      return { allowed: true };
+    }
+  },
+
   createTransaction: async (transactionData: TransactionData) => {
     try {
+      // Check transaction status before sending
+      const statusCheck = await TransactionService.checkTransactionStatus(transactionData.amount);
+      if (!statusCheck.allowed) {
+        throw new Error(statusCheck.message);
+      }
+      
       const response = await api.post('/api/transactions', transactionData);
       return response.data;
     } catch (error) {
@@ -120,6 +162,12 @@ export const TransactionService = {
 
   sendMoney: async (sendData: SendMoneyData) => {
     try {
+      // Check transaction status before sending
+      const statusCheck = await TransactionService.checkTransactionStatus(sendData.amount);
+      if (!statusCheck.allowed) {
+        throw new Error(statusCheck.message);
+      }
+      
       const response = await api.post('/api/transactions/send-money', sendData);
       return response.data;
     } catch (error) {

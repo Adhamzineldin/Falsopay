@@ -3,8 +3,10 @@
 // Autoload dependencies
 require_once __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/App/routes/api/UsersRoute.php';
+require_once __DIR__ . '/App/config/ErrorLogger.php';
 
 use App\database\Database;
+use App\config\ErrorLogger;
 use App\middleware\AuthMiddleware;
 use App\routes\api\BankAccountsRoute;
 use App\routes\api\BanksRoute;
@@ -20,26 +22,25 @@ use App\routes\auth\AuthRoutes;
 use core\Router;
 use JetBrains\PhpStorm\NoReturn;
 
+// Initialize our custom error logger
+$logger = ErrorLogger::getInstance();
+
 // Enable comprehensive error handling
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// Set up error logging to file
-ini_set('log_errors', 1);
-ini_set('error_log', __DIR__ . '/error.log');
-
 // Custom error handler
-set_error_handler(function($errno, $errstr, $errfile, $errline) {
-    error_log("PHP Error [$errno]: $errstr in $errfile on line $errline");
+set_error_handler(function($errno, $errstr, $errfile, $errline) use ($logger) {
+    $logger->log("PHP Error [$errno]: $errstr in $errfile on line $errline", 'ERROR');
     
     // Don't execute PHP's internal error handler
     return true;
 });
 
 // Custom exception handler
-set_exception_handler(function($e) {
-    error_log("Uncaught Exception: " . $e->getMessage() . " in file " . $e->getFile() . " on line " . $e->getLine());
+set_exception_handler(function($e) use ($logger) {
+    $logger->log("Uncaught Exception: " . $e->getMessage() . " in file " . $e->getFile() . " on line " . $e->getLine(), 'ERROR');
     
     // Send JSON response for API errors
     if (strpos($_SERVER['REQUEST_URI'], '/api/') !== false) {
@@ -109,10 +110,11 @@ function checkWebSocketStatus(): array {
 }
 
 function checkDatabaseStatus(): array {
+    global $logger;
     $warningThreshold = 200; // ms
 
     try {
-        $dbConnection =  Database::getInstance()->getConnection();
+        $dbConnection = Database::getInstance()->getConnection();
         $startTime = microtime(true);
         // Lightweight test query
         $stmt = $dbConnection->query('SELECT 1');
@@ -122,6 +124,7 @@ function checkDatabaseStatus(): array {
         $responseTime = round(($endTime - $startTime) * 1000);
 
         if ($responseTime > $warningThreshold) {
+            $logger->warning("Database response time is high: {$responseTime}ms");
             return [
                 'status' => 'warning',
                 'label' => 'Degraded',
@@ -130,19 +133,30 @@ function checkDatabaseStatus(): array {
             ];
         }
 
+        $logger->info("Database status check successful - response time: {$responseTime}ms");
         return [
             'status' => 'operational',
             'label' => 'Operational',
             'message' => 'Database is responsive with good query performance.',
             'response_time' => $responseTime . 'ms'
         ];
-    } catch (\Exception $e) {
-        error_log("Database health check error: " . $e->getMessage());
+    } catch (\PDOException $e) {
+        $errorMessage = "Database connection error: " . $e->getMessage();
+        $logger->error($errorMessage);
         return [
             'status' => 'error',
             'label' => 'Outage',
-            'message' => 'Database is down or unreachable.',
-            'response_time' => 'null'
+            'message' => 'Database is down or unreachable. System operating in fallback mode.',
+            'response_time' => 'N/A'
+        ];
+    } catch (\Exception $e) {
+        $errorMessage = "Database health check error: " . $e->getMessage();
+        $logger->error($errorMessage);
+        return [
+            'status' => 'error',
+            'label' => 'Outage',
+            'message' => 'Database is down or unreachable. System operating in fallback mode.',
+            'response_time' => 'N/A'
         ];
     }
 }

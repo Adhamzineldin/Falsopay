@@ -3,6 +3,7 @@
 namespace App\models;
 
 use App\database\Database;
+use App\config\ErrorLogger;
 use PDO;
 use Exception;
 
@@ -10,6 +11,7 @@ class SystemSettings
 {
     private PDO $pdo;
     private static ?array $cache = null;
+    private ErrorLogger $logger;
     private const DEFAULT_SETTINGS = [
         'transfer_limit_enabled' => false,
         'transfer_limit_amount' => 5000,
@@ -24,6 +26,7 @@ class SystemSettings
     public function __construct()
     {
         $this->pdo = Database::getInstance()->getConnection();
+        $this->logger = ErrorLogger::getInstance();
     }
 
     /**
@@ -68,7 +71,7 @@ class SystemSettings
             // Try to get settings again
             return $this->getSettings();
         } catch (Exception $e) {
-            error_log("Error getting system settings: " . $e->getMessage());
+            $this->logger->log("Error getting system settings: " . $e->getMessage());
             // Return default settings if error
             return self::DEFAULT_SETTINGS;
         }
@@ -94,7 +97,7 @@ class SystemSettings
             
             return $result;
         } catch (Exception $e) {
-            error_log("Error creating default system settings: " . $e->getMessage());
+            $this->logger->log("Error creating default system settings: " . $e->getMessage());
             return false;
         }
     }
@@ -152,7 +155,7 @@ class SystemSettings
             
             return $result;
         } catch (Exception $e) {
-            error_log("Error updating system settings: " . $e->getMessage());
+            $this->logger->log("Error updating system settings: " . $e->getMessage());
             return false;
         }
     }
@@ -166,15 +169,21 @@ class SystemSettings
         try {
             $settings = $this->getSettings();
             
-            return [
+            $result = [
                 'transactions_enabled' => !$settings['transactions_blocked'] && !$settings['maintenance_mode'],
                 'message' => $settings['transactions_blocked'] 
                     ? $settings['block_message'] 
                     : ($settings['maintenance_mode'] ? $settings['maintenance_message'] : null),
                 'transfer_limit' => $settings['transfer_limit_enabled'] ? $settings['transfer_limit_amount'] : null
             ];
+            
+            $this->logger->info("Public system status retrieved: " . json_encode($result));
+            return $result;
         } catch (Exception $e) {
-            error_log("Error getting public system status: " . $e->getMessage());
+            $this->logger->error("Error getting public system status: " . $e->getMessage());
+            
+            // Return a default status that allows the system to function
+            // This prevents maintenance mode from being triggered for transient errors
             return [
                 'transactions_enabled' => true,
                 'message' => null,

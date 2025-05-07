@@ -3,11 +3,13 @@
 namespace App\controllers;
 
 use App\models\SystemSettings;
+use App\config\ErrorLogger;
 use Exception;
 
 class SystemController
 {
     private SystemSettings $systemSettingsModel;
+    private ErrorLogger $logger;
 
     /**
      * @throws Exception
@@ -15,6 +17,7 @@ class SystemController
     public function __construct()
     {
         $this->systemSettingsModel = new SystemSettings();
+        $this->logger = ErrorLogger::getInstance();
     }
 
     /**
@@ -33,7 +36,7 @@ class SystemController
                 'code' => 200
             ];
         } catch (Exception $e) {
-            error_log("Error getting system settings: " . $e->getMessage());
+            $this->logger->error("Error getting system settings: " . $e->getMessage());
             return [
                 'status' => 'error',
                 'message' => 'Failed to retrieve system settings: ' . $e->getMessage(),
@@ -100,7 +103,7 @@ class SystemController
                 ];
             }
         } catch (Exception $e) {
-            error_log("Error updating system settings: " . $e->getMessage());
+            $this->logger->error("Error updating system settings: " . $e->getMessage());
             return [
                 'status' => 'error',
                 'message' => 'Failed to update system settings: ' . $e->getMessage(),
@@ -117,8 +120,11 @@ class SystemController
     public function getPublicStatus(): array
     {
         try {
-            // Use the new getPublicStatus method from the model
+            // Try to get system settings
             $publicInfo = $this->systemSettingsModel->getPublicStatus();
+            
+            // Log successful status check
+            $this->logger->info("Public system status retrieved successfully");
             
             return [
                 'status' => 'success',
@@ -126,11 +132,19 @@ class SystemController
                 'code' => 200
             ];
         } catch (Exception $e) {
-            error_log("Error getting public system status: " . $e->getMessage());
+            $errorMessage = "Error getting public system status: " . $e->getMessage();
+            $this->logger->error($errorMessage);
+            
+            // Even if we can't get settings, we should provide a default response
+            // This way frontend can still function in some capacity
             return [
-                'status' => 'error',
-                'message' => 'Failed to retrieve system status',
-                'code' => 500
+                'status' => 'success', // Return success to prevent maintenance mode
+                'data' => [
+                    'transactions_enabled' => true,
+                    'message' => null,
+                    'transfer_limit' => null
+                ],
+                'code' => 200
             ];
         }
     }
@@ -162,7 +176,7 @@ class SystemController
                 'code' => 200
             ];
         } catch (Exception $e) {
-            error_log("Error getting admin system status: " . $e->getMessage());
+            $this->logger->error("Error getting admin system status: " . $e->getMessage());
             return [
                 'status' => 'error',
                 'message' => 'Failed to retrieve system status: ' . $e->getMessage(),

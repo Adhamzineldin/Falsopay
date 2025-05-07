@@ -149,14 +149,14 @@ const SendMoney = () => {
                             return {
                                 ...account,
                                 balance: balance?.balance || 0,
-                                currency: balance?.currency || 'GBP'
+                                currency: balance?.currency || 'EGO'
                             };
                         } catch (e) {
                             console.error(`Error fetching balance for ${account.bank_id}:${account.account_number}:`, e);
                             return {
                                 ...account,
                                 balance: 0,
-                                currency: 'GBP'
+                                currency: 'EGP'
                             };
                         }
                     })

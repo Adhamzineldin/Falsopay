@@ -71,9 +71,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       
       // Only set maintenance mode if there's a network error or 5xx server error
       const isNetworkError = !error.response;
-      const isServerError = error.response && error.response.status >= 500;
       
-      if (isNetworkError || isServerError) {
+      if (isNetworkError) {
         setMaintenance({
           isInMaintenance: true,
           message: error.response?.data?.message || 'The system is currently undergoing maintenance. Please try again later.',
@@ -236,14 +235,24 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           return { success: false, blocked: true };
         }
         
-        toast({
-          title: "Login Failed",
-          description: ipa ? "Phone Number Or IPA Address is incorrect" : "Failed to login with phone number",
-          variant: "destructive",
-        });
+        // Show specific error message for IPA address issues
+        if (ipa) {
+          toast({
+            title: "IPA Verification Failed",
+            description: loginError?.response?.data?.message || "The IPA address you entered is invalid. Please try again.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Login Failed",
+            description: loginError?.response?.data?.message || "Failed to login with phone number",
+            variant: "destructive",
+          });
+        }
+        
         setIsLoading(false);
-        // Just return false to indicate failure without any other side effects
-        return false;
+        // Return an object with success:false to signal failure without resetting the UI
+        return { success: false };
       }
     } catch (error: any) {
       console.error('Login process error:', error);
@@ -262,14 +271,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         return { success: false, blocked: true };
       }
       
+      // Provide more specific error message based on context (IPA vs phone)
       toast({
         title: "Login Failed",
-        description: error.response?.data?.message || "Please check your credentials and try again",
+        description: ipa 
+          ? "Failed to verify your IPA address. Please try again." 
+          : (error.response?.data?.message || "Please check your credentials and try again"),
         variant: "destructive",
       });
+      
       setIsLoading(false);
-      // Just return false to indicate failure without any other side effects
-      return false;
+      // Return an object with success:false to signal failure without resetting the UI
+      return { success: false };
     }
   };
 

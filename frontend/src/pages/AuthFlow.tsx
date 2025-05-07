@@ -13,8 +13,17 @@ import {UserData, UserService} from "@/services/user.service.ts";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 const AuthFlow = () => {
+    // Hooks
+    const { login, verifyLoginCode, isAuthenticated } = useApp();
+    const { toast } = useToast();
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    const searchParams = new URLSearchParams(location.search);
+    const returnTo = searchParams.get('returnTo') || '/dashboard';
+
     // State for each step of the authentication flow
-    const [phoneNumber, setPhoneNumber] = useState('');
+    const [phoneNumber, setPhoneNumber] = useState(() => localStorage.getItem('auth_phone') || '');
     const [ipaAddress, setIpaAddress] = useState('');
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
@@ -25,7 +34,11 @@ const AuthFlow = () => {
     const [emailForVerification, setEmailForVerification] = useState('');
 
     // Flow control states
-    const [currentStep, setCurrentStep] = useState('phone-entry');
+    const [currentStep, setCurrentStep] = useState(() => {
+        // Try to restore the step from localStorage to prevent losing state on rerender
+        const savedStep = localStorage.getItem('auth_step');
+        return savedStep || 'phone-entry';
+    });
     const [isLoading, setIsLoading] = useState(false);
     const [verificationPin, setVerificationPin] = useState('');
 
@@ -34,14 +47,65 @@ const AuthFlow = () => {
     const [isDefaultAccount, setIsDefaultAccount] = useState(false);
     const [isUserBlocked, setIsUserBlocked] = useState(false);
 
-    // Hooks
-    const { login, verifyLoginCode } = useApp();
-    const { toast } = useToast();
-    const navigate = useNavigate();
-    const location = useLocation();
+    // Save current step to localStorage whenever it changes
+    useEffect(() => {
+        localStorage.setItem('auth_step', currentStep);
+    }, [currentStep]);
 
-    const searchParams = new URLSearchParams(location.search);
-    const returnTo = searchParams.get('returnTo') || '/dashboard';
+    // Save phone number to localStorage whenever it changes
+    useEffect(() => {
+        localStorage.setItem('auth_phone', phoneNumber);
+    }, [phoneNumber]);
+
+    // Clear auth localStorage when navigating away or unmounting
+    useEffect(() => {
+        // Add event listeners for page navigation/refresh
+        const handleBeforeUnload = () => {
+            // This will run when the user refreshes or closes the tab
+            if (currentStep === 'phone-entry') {
+                // Clear everything if we're at the start
+                localStorage.removeItem('auth_step');
+                localStorage.removeItem('auth_phone');
+            }
+        };
+        
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        
+        return () => {
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+            
+            // When component unmounts normally (like navigating to another page)
+            // only clear if we're at phone entry or after successful login
+            if (isAuthenticated || currentStep === 'phone-entry') {
+                localStorage.removeItem('auth_step');
+                localStorage.removeItem('auth_phone');
+            }
+        };
+    }, [currentStep, isAuthenticated]);
+    
+    // Automatically detect changes to URL parameters
+    useEffect(() => {
+        // Check if there's a returnTo parameter and we already stored auth state
+        if (returnTo && returnTo !== '/dashboard' && localStorage.getItem('auth_step')) {
+            // We have a special return URL and we're in the middle of authentication
+            // Let's restore the step
+            const savedStep = localStorage.getItem('auth_step');
+            if (savedStep) {
+                setCurrentStep(savedStep);
+            }
+        }
+    }, [returnTo]);
+
+    // Clear auth storage when unmounting or on successful login
+    useEffect(() => {
+        return () => {
+            // This cleanup function runs when the component unmounts
+            if (currentStep !== 'phone-entry') {
+                localStorage.removeItem('auth_step');
+                localStorage.removeItem('auth_phone');
+            }
+        };
+    }, []);
 
     // Generate verification PIN (mock implementation)
     const generatePin = () => {
@@ -170,6 +234,10 @@ const AuthFlow = () => {
                         });
                     }
 
+                    // Clear auth state from localStorage on successful login
+                    localStorage.removeItem('auth_step');
+                    localStorage.removeItem('auth_phone');
+
                     toast({
                         title: "Success",
                         description: "You have been successfully logged in!",
@@ -195,7 +263,7 @@ const AuthFlow = () => {
         }
     };
 
-    // Handle IPA address verification for existing accounts
+    // Handle IPA verification for existing accounts
     const handleIpaVerification = async (e) => {
         e.preventDefault();
 
@@ -222,27 +290,25 @@ const AuthFlow = () => {
                         token: result.token
                     });
 
+                    // Clear auth state from localStorage on successful login
+                    localStorage.removeItem('auth_step');
+                    localStorage.removeItem('auth_phone');
+
                     toast({
                         title: "Success",
                         description: "You have been successfully logged in!",
                     });
                     navigate(returnTo);
                 }
-            } else {
+            } else if (result && result.blocked) {
                 // Check if the account is blocked
-                if (result && result.blocked) {
-                    setIsUserBlocked(true);
-                    setCurrentStep('account-blocked');
-                } else {
-                    // Just show error toast but stay on the same screen
-                    toast({
-                        title: "Error",
-                        description: "Invalid IPA address. Please try again.",
-                        variant: "destructive",
-                    });
-                    // Clear the IPA field for a new attempt
-                    setIpaAddress('');
-                }
+                setIsUserBlocked(true);
+                setCurrentStep('account-blocked');
+            } else {
+                // Just clear the IPA field for a new attempt
+                setIpaAddress('');
+                // We're explicitly NOT changing the currentStep here
+                // We don't need to show a toast here because login() already shows one
             }
         } catch (error) {
             console.error('IPA verification error:', error);
@@ -261,6 +327,7 @@ const AuthFlow = () => {
                 });
                 // Clear the IPA field for a new attempt but stay on the same screen
                 setIpaAddress('');
+                // Don't change the current step, just stay on IPA verification
             }
         } finally {
             setIsLoading(false);
@@ -294,27 +361,25 @@ const AuthFlow = () => {
                         token: result.token
                     });
 
+                    // Clear auth state from localStorage on successful login
+                    localStorage.removeItem('auth_step');
+                    localStorage.removeItem('auth_phone');
+
                     toast({
                         title: "Success",
                         description: "You have been successfully logged in!",
                     });
                     navigate(returnTo);
                 }
-            } else {
+            } else if (result && result.blocked) {
                 // Check if the account is blocked
-                if (result && result.blocked) {
-                    setIsUserBlocked(true);
-                    setCurrentStep('account-blocked');
-                } else {
-                    // Just show error toast but stay on the same screen
-                    toast({
-                        title: "Error",
-                        description: "Invalid IPA address. Please try again.",
-                        variant: "destructive",
-                    });
-                    // Clear the IPA field for a new attempt
-                    setIpaAddress('');
-                }
+                setIsUserBlocked(true);
+                setCurrentStep('account-blocked');
+            } else {
+                // Just clear the IPA field for a new attempt
+                setIpaAddress('');
+                // We're explicitly NOT changing the currentStep here
+                // We don't need to show a toast here because login() already shows one
             }
         } catch (error) {
             console.error('Default account IPA verification error:', error);
@@ -333,6 +398,7 @@ const AuthFlow = () => {
                 });
                 // Clear the IPA field for a new attempt but stay on the same screen
                 setIpaAddress('');
+                // Keep the current step as default-account
             }
         } finally {
             setIsLoading(false);
@@ -345,6 +411,11 @@ const AuthFlow = () => {
         try {
             const user: {user_id: number} = await UserService.getUserByPhone(phoneNumber);
             await AuthService.deleteAccount(user.user_id);
+            
+            // Clear auth state since we're starting fresh
+            localStorage.removeItem('auth_step');
+            localStorage.removeItem('auth_phone');
+            
             toast({
                 title: "Account Deleted",
                 description: "Your account has been deleted. You can now register a new account.",
@@ -430,6 +501,11 @@ const AuthFlow = () => {
                         token: result.token
                     });
                 }
+                
+                // Clear auth state from localStorage on successful login
+                localStorage.removeItem('auth_step');
+                localStorage.removeItem('auth_phone');
+                
                 navigate(returnTo);
             } else {
                 setCurrentStep('ipa-verification');
@@ -487,6 +563,11 @@ const AuthFlow = () => {
             // Allow users to go back to phone entry from blocked screen
             setCurrentStep('phone-entry');
             setIsUserBlocked(false);
+            
+            // Clear phone number and auth state to start fresh
+            setPhoneNumber('');
+            localStorage.removeItem('auth_step');
+            localStorage.removeItem('auth_phone');
         }
     };
 

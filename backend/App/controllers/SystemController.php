@@ -305,8 +305,18 @@ class SystemController
         $isWebsocketRunning = false;
         
         // Get WebSocket configuration
-        $websocketPort = $_ENV['WS_PORT'] ?? '4100';
+        $websocketPort = $_ENV['WS_PORT'] ?? null;
         $websocketHost = $_ENV['WS_HOST'] ?? 'localhost';
+        
+        // If no port is specified, return a neutral status instead of an error
+        if (empty($websocketPort)) {
+            return [
+                'status' => 'not_configured',
+                'label' => 'Not Configured',
+                'message' => "WebSocket server port not configured",
+                'response_time' => 'N/A'
+            ];
+        }
         
         // Determine if we should use secure WebSocket
         $useSecure = ($websocketHost !== 'localhost' && $websocketHost !== '127.0.0.1');

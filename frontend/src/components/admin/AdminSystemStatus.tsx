@@ -12,7 +12,8 @@ import {
   Server,
   CheckCircle,
   AlertTriangle,
-  AlertCircle
+  AlertCircle,
+  Info
 } from 'lucide-react';
 
 const AdminSystemStatus = () => {
@@ -57,19 +58,26 @@ const AdminSystemStatus = () => {
         return <AlertTriangle className="h-5 w-5 text-amber-500" />;
       case 'error':
         return <AlertCircle className="h-5 w-5 text-red-500" />;
+      case 'not_configured':
+        return <Info className="h-5 w-5 text-blue-500" />;
       default:
         return <AlertCircle className="h-5 w-5 text-gray-500" />;
     }
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, label?: string) => {
+    // If a custom label is provided, use it with appropriate styling
+    if (label === 'Not Configured') {
+      return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">Not Configured</Badge>;
+    }
+    
     switch (status) {
       case 'operational':
         return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Operational</Badge>;
       case 'warning':
-        return <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100">Degraded</Badge>;
+        return <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100">{label || 'Degraded'}</Badge>;
       case 'error':
-        return <Badge className="bg-red-100 text-red-800 hover:bg-red-100">Outage</Badge>;
+        return <Badge className="bg-red-100 text-red-800 hover:bg-red-100">{label || 'Outage'}</Badge>;
       default:
         return <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100">Unknown</Badge>;
     }
@@ -110,7 +118,7 @@ const AdminSystemStatus = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   {getStatusIcon(systemStatus.database.status)}
-                  {getStatusBadge(systemStatus.database.status)}
+                  {getStatusBadge(systemStatus.database.status, systemStatus.database.label)}
                 </div>
               </div>
               <p className="text-sm text-gray-500">{systemStatus.database.message}</p>
@@ -130,7 +138,7 @@ const AdminSystemStatus = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   {getStatusIcon(systemStatus.websocket.status)}
-                  {getStatusBadge(systemStatus.websocket.status)}
+                  {getStatusBadge(systemStatus.websocket.status, systemStatus.websocket.label)}
                 </div>
               </div>
               <p className="text-sm text-gray-500">{systemStatus.websocket.message}</p>
@@ -150,7 +158,7 @@ const AdminSystemStatus = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   {getStatusIcon(systemStatus.server.status)}
-                  {getStatusBadge(systemStatus.server.status)}
+                  {getStatusBadge(systemStatus.server.status, systemStatus.server.label)}
                 </div>
               </div>
               <p className="text-sm text-gray-500">{systemStatus.server.message}</p>

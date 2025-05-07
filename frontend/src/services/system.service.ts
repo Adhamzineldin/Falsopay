@@ -2,19 +2,19 @@ import api from '@/services/api';
 
 export interface SystemStatus {
   database: {
-    status: 'operational' | 'warning' | 'error';
+    status: 'operational' | 'warning' | 'error' | 'not_configured';
     label: string;
     message: string;
     response_time: string;
   };
   websocket: {
-    status: 'operational' | 'warning' | 'error';
+    status: 'operational' | 'warning' | 'error' | 'not_configured';
     label: string;
     message: string;
     response_time: string;
   };
   server: {
-    status: 'operational' | 'warning' | 'error';
+    status: 'operational' | 'warning' | 'error' | 'not_configured';
     label: string;
     message: string;
     php_version: string;

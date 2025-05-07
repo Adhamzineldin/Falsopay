@@ -186,17 +186,17 @@ const AdminDashboard = () => {
         title: "Success",
         description: "Reply sent successfully",
       });
-      
-      // Refresh ticket details to show the new reply
-      fetchTicketDetails(activeTicket.ticket.ticket_id);
     } catch (error) {
       console.error('Error sending reply:', error);
       toast({
-        title: "Error",
-        description: "Failed to send reply",
+        title: "Warning",
+        description: "There was an issue, but your reply might still have been sent. Refreshing to check.",
         variant: "destructive",
       });
     } finally {
+      // Always refresh ticket details to show the new reply, regardless of success/failure
+      // since the data might be saved even if the API returned an error
+      await fetchTicketDetails(activeTicket.ticket.ticket_id);
       setIsSubmittingReply(false);
     }
   };

@@ -19,6 +19,40 @@ use App\routes\auth\AuthRoutes;
 use core\Router;
 use JetBrains\PhpStorm\NoReturn;
 
+// Enable comprehensive error handling
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+// Set up error logging to file
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/error.log');
+
+// Custom error handler
+set_error_handler(function($errno, $errstr, $errfile, $errline) {
+    error_log("PHP Error [$errno]: $errstr in $errfile on line $errline");
+    
+    // Don't execute PHP's internal error handler
+    return true;
+});
+
+// Custom exception handler
+set_exception_handler(function($e) {
+    error_log("Uncaught Exception: " . $e->getMessage() . " in file " . $e->getFile() . " on line " . $e->getLine());
+    
+    // Send JSON response for API errors
+    if (strpos($_SERVER['REQUEST_URI'], '/api/') !== false) {
+        header('Content-Type: application/json');
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'Server error: ' . $e->getMessage(),
+            'code' => 500
+        ]);
+    } else {
+        echo "Server Error: Please try again later.";
+    }
+});
+
 // Handle CORS and preflight request
 if (isset($_SERVER['HTTP_ORIGIN'])) {
     header("Access-Control-Allow-Origin: {$_SERVER['HTTP_ORIGIN']}");

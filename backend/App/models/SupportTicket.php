@@ -48,9 +48,14 @@ class SupportTicket
      */
     public function getTicketById(int $id): ?array
     {
-        $sql = "SELECT t.*, u.first_name, u.last_name, u.email, u.phone_number 
+        $sql = "SELECT t.*,
+                COALESCE(u.first_name, '') as first_name, 
+                COALESCE(u.last_name, '') as last_name, 
+                COALESCE(u.email, t.contact_email) as email, 
+                COALESCE(u.phone_number, t.contact_phone) as phone_number,
+                CASE WHEN t.user_id IS NULL THEN 1 ELSE 0 END as is_public 
                 FROM support_tickets t
-                JOIN users u ON t.user_id = u.user_id
+                LEFT JOIN users u ON t.user_id = u.user_id
                 WHERE t.ticket_id = :id";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute(['id' => $id]);
@@ -74,9 +79,14 @@ class SupportTicket
      */
     public function getAllTickets(): array
     {
-        $sql = "SELECT t.*, u.first_name, u.last_name, u.email, u.phone_number 
+        $sql = "SELECT t.*, 
+                COALESCE(u.first_name, '') as first_name, 
+                COALESCE(u.last_name, '') as last_name, 
+                COALESCE(u.email, t.contact_email) as email, 
+                COALESCE(u.phone_number, t.contact_phone) as phone_number,
+                CASE WHEN t.user_id IS NULL THEN 1 ELSE 0 END as is_public
                 FROM support_tickets t
-                JOIN users u ON t.user_id = u.user_id
+                LEFT JOIN users u ON t.user_id = u.user_id
                 ORDER BY 
                   CASE 
                     WHEN t.status = 'open' THEN 1
@@ -92,9 +102,14 @@ class SupportTicket
      */
     public function getTicketsByStatus(string $status): array
     {
-        $sql = "SELECT t.*, u.first_name, u.last_name, u.email, u.phone_number 
+        $sql = "SELECT t.*, 
+                COALESCE(u.first_name, '') as first_name, 
+                COALESCE(u.last_name, '') as last_name, 
+                COALESCE(u.email, t.contact_email) as email, 
+                COALESCE(u.phone_number, t.contact_phone) as phone_number,
+                CASE WHEN t.user_id IS NULL THEN 1 ELSE 0 END as is_public
                 FROM support_tickets t
-                JOIN users u ON t.user_id = u.user_id
+                LEFT JOIN users u ON t.user_id = u.user_id
                 WHERE t.status = :status
                 ORDER BY t.created_at DESC";
         $stmt = $this->pdo->prepare($sql);

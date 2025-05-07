@@ -141,5 +141,10 @@ class SupportRoute extends Route
                 ];
             }
         }, $middlewares);
+
+        // Admin reply to public ticket (without user_id)
+        $router->add('POST', '/api/admin/support/public-replies', function($body) use ($controller) {
+            return $controller->addPublicReply($body);
+        }, $adminMiddlewares);
     }
 } 

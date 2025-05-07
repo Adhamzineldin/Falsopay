@@ -403,4 +403,77 @@ class SupportController
             ];
         }
     }
+
+    /**
+     * Add a reply to a public ticket (admin only)
+     * 
+     * @param array $data The request data
+     * @return array Response data
+     */
+    public function addPublicReply(array $data): array
+    {
+        try {
+            // Validate required fields
+            $requiredFields = ['ticket_id', 'message'];
+            foreach ($requiredFields as $field) {
+                if (!isset($data[$field]) || empty($data[$field])) {
+                    return [
+                        'status' => 'error',
+                        'message' => "Missing required field: $field",
+                        'code' => 400
+                    ];
+                }
+            }
+
+            $ticketId = (int)$data['ticket_id'];
+            
+            // Get the ticket to check if it exists
+            $ticket = $this->supportTicketModel->getTicketById($ticketId);
+            
+            if (!$ticket) {
+                return [
+                    'status' => 'error',
+                    'message' => 'Ticket not found',
+                    'code' => 404
+                ];
+            }
+
+            // For public tickets (without user_id), get an admin user to use for the reply
+            $adminUser = $this->userModel->getAdminUser();
+            if (!$adminUser) {
+                return [
+                    'status' => 'error',
+                    'message' => 'No admin user available for creating the reply',
+                    'code' => 500
+                ];
+            }
+
+            // Add the reply using admin user ID
+            $reply = $this->supportTicketModel->addReply(
+                $ticketId,
+                $adminUser['user_id'],
+                $data['message'],
+                true // is admin
+            );
+
+            // Update the ticket status to "in_progress" if it's not already closed
+            if ($ticket['status'] !== 'closed') {
+                $this->supportTicketModel->updateTicketStatus($ticketId, 'in_progress');
+            }
+
+            return [
+                'status' => 'success',
+                'message' => 'Reply added successfully',
+                'data' => $reply,
+                'code' => 201
+            ];
+
+        } catch (Exception $e) {
+            return [
+                'status' => 'error',
+                'message' => 'Failed to add reply: ' . $e->getMessage(),
+                'code' => 500
+            ];
+        }
+    }
 } 

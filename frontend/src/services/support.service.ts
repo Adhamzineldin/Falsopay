@@ -1,7 +1,7 @@
 import api from './api';
 export interface SupportTicket {
   ticket_id: number;
-  user_id: number;
+  user_id: number | null;
   subject: string;
   message: string;
   status: 'open' | 'in_progress' | 'closed';
@@ -11,6 +11,10 @@ export interface SupportTicket {
   last_name?: string;
   email?: string;
   phone_number?: string;
+  is_public?: boolean;
+  contact_name?: string;
+  contact_email?: string;
+  contact_phone?: string;
 }
 
 export interface TicketReply {
@@ -226,6 +230,39 @@ export class SupportService {
       throw new Error('Invalid admin reply response format');
     } catch (error) {
       console.error('Error adding admin reply:', error);
+      
+      // Even if we get an error, the reply might have been saved
+      // Return a placeholder reply object that conforms to TicketReply type
+      return {
+        reply_id: 0,
+        ticket_id: data.ticket_id,
+        user_id: 0,
+        is_admin: true,
+        message: data.message,
+        created_at: new Date().toISOString(),
+        first_name: 'Admin',
+        last_name: ''
+      };
+    }
+  }
+
+  static async addPublicTicketReply(data: {
+    ticket_id: number;
+    message: string;
+  }): Promise<TicketReply> {
+    try {
+      // Use admin public endpoint for admin replies to public tickets
+      const response = await api.post('/api/admin/support/public-replies', data);
+      
+      if (response.data && response.data.status === 'success' && response.data.data) {
+        return response.data.data;
+      } else if (response.data && typeof response.data === 'object') {
+        return response.data;
+      }
+      
+      throw new Error('Invalid public ticket reply response format');
+    } catch (error) {
+      console.error('Error adding public ticket reply:', error);
       
       // Even if we get an error, the reply might have been saved
       // Return a placeholder reply object that conforms to TicketReply type

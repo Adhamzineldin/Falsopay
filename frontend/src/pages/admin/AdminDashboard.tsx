@@ -130,6 +130,10 @@ const AdminDashboard = () => {
       
       if (statusFilter === 'all') {
         ticketList = await SupportService.getAllTickets();
+      } else if (statusFilter === 'public') {
+        // Get all tickets and filter for public ones
+        const allTickets = await SupportService.getAllTickets();
+        ticketList = allTickets.filter(ticket => ticket.is_public);
       } else {
         ticketList = await SupportService.getTicketsByStatus(statusFilter);
       }
@@ -181,10 +185,20 @@ const AdminDashboard = () => {
     
     setIsSubmittingReply(true);
     try {
-      await SupportService.addAdminReply({
-        ticket_id: activeTicket.ticket.ticket_id,
-        message: reply.trim(),
-      });
+      // Check if this is a public ticket or regular ticket
+      if (activeTicket.ticket.is_public) {
+        // For public tickets, use the public reply endpoint
+        await SupportService.addPublicTicketReply({
+          ticket_id: activeTicket.ticket.ticket_id,
+          message: reply.trim(),
+        });
+      } else {
+        // For regular tickets with user_id, use the admin reply endpoint
+        await SupportService.addAdminReply({
+          ticket_id: activeTicket.ticket.ticket_id,
+          message: reply.trim(),
+        });
+      }
       
       setReply('');
       toast({
@@ -466,6 +480,7 @@ const AdminDashboard = () => {
                           <SelectItem value="open">Open</SelectItem>
                           <SelectItem value="in_progress">In Progress</SelectItem>
                           <SelectItem value="closed">Closed</SelectItem>
+                          <SelectItem value="public">Public Tickets</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -490,10 +505,16 @@ const AdminDashboard = () => {
                             <div className="flex items-center gap-2 mb-1">
                               {getStatusIcon(ticket.status)}
                               <h3 className="font-semibold text-sm">{ticket.subject}</h3>
+                              {ticket.is_public && (
+                                <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-300 text-xs">Public</Badge>
+                              )}
                             </div>
                             <div className="flex justify-between items-center">
                               <p className="text-xs text-gray-500">
-                                {ticket.first_name} {ticket.last_name}
+                                {ticket.is_public 
+                                  ? ticket.contact_name || `${ticket.first_name} ${ticket.last_name}`
+                                  : `${ticket.first_name} ${ticket.last_name}`
+                                }
                               </p>
                               <div className="flex items-center gap-1">
                                 {getStatusBadge(ticket.status)}
@@ -516,9 +537,26 @@ const AdminDashboard = () => {
                     <CardHeader>
                       <div className="flex justify-between items-start">
                         <div>
-                          <CardTitle>{activeTicket.ticket.subject}</CardTitle>
+                          <div className="flex items-center gap-2">
+                            <CardTitle>{activeTicket.ticket.subject}</CardTitle>
+                            {activeTicket.ticket.is_public && (
+                              <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-300">Public Ticket</Badge>
+                            )}
+                          </div>
                           <CardDescription>
-                            From: {activeTicket.ticket.first_name} {activeTicket.ticket.last_name} ({activeTicket.ticket.email})
+                            {activeTicket.ticket.is_public ? (
+                              <>
+                                From: {activeTicket.ticket.contact_name || `${activeTicket.ticket.first_name} ${activeTicket.ticket.last_name}`} 
+                                ({activeTicket.ticket.contact_email || activeTicket.ticket.email})
+                                {activeTicket.ticket.contact_phone && (
+                                  <span className="ml-2">Phone: {activeTicket.ticket.contact_phone}</span>
+                                )}
+                              </>
+                            ) : (
+                              <>
+                                From: {activeTicket.ticket.first_name} {activeTicket.ticket.last_name} ({activeTicket.ticket.email})
+                              </>
+                            )}
                           </CardDescription>
                           <div className="text-sm text-gray-500 mt-1">
                             Created on {formatDate(activeTicket.ticket.created_at)}
@@ -546,7 +584,10 @@ const AdminDashboard = () => {
                       <div className="border rounded-lg p-4 bg-gray-50">
                         <div className="flex justify-between items-center mb-2">
                           <div className="font-semibold">
-                            {activeTicket.ticket.first_name} {activeTicket.ticket.last_name}
+                            {activeTicket.ticket.is_public 
+                              ? activeTicket.ticket.contact_name || `${activeTicket.ticket.first_name} ${activeTicket.ticket.last_name}`
+                              : `${activeTicket.ticket.first_name} ${activeTicket.ticket.last_name}`
+                            }
                           </div>
                           <div className="text-sm text-gray-500">
                             {formatDate(activeTicket.ticket.created_at)}

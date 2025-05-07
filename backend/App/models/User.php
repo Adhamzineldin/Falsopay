@@ -258,4 +258,15 @@ class User
         $sql = "SELECT * FROM users WHERE status = 'blocked'";
         return $this->pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    /**
+     * Get a single admin user (useful for system operations)
+     */
+    public function getAdminUser(): ?array
+    {
+        $sql = "SELECT * FROM users WHERE role = 'admin' LIMIT 1";
+        $stmt = $this->pdo->query($sql);
+        $admin = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $admin ?: null;
+    }
 }

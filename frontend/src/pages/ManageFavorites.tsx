@@ -43,7 +43,8 @@ import {
   Pencil,
   Save,
   Edit,
-  RotateCw
+  RotateCw,
+  AlertTriangle
 } from 'lucide-react';
 
 const ManageFavorites = () => {
@@ -58,6 +59,8 @@ const ManageFavorites = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState('');
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [favoriteToDelete, setFavoriteToDelete] = useState<Favorite | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -93,6 +96,11 @@ const ManageFavorites = () => {
     }
   };
 
+  const handleOpenDeleteDialog = (favorite: Favorite) => {
+    setFavoriteToDelete(favorite);
+    setShowDeleteDialog(true);
+  };
+
   const handleDeleteFavorite = async (favoriteId: number) => {
     if (!user) return;
     
@@ -107,6 +115,10 @@ const ManageFavorites = () => {
         title: "Success",
         description: "Favorite removed successfully",
       });
+
+      // Close dialog
+      setShowDeleteDialog(false);
+      setFavoriteToDelete(null);
     } catch (error) {
       console.error('Error removing favorite:', error);
       toast({
@@ -278,7 +290,7 @@ const ManageFavorites = () => {
                         <Button 
                           variant="destructive" 
                           size="icon"
-                          onClick={() => handleDeleteFavorite(favorite.favorite_id)}
+                          onClick={() => handleOpenDeleteDialog(favorite)}
                           disabled={isDeleting}
                         >
                           <Trash2 className="h-4 w-4" />
@@ -342,6 +354,55 @@ const ManageFavorites = () => {
                 </DialogFooter>
               </>
             )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-red-500" />
+                Confirm Deletion
+              </DialogTitle>
+              <DialogDescription>
+                Are you sure you want to remove this favorite? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            
+            {favoriteToDelete && (
+              <div className="py-4">
+                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-md">
+                  <div className="bg-gray-100 p-2 rounded-full">
+                    {getMethodIcon(favoriteToDelete.method)}
+                  </div>
+                  <div>
+                    <div className="font-medium">{favoriteToDelete.recipient_name}</div>
+                    <div className="text-sm text-gray-500">{favoriteToDelete.recipient_identifier}</div>
+                    <div className="text-xs text-gray-500">{getMethodName(favoriteToDelete.method)}</div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setShowDeleteDialog(false);
+                  setFavoriteToDelete(null);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="destructive"
+                onClick={() => favoriteToDelete && handleDeleteFavorite(favoriteToDelete.favorite_id)}
+                disabled={isDeleting}
+              >
+                {isDeleting ? 'Deleting...' : 'Delete Favorite'}
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>

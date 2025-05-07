@@ -15,7 +15,8 @@ import {
   Phone, 
   Landmark, 
   Building,
-  Settings
+  Settings,
+  AlertTriangle
 } from 'lucide-react';
 import {
   Sheet,
@@ -68,6 +69,8 @@ const SendMoneyFavorites = ({
   const [isDeleting, setIsDeleting] = useState(false);
   const [customName, setCustomName] = useState('');
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [favoriteToDelete, setFavoriteToDelete] = useState<Favorite | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -176,6 +179,12 @@ const SendMoneyFavorites = ({
     }
   };
 
+  const handleOpenDeleteDialog = (favorite: Favorite, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering onSelectFavorite
+    setFavoriteToDelete(favorite);
+    setShowDeleteDialog(true);
+  };
+
   const handleRemoveFavorite = async (favoriteId: number) => {
     setIsDeleting(true);
     try {
@@ -188,6 +197,10 @@ const SendMoneyFavorites = ({
 
       // Update local state
       setFavorites(favorites.filter(fav => fav.favorite_id !== favoriteId));
+      
+      // Close dialog
+      setShowDeleteDialog(false);
+      setFavoriteToDelete(null);
     } catch (error) {
       console.error('Error removing favorite:', error);
       toast({
@@ -312,10 +325,7 @@ const SendMoneyFavorites = ({
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRemoveFavorite(favorite.favorite_id);
-                        }}
+                        onClick={(e) => handleOpenDeleteDialog(favorite, e)}
                         disabled={isDeleting}
                       >
                         <Trash2 className="h-4 w-4 text-gray-400 hover:text-red-500" />
@@ -388,6 +398,57 @@ const SendMoneyFavorites = ({
               disabled={isSaving || !customName.trim()}
             >
               {isSaving ? "Saving..." : "Save to Favorites"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-red-500" />
+              Remove from Favorites
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to remove this recipient from your favorites?
+            </DialogDescription>
+          </DialogHeader>
+          
+          {favoriteToDelete && (
+            <div className="py-4">
+              <div className="flex items-center p-3 bg-gray-50 rounded-md">
+                <div className="bg-gray-100 p-2 rounded-full mr-3">
+                  {getMethodIcon(favoriteToDelete.method)}
+                </div>
+                <div>
+                  <div className="font-medium">{favoriteToDelete.recipient_name}</div>
+                  <div className="text-sm text-gray-500">{favoriteToDelete.recipient_identifier}</div>
+                  {favoriteToDelete.bank_name && (
+                    <div className="text-xs text-gray-400">{favoriteToDelete.bank_name}</div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowDeleteDialog(false);
+                setFavoriteToDelete(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={() => favoriteToDelete && handleRemoveFavorite(favoriteToDelete.favorite_id)}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Removing..." : "Remove"}
             </Button>
           </DialogFooter>
         </DialogContent>

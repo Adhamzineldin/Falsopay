@@ -365,7 +365,7 @@ class SupportController
             }
 
             // Check if there's a user with this email
-            $existingUser = $this->userModel->findByEmail($data['email']);
+            $existingUser = $this->userModel->getUserByEmail($data['email']);
             $userId = null;
 
             if ($existingUser) {

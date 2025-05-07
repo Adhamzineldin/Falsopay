@@ -103,31 +103,8 @@ export class SupportService {
     user_id?: number;
   }): Promise<TicketReply> {
     try {
-      // Get the authenticated user from localStorage
-      const userJson = localStorage.getItem('user');
-      let userId = data.user_id;
-      
-      // If no user_id was provided, try to get it from localStorage
-      if (!userId && userJson) {
-        try {
-          const user = JSON.parse(userJson);
-          userId = user.user_id;
-        } catch (e) {
-          console.error('Error parsing user from localStorage:', e);
-        }
-      }
-      
-      console.log('Adding reply with user ID:', userId);
-      
-      // Add user_id to the data if we have it
-      const postData = {
-        ticket_id: data.ticket_id,
-        message: data.message,
-        ...(userId ? { user_id: userId } : {})
-      };
-      
-      // Use the regular endpoint instead of debug
-      const response = await api.post('/api/support/replies', postData);
+      // Simple direct API call with whatever data was provided
+      const response = await api.post('/api/support/replies', data);
       
       if (response.data && response.data.status === 'success' && response.data.data) {
         return response.data.data;
@@ -138,19 +115,7 @@ export class SupportService {
       throw new Error('Invalid reply response format');
     } catch (error) {
       console.error('Error adding reply:', error);
-      
-      // Even if we get an error, the reply might have been saved
-      // Return a placeholder reply object that conforms to TicketReply type
-      return {
-        reply_id: 0,
-        ticket_id: data.ticket_id,
-        user_id: data.user_id || 0,
-        is_admin: false,
-        message: data.message,
-        created_at: new Date().toISOString(),
-        first_name: 'User',
-        last_name: ''
-      };
+      throw error;
     }
   }
 

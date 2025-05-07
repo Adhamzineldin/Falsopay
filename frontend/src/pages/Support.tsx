@@ -383,13 +383,8 @@ const Support = () => {
                           className={`border rounded-lg p-4 ${reply.is_admin ? 'bg-blue-50' : 'bg-gray-50'}`}
                         >
                           <div className="flex justify-between items-center mb-2">
-                            <div className="font-semibold flex items-center gap-2">
-                              {reply.user_id === user?.user_id ? 
-                                'You' : 
-                                `${reply.first_name || ''} ${reply.last_name || ''}`}
-                              {reply.is_admin && (
-                                <Badge variant="secondary" className="text-xs">Support Team</Badge>
-                              )}
+                            <div className="font-semibold">
+                              {reply.first_name} {reply.last_name}
                             </div>
                             <div className="text-sm text-gray-500">
                               {formatDate(reply.created_at)}

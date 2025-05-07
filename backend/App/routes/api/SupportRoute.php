@@ -37,15 +37,9 @@ class SupportRoute extends Route
         }, $middlewares);
         
         $router->add('POST', '/api/support/replies', function($body) use ($controller) {
-            // Use the authenticated user's ID from the server
-            $userId = $_SERVER['AUTHENTICATED_USER_ID'] ?? 0;
+            // Just get the user ID from the request
+            $userId = $body['user_id'] ?? 0;
             
-            // Also check body and request as fallbacks
-            if (!$userId) {
-                $userId = $_REQUEST['user_id'] ?? $body['user_id'] ?? 0;
-            }
-            
-            // Validate we have a user ID
             if (!$userId) {
                 return [
                     'status' => 'error',
@@ -54,7 +48,8 @@ class SupportRoute extends Route
                 ];
             }
             
-            return $controller->addReply($body, (int)$userId);
+            // Pass directly to controller
+            return $controller->addReply($body, $userId);
         }, $middlewares);
         
         // Admin-only routes
@@ -76,8 +71,8 @@ class SupportRoute extends Route
         
         // Admin reply to ticket
         $router->add('POST', '/api/admin/support/replies', function($body) use ($controller) {
-            // Use the authenticated admin's user ID
-            $adminUserId = $_SERVER['AUTHENTICATED_USER_ID'] ?? 0;
+            // Just get the admin user ID from the request
+            $adminUserId = $body['admin_user_id'] ?? 0;
             
             if (!$adminUserId) {
                 return [
@@ -88,7 +83,7 @@ class SupportRoute extends Route
             }
             
             // Pass the admin's user_id and set isAdmin flag to true
-            return $controller->addReply($body, (int)$adminUserId, true);
+            return $controller->addReply($body, $adminUserId, true);
         }, $adminMiddlewares);
 
         // Add a special debug route for user replies that temporarily bypasses the ownership check
@@ -155,13 +150,7 @@ class SupportRoute extends Route
 
         // Admin reply to public ticket (without user_id)
         $router->add('POST', '/api/admin/support/public-replies', function($body) use ($controller) {
-            // Get the authenticated admin user ID and add it to the data
-            $adminUserId = $_SERVER['AUTHENTICATED_USER_ID'] ?? 0;
-            
-            if ($adminUserId) {
-                $body['admin_user_id'] = $adminUserId;
-            }
-            
+            // Just pass the data directly to the controller
             return $controller->addPublicReply($body);
         }, $adminMiddlewares);
     }

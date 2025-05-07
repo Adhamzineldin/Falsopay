@@ -198,13 +198,6 @@ class SupportController
 
             // If not admin, ensure the ticket belongs to the user
             if (!$isAdmin && (int)$ticket['user_id'] !== $userId) {
-                error_log("Authorization failed: User $userId trying to reply to ticket {$ticketId} which belongs to user {$ticket['user_id']}");
-                
-                // Debug info
-                error_log("Request user_id: " . ($userId ?? 'null'));
-                error_log("Ticket user_id: " . ($ticket['user_id'] ?? 'null'));
-                error_log("isAdmin: " . ($isAdmin ? 'true' : 'false'));
-                
                 return [
                     'status' => 'error',
                     'message' => 'Unauthorized access to this ticket',
@@ -212,14 +205,10 @@ class SupportController
                 ];
             }
 
-            // Use the userId directly - for both admins and regular users
-            // This ensures that the reply shows the actual logged-in user's name
-            $replyUserId = $userId;
-
-            // Add the reply
+            // Add the reply using the provided user ID
             $reply = $this->supportTicketModel->addReply(
                 $ticketId,
-                $replyUserId,
+                $userId,
                 $data['message'],
                 $isAdmin
             );
@@ -229,34 +218,27 @@ class SupportController
                 $this->supportTicketModel->updateTicketStatus($ticketId, 'in_progress');
             }
 
-            // Send socket notification about the new reply
+            // Simple notification without changing names
             $socketService = new \App\services\SocketService();
             
             if ($isAdmin) {
-                // If admin is replying, notify the ticket owner
-                // Get the admin's actual name for the notification
-                $adminUser = $this->userModel->getUserById($userId);
-                $adminName = $adminUser['first_name'] . ' ' . $adminUser['last_name'];
-                
+                // Notify the ticket owner about admin reply
                 $socketService->sendTicketNotification(
                     (int)$ticket['user_id'],
                     $ticketId,
                     $ticket['subject'],
-                    "Support team member {$adminName} has replied to your ticket",
+                    "New reply on your ticket",
                     "new_reply"
                 );
             } else {
-                // If user is replying, notify admins
+                // Notify admins about user reply
                 $adminUsers = $this->userModel->getAdminUsers();
-                $userInfo = $this->userModel->getUserById($userId);
-                $userName = $userInfo['first_name'] . ' ' . $userInfo['last_name'];
-                
                 foreach ($adminUsers as $admin) {
                     $socketService->sendTicketNotification(
                         $admin['user_id'],
                         $ticketId,
                         $ticket['subject'],
-                        "New reply from {$userName} on ticket #{$ticketId}",
+                        "New reply on ticket #{$ticketId}",
                         "new_reply"
                     );
                 }
@@ -508,30 +490,16 @@ class SupportController
                 ];
             }
 
-            // For public tickets, use the actual admin's user ID who's making the reply
+            // Use admin ID from request
             $adminUserId = $data['admin_user_id'] ?? null;
             
             if (!$adminUserId) {
-                // If admin ID not explicitly provided, get it from the authenticated user info
-                if (isset($_SERVER['AUTHENTICATED_USER_ID'])) {
-                    $adminUserId = (int)$_SERVER['AUTHENTICATED_USER_ID'];
-                } else {
-                    // Fallback to getting the first admin if we can't identify the current admin
-                    $adminUser = $this->userModel->getAdminUser();
-                    if (!$adminUser) {
-                        return [
-                            'status' => 'error',
-                            'message' => 'No admin user available for creating the reply',
-                            'code' => 500
-                        ];
-                    }
-                    $adminUserId = $adminUser['user_id'];
-                }
+                return [
+                    'status' => 'error',
+                    'message' => 'Admin user ID is required',
+                    'code' => 400
+                ];
             }
-
-            // Get admin info for notification
-            $adminUser = $this->userModel->getUserById($adminUserId);
-            $adminName = $adminUser['first_name'] . ' ' . $adminUser['last_name'];
 
             // Add the reply using admin user ID
             $reply = $this->supportTicketModel->addReply(
@@ -546,14 +514,14 @@ class SupportController
                 $this->supportTicketModel->updateTicketStatus($ticketId, 'in_progress');
             }
 
-            // If the ticket has a user ID, send a notification
+            // Simple notification
             if (isset($ticket['user_id']) && $ticket['user_id']) {
                 $socketService = new \App\services\SocketService();
                 $socketService->sendTicketNotification(
                     (int)$ticket['user_id'],
                     $ticketId,
                     $ticket['subject'],
-                    "Support team member {$adminName} has replied to your ticket",
+                    "New reply on your ticket",
                     "new_reply"
                 );
             }

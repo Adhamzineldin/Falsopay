@@ -192,27 +192,51 @@ export default function MoneyRequestsPage() {
       });
       
       if (response.success) {
+        // Show success message
         toast.success('Money request accepted', {
-          description: `Payment of ${formatCurrency(response.data.request.amount)} was sent successfully`
+          description: `Payment of ${formatCurrency(selectedRequest.amount)} was sent successfully`
         });
         
-        // Update the list
-        setAllRequests(prev => 
-          prev.map(req => 
-            req.request_id === selectedRequest.request_id 
-              ? { ...req, status: 'accepted', transaction_id: response.data.transaction.transaction_id } 
-              : req
-          )
-        );
+        // Handle warning message if present
+        if (response.data.warning) {
+          console.warn('Warning from server:', response.data.warning);
+          toast.warning('Note', {
+            description: response.data.warning
+          });
+          
+          // Force refresh to get the latest status
+          setTimeout(() => {
+            loadAllRequests();
+          }, 1000);
+        } else {
+          // Update the list normally if no warning
+          setAllRequests(prev => 
+            prev.map(req => 
+              req.request_id === selectedRequest.request_id 
+                ? { ...req, status: 'accepted', transaction_id: response.data.transaction.transaction_id } 
+                : req
+            )
+          );
+        }
         
         // Close dialog and reset state
         setIsPinDialogOpen(false);
         setPin('');
         setSelectedRequest(null);
       } else {
-        toast.error('Failed to accept request', {
-          description: response.message
-        });
+        // Handle error case
+        let errorMessage = response.message || 'Failed to accept request';
+        
+        // Special handling for specific error types
+        if (errorMessage.includes('exceeded') || errorMessage.includes('limit')) {
+          toast.error('Transaction limit exceeded', {
+            description: errorMessage
+          });
+        } else {
+          toast.error('Failed to accept request', {
+            description: errorMessage
+          });
+        }
       }
     } catch (error) {
       console.error('Error accepting request:', error);

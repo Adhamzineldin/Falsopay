@@ -123,7 +123,9 @@ class MoneyRequest {
      */
     public function updateRequestStatus($requestId, $status, $transactionId = null) {
         try {
-            $sql = "UPDATE money_requests SET status = :status";
+            error_log("Updating money request status: Request ID: $requestId, Status: $status, Transaction ID: " . ($transactionId ?? 'null'));
+
+            $sql = "UPDATE money_requests SET status = :status, updated_at = NOW()";
             $params = [
                 ':request_id' => $requestId,
                 ':status' => $status
@@ -135,9 +137,18 @@ class MoneyRequest {
             }
 
             $sql .= " WHERE request_id = :request_id";
+            
+            error_log("SQL query: $sql");
+            error_log("Parameters: " . json_encode($params));
 
             $stmt = $this->pdo->prepare($sql);
-            return $stmt->execute($params);
+            $result = $stmt->execute($params);
+            
+            // Check affected rows to confirm update worked
+            $rowCount = $stmt->rowCount();
+            error_log("Update result: " . ($result ? 'true' : 'false') . ", Rows affected: $rowCount");
+            
+            return $result && $rowCount > 0;
         } catch (PDOException $e) {
             error_log("Error updating money request status: " . $e->getMessage());
             return false;

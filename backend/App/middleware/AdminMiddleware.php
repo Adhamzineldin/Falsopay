@@ -67,4 +67,31 @@ class AdminMiddleware
             return false;
         }
     }
+    
+    /**
+     * Static method to ensure the user is an admin
+     * 
+     * @return string|null Returns null if successful, or an error message if not
+     */
+    public static function ensureAdmin(): ?string
+    {
+        try {
+            // Check if the user is authenticated
+            if (!isset($_SESSION['user_id'])) {
+                return 'Authentication required';
+            }
+            
+            // Check if the user has admin role
+            $userModel = new User();
+            $isAdmin = $userModel->isAdmin($_SESSION['user_id']);
+            
+            if (!$isAdmin) {
+                return 'Unauthorized. Admin access required';
+            }
+            
+            return null;
+        } catch (Exception $e) {
+            return 'Server error: ' . $e->getMessage();
+        }
+    }
 } 

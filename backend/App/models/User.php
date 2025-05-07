@@ -217,4 +217,45 @@ class User
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         return $result && $result['role'] === 'admin';
     }
+
+    /**
+     * Block a user
+     */
+    public function blockUser(int $userId, ?string $reason = null): bool
+    {
+        $sql = "UPDATE users SET status = 'blocked' WHERE user_id = :userId";
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute(['userId' => $userId]);
+    }
+    
+    /**
+     * Unblock a user
+     */
+    public function unblockUser(int $userId): bool
+    {
+        $sql = "UPDATE users SET status = 'active' WHERE user_id = :userId";
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute(['userId' => $userId]);
+    }
+    
+    /**
+     * Check if user is blocked
+     */
+    public function isBlocked(int $userId): bool
+    {
+        $sql = "SELECT status FROM users WHERE user_id = :userId";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute(['userId' => $userId]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result && $result['status'] === 'blocked';
+    }
+    
+    /**
+     * Get all blocked users
+     */
+    public function getBlockedUsers(): array
+    {
+        $sql = "SELECT * FROM users WHERE status = 'blocked'";
+        return $this->pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

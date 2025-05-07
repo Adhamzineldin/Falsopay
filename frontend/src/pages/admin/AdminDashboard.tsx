@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MainLayout from '@/components/layouts/MainLayout';
 import { useApp } from '@/contexts/AppContext';
-import { UserService } from '@/services/user.service';
+import { UserService, UserData } from '@/services/user.service';
 import { SupportService, SupportTicket, TicketWithReplies } from '@/services/support.service';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -25,7 +25,9 @@ import {
   ShieldAlert,
   ShieldCheck,
   Activity,
-  DollarSign
+  DollarSign,
+  Lock,
+  Unlock
 } from 'lucide-react';
 import {
   Table,
@@ -55,14 +57,11 @@ import {
 import AdminSystemStatus from '@/components/admin/AdminSystemStatus';
 import AdminTransferSettings from '@/components/admin/AdminTransferSettings';
 
-interface UserData {
-  user_id: number;
-  first_name: string;
-  last_name: string;
-  email: string;
-  phone_number: string;
-  role: string;
-  created_at: string;
+interface UserActionDialogProps {
+  user: UserData;
+  onClose: () => void;
+  onBlock: (userId: number, reason: string) => Promise<void>;
+  onUnblock: (userId: number) => Promise<void>;
 }
 
 const AdminDashboard = () => {
@@ -79,6 +78,10 @@ const AdminDashboard = () => {
   const [isSubmittingReply, setIsSubmittingReply] = useState(false);
   const [isChangingRole, setIsChangingRole] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
+  const [blockReason, setBlockReason] = useState('');
+  const [isProcessingUserAction, setIsProcessingUserAction] = useState(false);
+  const [showBlockDialog, setShowBlockDialog] = useState(false);
+  const [showUnblockDialog, setShowUnblockDialog] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated || !user) {
@@ -260,54 +263,150 @@ const AdminDashboard = () => {
     }
   };
 
+  // Block user handler
+  const handleBlockUser = async (userId: number, reason: string) => {
+    if (!reason.trim()) {
+      toast({
+        title: "Error",
+        description: "Please provide a reason for blocking this user",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsProcessingUserAction(true);
+    try {
+      const success = await UserService.blockUser(userId, reason);
+      
+      if (success) {
+        toast({
+          title: "Success",
+          description: "User has been blocked successfully",
+        });
+        
+        // Update the user status in the list
+        setUsers(users.map(u => 
+          u.user_id === userId ? { ...u, status: 'blocked' } : u
+        ));
+        
+        // Close the dialog and reset form
+        setSelectedUser(null);
+        setBlockReason('');
+        setShowBlockDialog(false);
+      } else {
+        throw new Error("Failed to block user");
+      }
+    } catch (error) {
+      console.error('Error blocking user:', error);
+      toast({
+        title: "Error",
+        description: "Failed to block user",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessingUserAction(false);
+    }
+  };
+
+  // Unblock user handler
+  const handleUnblockUser = async (userId: number) => {
+    setIsProcessingUserAction(true);
+    try {
+      const success = await UserService.unblockUser(userId);
+      
+      if (success) {
+        toast({
+          title: "Success",
+          description: "User has been unblocked successfully",
+        });
+        
+        // Update the user status in the list
+        setUsers(users.map(u => 
+          u.user_id === userId ? { ...u, status: 'active' } : u
+        ));
+        
+        // Close the dialog
+        setSelectedUser(null);
+        setShowUnblockDialog(false);
+      } else {
+        throw new Error("Failed to unblock user");
+      }
+    } catch (error) {
+      console.error('Error unblocking user:', error);
+      toast({
+        title: "Error",
+        description: "Failed to unblock user",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessingUserAction(false);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
-    switch(status) {
+    switch (status) {
       case 'open':
-        return <Badge variant="default" className="bg-green-500">Open</Badge>;
+        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-300">Open</Badge>;
       case 'in_progress':
-        return <Badge variant="default" className="bg-blue-500">In Progress</Badge>;
+        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-300">In Progress</Badge>;
       case 'closed':
-        return <Badge variant="outline">Closed</Badge>;
+        return <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-300">Closed</Badge>;
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-300">{status}</Badge>;
     }
   };
 
   const getStatusIcon = (status: string) => {
-    switch(status) {
+    switch (status) {
       case 'open':
-        return <Check className="h-4 w-4 text-green-500" />;
+        return <Clock className="h-4 w-4 text-blue-600" />;
       case 'in_progress':
-        return <Clock className="h-4 w-4 text-blue-500" />;
+        return <Activity className="h-4 w-4 text-yellow-600" />;
       case 'closed':
-        return <X className="h-4 w-4 text-gray-500" />;
+        return <Check className="h-4 w-4 text-green-600" />;
       default:
-        return null;
+        return <Clock className="h-4 w-4 text-gray-600" />;
     }
   };
 
   const getRoleBadge = (role: string) => {
-    switch(role) {
+    switch (role) {
       case 'admin':
-        return <Badge variant="default" className="bg-purple-500">Admin</Badge>;
+        return <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-300">Admin</Badge>;
       case 'user':
-        return <Badge variant="outline">User</Badge>;
+        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">User</Badge>;
       default:
-        return <Badge variant="outline">{role}</Badge>;
+        return <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-300">{role}</Badge>;
+    }
+  };
+
+  const getUserStatusBadge = (status?: string) => {
+    switch (status) {
+      case 'blocked':
+        return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-300">Blocked</Badge>;
+      case 'active':
+      default:
+        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">Active</Badge>;
     }
   };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    if (!dateString) return 'N/A';
+    
+    try {
+      const date = new Date(dateString);
+      return new Intl.DateTimeFormat('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }).format(date);
+    } catch (e) {
+      return dateString;
+    }
   };
-  
+
   return (
     <MainLayout>
       <div className="container mx-auto px-4 py-8">
@@ -558,92 +657,187 @@ const AdminDashboard = () => {
                           <TableHead>Email</TableHead>
                           <TableHead>Phone</TableHead>
                           <TableHead>Role</TableHead>
+                          <TableHead>Status</TableHead>
                           <TableHead>Created</TableHead>
                           <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {users && users.length > 0 ? users.map((user) => (
-                          <TableRow key={user.user_id}>
-                            <TableCell>{user.user_id}</TableCell>
-                            <TableCell className="font-medium">{user.first_name} {user.last_name}</TableCell>
-                            <TableCell>{user.email}</TableCell>
-                            <TableCell>{user.phone_number}</TableCell>
-                            <TableCell>{getRoleBadge(user.role)}</TableCell>
-                            <TableCell>{formatDate(user.created_at)}</TableCell>
-                            <TableCell className="text-right">
-                              <Dialog>
-                                <DialogTrigger asChild>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="sm"
-                                    onClick={() => setSelectedUser(user)}
-                                  >
-                                    {user.role === 'admin' ? (
-                                      <ShieldCheck className="h-4 w-4 mr-1" />
-                                    ) : (
-                                      <ShieldAlert className="h-4 w-4 mr-1" />
-                                    )}
-                                    Manage Role
-                                  </Button>
-                                </DialogTrigger>
-                                {selectedUser && (
-                                  <DialogContent>
-                                    <DialogHeader>
-                                      <DialogTitle>Manage User Role</DialogTitle>
-                                      <DialogDescription>
-                                        Change the role for {selectedUser.first_name} {selectedUser.last_name}
-                                      </DialogDescription>
-                                    </DialogHeader>
-                                    <div className="py-4">
-                                      <div className="space-y-4">
-                                        <div>
-                                          <Label htmlFor="user-role">Role</Label>
-                                          <Select defaultValue={selectedUser.role}>
-                                            <SelectTrigger id="user-role" className="mt-1">
-                                              <SelectValue placeholder="Select role" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                              <SelectItem value="user">User</SelectItem>
-                                              <SelectItem value="admin">Admin</SelectItem>
-                                            </SelectContent>
-                                          </Select>
-                                        </div>
-                                        <div className="text-sm text-gray-500">
-                                          <p><strong>Current role:</strong> {selectedUser.role}</p>
-                                          <p><strong>User ID:</strong> {selectedUser.user_id}</p>
-                                          <p><strong>Email:</strong> {selectedUser.email}</p>
-                                        </div>
-                                      </div>
-                                    </div>
-                                    <DialogFooter>
-                                      <Button
-                                        variant="outline"
-                                        onClick={() => setSelectedUser(null)}
-                                      >
-                                        Cancel
-                                      </Button>
-                                      <Button
-                                        onClick={() => handleSetUserRole(
-                                          selectedUser.user_id,
-                                          selectedUser.role === 'admin' ? 'user' : 'admin'
-                                        )}
-                                        disabled={isChangingRole}
-                                      >
-                                        {isChangingRole ? 'Updating...' : 'Update Role'}
-                                      </Button>
-                                    </DialogFooter>
-                                  </DialogContent>
-                                )}
-                              </Dialog>
-                            </TableCell>
-                          </TableRow>
-                        )) : (
+                        {users.length === 0 ? (
                           <TableRow>
-                            <TableCell colSpan={7} className="h-24 text-center">
+                            <TableCell colSpan={7} className="text-center py-8">
                               No users found
                             </TableCell>
                           </TableRow>
+                        ) : (
+                          users.map((userData, index) => (
+                            <TableRow key={userData.user_id}>
+                              <TableCell className="font-medium">{index + 1}</TableCell>
+                              <TableCell>
+                                {userData.first_name} {userData.last_name}
+                              </TableCell>
+                              <TableCell>
+                                <div>{userData.email}</div>
+                                <div className="text-gray-500 text-xs">{userData.phone_number}</div>
+                              </TableCell>
+                              <TableCell>
+                                {getRoleBadge(userData.role || 'user')}
+                              </TableCell>
+                              <TableCell>
+                                {getUserStatusBadge(userData.status)}
+                              </TableCell>
+                              <TableCell>
+                                {formatDate(userData.created_at || '')}
+                              </TableCell>
+                              <TableCell className="text-right space-x-1">
+                                <Dialog>
+                                  <DialogTrigger asChild>
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline" 
+                                      onClick={() => setSelectedUser(userData)}
+                                    >
+                                      <ShieldCheck className="h-4 w-4 mr-1" />
+                                      Role
+                                    </Button>
+                                  </DialogTrigger>
+                                  {selectedUser && (
+                                    <DialogContent>
+                                      <DialogHeader>
+                                        <DialogTitle>Change User Role</DialogTitle>
+                                        <DialogDescription>
+                                          Update the role for {selectedUser.first_name} {selectedUser.last_name}
+                                        </DialogDescription>
+                                      </DialogHeader>
+                                      <div className="py-4">
+                                        <Label htmlFor="role">Select New Role</Label>
+                                        <Select
+                                          defaultValue={selectedUser.role || 'user'}
+                                          onValueChange={(value) => handleSetUserRole(selectedUser.user_id, value)}
+                                          disabled={isChangingRole}
+                                        >
+                                          <SelectTrigger>
+                                            <SelectValue placeholder="Select role" />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            <SelectItem value="user">User</SelectItem>
+                                            <SelectItem value="admin">Admin</SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                      <DialogFooter>
+                                        <Button variant="outline" onClick={() => setSelectedUser(null)}>
+                                          Close
+                                        </Button>
+                                      </DialogFooter>
+                                    </DialogContent>
+                                  )}
+                                </Dialog>
+                                
+                                {/* Block User Dialog */}
+                                <Dialog open={showBlockDialog && selectedUser?.user_id === userData.user_id} onOpenChange={(open) => {
+                                  if (!open) {
+                                    setShowBlockDialog(false);
+                                    setBlockReason('');
+                                  }
+                                }}>
+                                  <DialogTrigger asChild>
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline"
+                                      className={userData.status === 'blocked' ? 'hidden' : ''}
+                                      onClick={() => {
+                                        setSelectedUser(userData);
+                                        setShowBlockDialog(true);
+                                      }}
+                                    >
+                                      <Lock className="h-4 w-4 mr-1" />
+                                      Block
+                                    </Button>
+                                  </DialogTrigger>
+                                  {selectedUser && (
+                                    <DialogContent>
+                                      <DialogHeader>
+                                        <DialogTitle>Block User</DialogTitle>
+                                        <DialogDescription>
+                                          Block access for {selectedUser.first_name} {selectedUser.last_name}. 
+                                          This will prevent the user from logging in.
+                                        </DialogDescription>
+                                      </DialogHeader>
+                                      <div className="py-4">
+                                        <Label htmlFor="block-reason">Reason for Blocking</Label>
+                                        <Textarea
+                                          id="block-reason"
+                                          placeholder="Please provide a reason for blocking this user"
+                                          value={blockReason}
+                                          onChange={(e) => setBlockReason(e.target.value)}
+                                          className="mt-1"
+                                          rows={3}
+                                        />
+                                      </div>
+                                      <DialogFooter>
+                                        <Button variant="outline" onClick={() => {
+                                          setShowBlockDialog(false);
+                                          setBlockReason('');
+                                        }}>
+                                          Cancel
+                                        </Button>
+                                        <Button 
+                                          variant="destructive" 
+                                          onClick={() => handleBlockUser(selectedUser.user_id, blockReason)}
+                                          disabled={isProcessingUserAction || !blockReason.trim()}
+                                        >
+                                          {isProcessingUserAction ? 'Processing...' : 'Block User'}
+                                        </Button>
+                                      </DialogFooter>
+                                    </DialogContent>
+                                  )}
+                                </Dialog>
+                                
+                                {/* Unblock User Button */}
+                                <Dialog open={showUnblockDialog && selectedUser?.user_id === userData.user_id} onOpenChange={(open) => {
+                                  if (!open) setShowUnblockDialog(false);
+                                }}>
+                                  <DialogTrigger asChild>
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline"
+                                      className={userData.status !== 'blocked' ? 'hidden' : ''}
+                                      onClick={() => {
+                                        setSelectedUser(userData);
+                                        setShowUnblockDialog(true);
+                                      }}
+                                    >
+                                      <Unlock className="h-4 w-4 mr-1" />
+                                      Unblock
+                                    </Button>
+                                  </DialogTrigger>
+                                  {selectedUser && (
+                                    <DialogContent>
+                                      <DialogHeader>
+                                        <DialogTitle>Unblock User</DialogTitle>
+                                        <DialogDescription>
+                                          Restore access for {selectedUser.first_name} {selectedUser.last_name}. 
+                                          This will allow the user to log in again.
+                                        </DialogDescription>
+                                      </DialogHeader>
+                                      <DialogFooter>
+                                        <Button variant="outline" onClick={() => setShowUnblockDialog(false)}>
+                                          Cancel
+                                        </Button>
+                                        <Button 
+                                          onClick={() => handleUnblockUser(selectedUser.user_id)}
+                                          disabled={isProcessingUserAction}
+                                        >
+                                          {isProcessingUserAction ? 'Processing...' : 'Unblock User'}
+                                        </Button>
+                                      </DialogFooter>
+                                    </DialogContent>
+                                  )}
+                                </Dialog>
+                              </TableCell>
+                            </TableRow>
+                          ))
                         )}
                       </TableBody>
                     </Table>

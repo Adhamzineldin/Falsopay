@@ -8,6 +8,8 @@ export interface UserData {
   phone_number: string;
   created_at?: string;
   default_account?: number | null;
+  role?: string;
+  status?: 'active' | 'blocked';
 }
 
 export const UserService = {
@@ -120,6 +122,56 @@ export const UserService = {
     } catch (error) {
       console.error('Error fetching user role:', error);
       return null;
+    }
+  },
+  
+  // Block a user (admin only)
+  blockUser: async (userId: number, reason: string = "") => {
+    try {
+      const response = await api.post('/api/admin/users/block', { 
+        user_id: userId,
+        reason
+      });
+      
+      if (response.data && response.data.status === 'success') {
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error blocking user:', error);
+      throw error;
+    }
+  },
+  
+  // Unblock a user (admin only)
+  unblockUser: async (userId: number) => {
+    try {
+      const response = await api.post('/api/admin/users/unblock', { 
+        user_id: userId 
+      });
+      
+      if (response.data && response.data.status === 'success') {
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error unblocking user:', error);
+      throw error;
+    }
+  },
+  
+  // Get all blocked users (admin only)
+  getBlockedUsers: async () => {
+    try {
+      const response = await api.get('/api/admin/users/blocked');
+      
+      if (response.data && response.data.status === 'success' && response.data.data) {
+        return response.data.data;
+      }
+      return [];
+    } catch (error) {
+      console.error('Error fetching blocked users:', error);
+      throw error;
     }
   }
 };

@@ -18,7 +18,7 @@ class SystemRoute extends Route
             $logger = ErrorLogger::getInstance();
             
             // Add admin middleware for admin-only routes
-            $adminMiddlewares = $middlewares;
+            $adminMiddlewares = array_merge($middlewares, [[AdminMiddleware::class, 'ensureAdmin']]);
             
             // Public status route - accessible without authentication
             $router->add('GET', '/api/system/status', function() use ($controller, $logger) {
@@ -83,12 +83,23 @@ class SystemRoute extends Route
                         $userId = (int)$_SESSION['user_id'];
                     }
                     
-                    return $controller->updateSettings($body, $userId);
+                    // Log the user ID and request body for debugging
+                    $logger->info("Updating system settings with user ID: " . ($userId ?? 'null') . ", body: " . json_encode($body));
+                    
+                    $result = $controller->updateSettings($body, $userId);
+                    
+                    // If result is an error, log it
+                    if (isset($result['status']) && $result['status'] === 'error') {
+                        $logger->error("Error updating system settings: " . ($result['message'] ?? 'Unknown error'));
+                    }
+                    
+                    return $result;
                 } catch (Exception $e) {
-                    $logger->error("Route error in PUT /api/admin/system/settings: " . $e->getMessage());
+                    $errorMsg = "Route error in PUT /api/admin/system/settings: " . $e->getMessage();
+                    $logger->error($errorMsg);
                     return [
                         'status' => 'error',
-                        'message' => 'Failed to update system settings',
+                        'message' => 'Failed to update system settings: ' . $e->getMessage(),
                         'code' => 500
                     ];
                 }

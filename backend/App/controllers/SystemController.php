@@ -71,6 +71,15 @@ class SystemController
                     $updateData[$key] = $data[$key];
                 }
             }
+            
+            if (empty($updateData)) {
+                $this->logger->warning("System settings update attempted with no valid fields");
+                return [
+                    'status' => 'error',
+                    'message' => 'No valid settings to update',
+                    'code' => 400
+                ];
+            }
 
             // Validate transfer_limit_amount is a positive number if set
             if (isset($updateData['transfer_limit_amount'])) {
@@ -96,14 +105,16 @@ class SystemController
                     'code' => 200
                 ];
             } else {
+                $this->logger->error("System settings update failed at controller level");
                 return [
                     'status' => 'error',
-                    'message' => 'Failed to update system settings',
+                    'message' => 'Failed to update system settings. Please try again or contact support.',
                     'code' => 500
                 ];
             }
         } catch (Exception $e) {
-            $this->logger->error("Error updating system settings: " . $e->getMessage());
+            $errorMessage = "Error updating system settings: " . $e->getMessage();
+            $this->logger->error($errorMessage);
             return [
                 'status' => 'error',
                 'message' => 'Failed to update system settings: ' . $e->getMessage(),

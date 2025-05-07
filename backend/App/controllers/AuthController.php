@@ -121,6 +121,11 @@ class AuthController
         if (!$user) {
             self::json(['error' => 'User not found'], 404);
         }
+        
+        // Check if user is blocked
+        if ($user['status'] === 'blocked') {
+            self::json(['error' => 'Your account has been blocked. Please contact support for assistance.'], 403);
+        }
 
         $ipa_accounts = $ipaModel->getAllByUserId($user['user_id']);
 

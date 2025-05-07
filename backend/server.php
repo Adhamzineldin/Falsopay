@@ -18,6 +18,7 @@ use App\routes\api\UsersRoute;
 use App\routes\api\FavoritesRoute;
 use App\routes\api\SupportRoute;
 use App\routes\api\SystemRoute;
+use App\routes\api\UserAdminRoutes;
 use App\routes\auth\AuthRoutes;
 use core\Router;
 use JetBrains\PhpStorm\NoReturn;
@@ -183,7 +184,8 @@ $routes = [
     TransactionRoutes::class,
     FavoritesRoute::class,
     SupportRoute::class,
-    SystemRoute::class
+    SystemRoute::class,
+    UserAdminRoutes::class
 ];
 
 $middleware = [[AuthMiddleware::class, 'ensureAuthenticated']];

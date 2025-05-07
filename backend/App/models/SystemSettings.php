@@ -108,7 +108,7 @@ class SystemSettings
      * @param int|null $userId The ID of the user making the update
      * @return bool Whether the operation was successful
      */
-    public function updateSettings(array $settings, int $userId = null): bool
+    public function updateSettings(array $settings, ?int $userId = null): bool
     {
         try {
             // Get current settings to get the setting_id
@@ -135,6 +135,7 @@ class SystemSettings
             }
             
             if (empty($updateFields)) {
+                $this->logger->warning("System settings update failed: No valid fields to update");
                 return false; // Nothing to update
             }
             
@@ -153,9 +154,15 @@ class SystemSettings
             // Clear cache to force a refresh
             self::$cache = null;
             
+            if ($result) {
+                $this->logger->info("System settings updated successfully");
+            } else {
+                $this->logger->error("System settings update failed: Database update returned false");
+            }
+            
             return $result;
         } catch (Exception $e) {
-            $this->logger->log("Error updating system settings: " . $e->getMessage());
+            $this->logger->error("Error updating system settings: " . $e->getMessage());
             return false;
         }
     }

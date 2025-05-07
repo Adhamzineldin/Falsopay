@@ -59,7 +59,8 @@ try {
         phone_number VARCHAR(15) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         default_account INT DEFAULT NULL,  -- Add the Default_Account column here (no FK yet)
-        role VARCHAR(20) DEFAULT 'user'  -- Add role column with default 'user'
+        role VARCHAR(20) DEFAULT 'user',  -- Add role column with default 'user'
+        status ENUM('active', 'blocked') NOT NULL DEFAULT 'active'  -- Add status field
     );
 
     -- 4. Bank_Accounts Table

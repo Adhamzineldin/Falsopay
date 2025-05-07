@@ -49,12 +49,14 @@ export default function MoneyRequestsPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
   const [isPinDialogOpen, setIsPinDialogOpen] = useState(false);
+  const [isDeclineDialogOpen, setIsDeclineDialogOpen] = useState(false);
   const [pin, setPin] = useState('');
   const [selectedRequest, setSelectedRequest] = useState<MoneyRequest | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentUserIpas, setCurrentUserIpas] = useState<IpaOption[]>([]);
   const [selectedIpa, setSelectedIpa] = useState<string>('');
   const [isLoadingIpas, setIsLoadingIpas] = useState(false);
+  const [requestToDecline, setRequestToDecline] = useState<number | null>(null);
   
   const pinInputRef = useRef<HTMLInputElement>(null);
   
@@ -220,10 +222,19 @@ export default function MoneyRequestsPage() {
     }
   };
 
-  // Decline a money request
-  const handleDeclineRequest = async (requestId: number) => {
+  // Prepare to decline a request
+  const handleDeclineRequest = (requestId: number) => {
+    setRequestToDecline(requestId);
+    setIsDeclineDialogOpen(true);
+  };
+
+  // Confirm decline of a money request
+  const confirmDeclineRequest = async () => {
+    if (!requestToDecline) return;
+    
     try {
-      const response = await moneyRequestService.declineRequest(requestId);
+      setIsProcessing(true);
+      const response = await moneyRequestService.declineRequest(requestToDecline);
       
       if (response.success) {
         toast.success('Money request declined');
@@ -231,7 +242,7 @@ export default function MoneyRequestsPage() {
         // Update the list
         setAllRequests(prev => 
           prev.map(req => 
-            req.request_id === requestId 
+            req.request_id === requestToDecline 
               ? { ...req, status: 'declined' } 
               : req
           )
@@ -244,6 +255,10 @@ export default function MoneyRequestsPage() {
     } catch (error) {
       console.error('Error declining request:', error);
       toast.error('Failed to decline request');
+    } finally {
+      setIsProcessing(false);
+      setIsDeclineDialogOpen(false);
+      setRequestToDecline(null);
     }
   };
 
@@ -504,7 +519,7 @@ export default function MoneyRequestsPage() {
                     onPinSubmit={processRequest}
                     isLoading={isProcessing}
                     title=""
-                    maxLength={4}
+                    maxLength={6}
                   />
                 </div>
               </div>
@@ -522,6 +537,45 @@ export default function MoneyRequestsPage() {
               disabled={isProcessing}
             >
               Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Decline Confirmation Dialog */}
+      <Dialog open={isDeclineDialogOpen} onOpenChange={setIsDeclineDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirm Decline</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to decline this money request?
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <p className="text-sm text-muted-foreground">
+              The requester will be notified that you have declined their request. This action cannot be undone.
+            </p>
+          </div>
+          
+          <DialogFooter className="flex space-x-2 justify-end">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setIsDeclineDialogOpen(false);
+                setRequestToDecline(null);
+              }}
+              disabled={isProcessing}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={confirmDeclineRequest}
+              disabled={isProcessing}
+            >
+              {isProcessing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Decline Request
             </Button>
           </DialogFooter>
         </DialogContent>

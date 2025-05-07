@@ -275,19 +275,35 @@ class MoneyRequestController {
                     'sender_ipa_address' => $senderIpaAddress,
                     'receiver_ipa_address' => $request['requester_ipa_address'],
                     'transfer_method' => 'ipa',
-                    'pin' => $pin // Pass the PIN for verification in the transaction
+                    'pin' => $pin, // Pass the PIN for verification in the transaction
+                    'transaction_type' => 'send'
                 ];
                 
                 // Process the transaction through the TransactionController
                 $transactionController = new TransactionController();
-                $transactionResult = $transactionController->processIpaTransfer($transactionData);
-
-                if (!$transactionResult['success']) {
-                    return ['success' => false, 'message' => $transactionResult['message']];
+                // Call sendMoney instead of processIpaTransfer
+                ob_start(); // Capture any output from the send money method
+                $transactionController::sendMoney($transactionData);
+                $output = ob_get_clean();
+                
+                // Parse the output from the sendMoney function which returns JSON
+                $transactionResult = json_decode($output, true);
+                
+                if (!isset($transactionResult['success']) || !$transactionResult['success']) {
+                    $errorMessage = $transactionResult['error'] ?? 'Failed to process payment';
+                    return ['success' => false, 'message' => $errorMessage];
                 }
-
+                
                 // Update the money request status to accepted and link it to the transaction
-                $this->moneyRequestModel->updateRequestStatus($requestId, 'accepted', $transactionResult['data']['transaction_id']);
+                $this->moneyRequestModel->updateRequestStatus($requestId, 'accepted', $transactionResult['transaction_id']);
+                
+                // Create response data structure
+                $responseData = [
+                    'request' => $request,
+                    'transaction' => [
+                        'transaction_id' => $transactionResult['transaction_id']
+                    ]
+                ];
 
                 // Notify the requester that the request was accepted
                 $this->notifyUser($request['requester_user_id'], [
@@ -295,17 +311,14 @@ class MoneyRequestController {
                     'action' => 'accepted',
                     'data' => [
                         'request_id' => $requestId,
-                        'transaction' => $transactionResult['data']
+                        'transaction' => $responseData['transaction']
                     ]
                 ]);
 
                 return [
                     'success' => true, 
                     'message' => 'Money request accepted and payment processed', 
-                    'data' => [
-                        'request' => $request,
-                        'transaction' => $transactionResult['data']
-                    ]
+                    'data' => $responseData
                 ];
             } else if ($action === 'decline') {
                 // Update the money request status to declined

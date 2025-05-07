@@ -265,101 +265,108 @@ class MoneyRequestController {
                     return ['success' => false, 'message' => 'The IPA address does not belong to you'];
                 }
                 
-                // Create a transaction if the user accepts the request
+                // Get bank details
+                $bankAccountModel = new \App\models\BankAccount();
+                $senderBankDetails = $bankAccountModel->getByCompositeKey($senderIpa['bank_id'], $senderIpa['account_number']);
+                
+                if (!$senderBankDetails) {
+                    return ['success' => false, 'message' => 'Your bank account could not be found'];
+                }
+                
+                // Check if sender has enough balance
+                $senderBalance = $bankAccountModel->getBalance($senderIpa['bank_id'], $senderIpa['account_number']);
+                if ($senderBalance < $request['amount']) {
+                    return ['success' => false, 'message' => 'Insufficient balance to accept this money request'];
+                }
+                
+                // Get receiver IPA details
+                $receiverIpaAddress = $request['requester_ipa_address'];
+                $receiverIpa = $this->ipaModel->getByIpaAddress($receiverIpaAddress);
+                
+                if (!$receiverIpa) {
+                    return ['success' => false, 'message' => 'Requester IPA address not found'];
+                }
+                
+                // Create transaction data for direct use with Transaction model
                 $transactionData = [
                     'sender_user_id' => $userId,
                     'receiver_user_id' => $request['requester_user_id'],
+                    'amount' => $request['amount'],
                     'sender_name' => $request['requested_name'],
                     'receiver_name' => $request['requester_name'],
-                    'amount' => $request['amount'],
-                    'sender_ipa_address' => $senderIpaAddress,
-                    'receiver_ipa_address' => $request['requester_ipa_address'],
+                    'sender_bank_id' => $senderIpa['bank_id'],
+                    'receiver_bank_id' => $receiverIpa['bank_id'],
+                    'sender_account_number' => $senderIpa['account_number'],
+                    'receiver_account_number' => $receiverIpa['account_number'],
                     'transfer_method' => 'ipa',
-                    'pin' => $pin, // Pass the PIN for verification in the transaction
+                    'sender_ipa_address' => $senderIpaAddress,
+                    'receiver_ipa_address' => $receiverIpaAddress,
                     'transaction_type' => 'send'
                 ];
                 
-                // Process the transaction through the TransactionController
-                $transactionController = new TransactionController();
-                // Call sendMoney instead of processIpaTransfer
-                ob_start(); // Capture any output from the send money method
-                $transactionController::sendMoney($transactionData);
-                $output = ob_get_clean();
-
-                // Log the raw output for debugging
-                error_log("Raw transaction output: " . $output);
-
-                // Handle WhatsApp notification responses if present in the output
-                if (strpos($output, '"messaging_product": "whatsapp"') !== false) {
-                    // Extract just the transaction result part at the end
-                    preg_match('/\{[\s\n]*"success"[\s\n]*:.*\}/s', $output, $matches);
-                    if (!empty($matches)) {
-                        $transactionJson = $matches[0];
-                        $transactionResult = json_decode($transactionJson, true);
-                        error_log("Extracted transaction result: " . $transactionJson);
-                    } else {
-                        // If we can't extract it, assume the transaction was successful
-                        // This ensures we don't block the flow when WhatsApp notifications are present
-                        $transactionResult = ['success' => true, 'transaction_id' => 0];
-                        error_log("Could not extract transaction result - assuming success");
+                try {
+                    // Create the transaction directly using the Transaction model
+                    $transactionId = $this->transactionModel->createTransaction($transactionData);
+                    
+                    if (!$transactionId) {
+                        throw new Exception("Failed to create transaction");
                     }
-                } else {
-                    // Standard parsing if no WhatsApp notifications
-                    $transactionResult = json_decode($output, true);
-                }
-
-                if (!isset($transactionResult['success']) || !$transactionResult['success']) {
-                    $errorMessage = $transactionResult['error'] ?? 'Failed to process payment';
-                    return ['success' => false, 'message' => $errorMessage];
-                }
-                
-                // Extract transaction ID and force update the request status
-                $transactionId = $transactionResult['transaction_id'] ?? null;
-                if ($transactionId) {
-                    // Force update money request status - ignore return value
+                    
+                    // Update balances directly
+                    $bankAccountModel->subtractBalance($senderIpa['bank_id'], $senderIpa['account_number'], $request['amount']);
+                    $bankAccountModel->addBalance($receiverIpa['bank_id'], $receiverIpa['account_number'], $request['amount']);
+                    
+                    // Update the money request status
                     $this->moneyRequestModel->updateRequestStatus($requestId, 'accepted', $transactionId);
                     
-                    // Manually double-check if status was updated
-                    sleep(1); // Give DB a moment
-                    $updatedRequest = $this->moneyRequestModel->getRequestById($requestId);
+                    // Send notifications
+                    $socketService = new \App\services\SocketService();
+                    $socketService->sendTransactionStatus(
+                        fromUserId: $userId,
+                        toUserId: $request['requester_user_id'],
+                        amount: $request['amount'],
+                        fromName: $request['requested_name'],
+                        toName: $request['requester_name'],
+                        transactionId: $transactionId
+                    );
                     
-                    if ($updatedRequest && $updatedRequest['status'] !== 'accepted') {
-                        // If still not updated, try direct SQL update through PDO
-                        try {
-                            $database = \App\database\Database::getInstance();
-                            $pdo = $database->getConnection();
-                            $stmt = $pdo->prepare("UPDATE money_requests SET status = 'accepted', transaction_id = ? WHERE request_id = ?");
-                            $stmt->execute([$transactionId, $requestId]);
-                        } catch (\Exception $e) {
-                            error_log("Emergency update failed: " . $e->getMessage());
-                        }
-                    }
+                    // Notify the requester through WebSocket
+                    $this->notifyUser($request['requester_user_id'], [
+                        'type' => 'money_request',
+                        'action' => 'accepted',
+                        'data' => [
+                            'request_id' => $requestId,
+                            'transaction' => [
+                                'transaction_id' => $transactionId
+                            ]
+                        ]
+                    ]);
+                    
+                    // Get new balances for response
+                    $senderNewBalance = $bankAccountModel->getBalance($senderIpa['bank_id'], $senderIpa['account_number']);
+                    $receiverNewBalance = $bankAccountModel->getBalance($receiverIpa['bank_id'], $receiverIpa['account_number']);
+                    
+                    // Prepare response data
+                    $responseData = [
+                        'success' => true,
+                        'message' => 'Money request accepted and payment processed',
+                        'data' => [
+                            'request' => $request,
+                            'transaction' => [
+                                'transaction_id' => $transactionId,
+                                'amount' => $request['amount'],
+                                'sender_balance' => $senderNewBalance,
+                                'receiver_balance' => $receiverNewBalance
+                            ]
+                        ]
+                    ];
+                    
+                    return $responseData;
+                    
+                } catch (Exception $e) {
+                    error_log("Error processing transaction: " . $e->getMessage());
+                    return ['success' => false, 'message' => 'Failed to process transaction: ' . $e->getMessage()];
                 }
-                
-                // Always use the original request data to avoid issues
-                $responseData = [
-                    'request' => $request,
-                    'transaction' => [
-                        'transaction_id' => $transactionId ?? 0
-                    ]
-                ];
-                
-                // Always notify the requester
-                $this->notifyUser($request['requester_user_id'], [
-                    'type' => 'money_request',
-                    'action' => 'accepted',
-                    'data' => [
-                        'request_id' => $requestId,
-                        'transaction' => $responseData['transaction']
-                    ]
-                ]);
-                
-                // Always return success if we got this far (money was sent)
-                return [
-                    'success' => true,
-                    'message' => 'Money request accepted and payment processed',
-                    'data' => $responseData
-                ];
             } else if ($action === 'decline') {
                 // Update the money request status to declined
                 $this->moneyRequestModel->updateRequestStatus($requestId, 'declined');
@@ -379,7 +386,7 @@ class MoneyRequestController {
             }
         } catch (Exception $e) {
             error_log("Error in processRequest: " . $e->getMessage());
-            return ['success' => false, 'message' => 'An error occurred while processing the money request'];
+            return ['success' => false, 'message' => 'An error occurred while processing the money request: ' . $e->getMessage()];
         }
     }
 

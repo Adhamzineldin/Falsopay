@@ -106,6 +106,19 @@ class MoneyRequestService {
         };
       }
       
+      // Handle the new response format
+      if (responseData && responseData.success && responseData.data?.transaction?.transaction_id) {
+        return {
+          success: true,
+          transaction_id: responseData.data.transaction.transaction_id,
+          amount: responseData.data.transaction.amount,
+          sender_balance: responseData.data.transaction.sender_balance,
+          receiver_balance: responseData.data.transaction.receiver_balance,
+          message: responseData.message || 'Transaction completed successfully',
+          data: responseData.data
+        };
+      }
+      
       // Check for direct transaction_id in response (simple format)
       if (responseData && responseData.transaction_id && typeof responseData.transaction_id === 'number') {
         return {
@@ -116,7 +129,7 @@ class MoneyRequestService {
         };
       }
       
-      // Return the original response if not in WhatsApp format
+      // Return the original response if none of the above formats match
       return responseData;
     } catch (error) {
       console.error('Error accepting request:', error);

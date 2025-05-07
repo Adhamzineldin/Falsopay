@@ -192,63 +192,53 @@ export default function MoneyRequestsPage() {
         sender_ipa_address: selectedIpa
       });
       
-      // Handle success response in any form (normal or WhatsApp)
-      if (response && (response.success === true || (response.transaction_id && response.transaction_id > 0))) {
+      // Handle success response in any form
+      if (
+        response && 
+        (response.success === true || 
+         (response.transaction_id && response.transaction_id > 0))
+      ) {
         // Check for WhatsApp notification response
         if (response.whatsapp_notification) {
           // If we received a WhatsApp notification response
           toast.success('Money request accepted', {
             description: response.message || `Payment of ${formatCurrency(selectedRequest.amount)} was sent successfully with notification.`
           });
-
-          // Update the UI to show the request as accepted
-          setAllRequests(prev => 
-            prev.map(req => 
-              req.request_id === selectedRequest.request_id 
-                ? { ...req, status: 'accepted', transaction_id: response.transaction_id } 
-                : req
-            )
-          );
         } else {
-          // Original success handling if we don't get the WhatsApp notification structure
+          // Standard success response
           toast.success('Money request accepted', {
-            description: `Payment of ${formatCurrency(selectedRequest.amount)} was sent successfully`
+            description: response.message || `Payment of ${formatCurrency(selectedRequest.amount)} was sent successfully`
           });
-          
-          // Update the UI to show the request as accepted
-          setAllRequests(prev => 
-            prev.map(req => 
-              req.request_id === selectedRequest.request_id 
-                ? { ...req, status: 'accepted', transaction_id: response.data?.transaction?.transaction_id } 
-                : req
-            )
-          );
         }
         
-        // Always do a refresh after a short delay to get the latest data
-        setTimeout(() => {
-          loadAllRequests();
-        }, 2000);
+        // Update the UI to show the request as accepted
+        setAllRequests(prev => 
+          prev.map(req => 
+            req.request_id === selectedRequest.request_id 
+              ? { 
+                  ...req, 
+                  status: 'accepted', 
+                  transaction_id: response.transaction_id || response.data?.transaction?.transaction_id
+                } 
+              : req
+          )
+        );
         
-        // Close dialog and reset state
+        // Close the dialog
         setIsPinDialogOpen(false);
         setPin('');
         setSelectedRequest(null);
       } else {
-        // Handle error case
-        const errorMessage = response.message || 'Failed to accept request';
-        toast.error('Failed to process payment', {
-          description: errorMessage
+        // Handle error response
+        toast.error('Failed to process the request', {
+          description: response.message || 'An unexpected error occurred'
         });
       }
     } catch (error) {
-      console.error('Error accepting request:', error);
-      toast.error('Failed to accept request');
-      
-      // Force refresh even on error to ensure UI is up to date
-      setTimeout(() => {
-        loadAllRequests();
-      }, 2000);
+      console.error('Error processing request:', error);
+      toast.error('Failed to process the request', {
+        description: error.message || 'An unexpected error occurred'
+      });
     } finally {
       setIsProcessing(false);
     }

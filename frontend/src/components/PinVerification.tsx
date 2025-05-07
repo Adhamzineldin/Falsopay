@@ -59,6 +59,7 @@ const PinVerification: React.FC<PinVerificationProps> = ({
     
     // If we have an expected PIN, verify locally
     if (expectedPin) {
+      console.log(`Verifying PIN: ${pin}, Expected: ${expectedPin}`);
       setTimeout(() => {
         if (pin === expectedPin) {
           setError('');

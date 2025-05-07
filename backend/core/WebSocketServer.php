@@ -78,9 +78,9 @@ $loop = Factory::create();
 $notificationServer = new NotificationServer();
 
 // Get host and port from environment variables
-$host = $_ENV["HOST"] ?? 'localhost';
-$wsPort = $_ENV['WS_PORT'] ?? 4100;
-$httpPort = $_ENV['HTTP_PORT'] ?? 4101;
+$host = $_ENV["HOST"] ?? '0.0.0.0';
+$wsPort = $_ENV['WS_PORT'] ?? 8080;
+$httpPort = $_ENV['HTTP_PORT'] ?? 8081;
 
 // Set up WebSocket server
 $webSocketServer = new Ratchet\Server\IoServer(

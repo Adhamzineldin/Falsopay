@@ -206,22 +206,10 @@ class SystemController
         $startTime = microtime(true);
         
         try {
-            // Use a more complex query that exercises the database more realistically
-            // This performs a set of common database operations similar to what the app uses
-            $query = "
-                SELECT 
-                    (SELECT COUNT(*) FROM users) as user_count,
-                    (SELECT COUNT(*) FROM money_requests WHERE status = 'pending') as pending_requests,
-                    (SELECT COUNT(*) FROM transactions) as transaction_count,
-                    (SELECT COUNT(*) FROM instant_payment_addresses) as ipa_count,
-                    (SELECT COUNT(*) FROM bank_accounts) as account_count;
-            ";
-            
+            // Simple DB query to test connection
+            $query = "SELECT 1";
             $stmt = $this->systemSettingsModel->getPdo()->prepare($query);
             $stmt->execute();
-            
-            // Actually fetch the data to simulate real application behavior
-            $counts = $stmt->fetch(\PDO::FETCH_ASSOC);
             
             $responseTime = round((microtime(true) - $startTime) * 1000, 2);
             
@@ -257,59 +245,27 @@ class SystemController
      */
     private function checkServerStatus(): array
     {
-        $startTime = microtime(true);
-        
-        // Get basic server info
         $memoryUsage = memory_get_usage(true);
         $humanMemory = $this->formatBytes($memoryUsage);
         $phpVersion = phpversion();
         
-        // Do a simple file I/O operation to test disk performance
-        $tempFile = sys_get_temp_dir() . '/falsopay_perf_test_' . uniqid() . '.tmp';
-        $fileIoSuccessful = false;
-        
-        try {
-            // Write test
-            $dataToWrite = str_repeat('A', 1024 * 10); // 10KB of data
-            $bytesWritten = @file_put_contents($tempFile, $dataToWrite);
-            
-            // Read test
-            if ($bytesWritten === strlen($dataToWrite)) {
-                $readData = @file_get_contents($tempFile);
-                $fileIoSuccessful = ($readData === $dataToWrite);
-            }
-            
-            // Clean up
-            @unlink($tempFile);
-        } catch (Exception $e) {
-            $this->logger->error("Server check file I/O error: " . $e->getMessage());
-        }
-        
-        // Calculate total response time
-        $responseTime = round((microtime(true) - $startTime) * 1000, 2);
-        
-        // Check for server issues
-        $statusMessage = 'Server is operating normally';
-        $status = 'operational';
-        $label = 'Operational';
-        
-        if (!$fileIoSuccessful) {
-            $status = 'error';
-            $label = 'Outage';
-            $statusMessage = 'Server file I/O operations are failing';
-        } else if ($memoryUsage > 50 * 1024 * 1024 || $responseTime > 200) { // Over 50MB or slow response
-            $status = 'warning';
-            $label = 'Degraded';
-            $statusMessage = 'Server performance is degraded';
+        // High memory usage might be a warning
+        if ($memoryUsage > 50 * 1024 * 1024) { // Over 50MB
+            return [
+                'status' => 'warning',
+                'label' => 'Degraded',
+                'message' => 'Server memory usage is high',
+                'php_version' => $phpVersion,
+                'memory_usage' => $humanMemory
+            ];
         }
         
         return [
-            'status' => $status,
-            'label' => $label,
-            'message' => $statusMessage,
+            'status' => 'operational',
+            'label' => 'Operational',
+            'message' => 'Server is operating normally',
             'php_version' => $phpVersion,
-            'memory_usage' => $humanMemory,
-            'response_time' => $responseTime . 'ms'
+            'memory_usage' => $humanMemory
         ];
     }
     
@@ -322,16 +278,24 @@ class SystemController
     {
         $startTime = microtime(true);
         $isWebsocketRunning = false;
-        $websocketPort = $_ENV['WEBSOCKET_PORT'] ?? '8080';
-        $websocketHost = $_ENV['WEBSOCKET_HOST'] ?? 'localhost';
+        
+        // Get WebSocket configuration
+        $websocketPort = $_ENV['WS_PORT'] ?? '4100';
+        $websocketHost = $_ENV['WS_HOST'] ?? 'localhost';
+        
+        // Determine if we should use secure WebSocket
+        $useSecure = ($websocketHost !== 'localhost' && $websocketHost !== '127.0.0.1');
         
         try {
-            // Try to actually connect to the WebSocket server
-            $socket = @fsockopen($websocketHost, $websocketPort, $errorCode, $errorMessage, 2);
+            // Attempt a real connection to the WebSocket server
+            // For TCP connection test only (not actual WebSocket handshake)
+            $connectionTimeout = 2; // 2 seconds timeout
+            $socket = @fsockopen($websocketHost, $websocketPort, $errorCode, $errorMessage, $connectionTimeout);
             
             if ($socket) {
                 $isWebsocketRunning = true;
                 fclose($socket);
+                $this->logger->info("WebSocket connection test successful to {$websocketHost}:{$websocketPort}");
             } else {
                 // Failed to connect
                 $this->logger->error("WebSocket connection failed: $errorCode - $errorMessage");
@@ -342,11 +306,14 @@ class SystemController
         
         $responseTime = round((microtime(true) - $startTime) * 1000, 2);
         
+        // Protocol information for display
+        $protocol = $useSecure ? 'WSS' : 'WS';
+        
         if (!$isWebsocketRunning) {
             return [
                 'status' => 'error',
                 'label' => 'Outage',
-                'message' => 'WebSocket server is not responding',
+                'message' => "$protocol WebSocket server is not responding ($websocketHost:$websocketPort)",
                 'response_time' => 'N/A'
             ];
         }
@@ -355,7 +322,7 @@ class SystemController
             return [
                 'status' => 'warning',
                 'label' => 'Degraded',
-                'message' => 'WebSocket response time is high: ' . $responseTime . 'ms',
+                'message' => "$protocol WebSocket response time is high: " . $responseTime . 'ms',
                 'response_time' => $responseTime . 'ms'
             ];
         }
@@ -363,7 +330,7 @@ class SystemController
         return [
             'status' => 'operational',
             'label' => 'Operational',
-            'message' => 'WebSocket server is running properly',
+            'message' => "$protocol WebSocket server is running properly",
             'response_time' => $responseTime . 'ms'
         ];
     }

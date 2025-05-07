@@ -66,6 +66,8 @@
       <excludeFolder url="file://$MODULE_DIR$/backend/vendor/sebastian/version" />
       <excludeFolder url="file://$MODULE_DIR$/backend/vendor/staabm/side-effects-detector" />
       <excludeFolder url="file://$MODULE_DIR$/backend/vendor/theseer/tokenizer" />
+      <excludeFolder url="file://$MODULE_DIR$/.idea/dataSources" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/.idea" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.12" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />

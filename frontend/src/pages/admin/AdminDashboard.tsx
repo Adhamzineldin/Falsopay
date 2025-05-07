@@ -677,8 +677,10 @@ const AdminDashboard = () => {
                                 {userData.first_name} {userData.last_name}
                               </TableCell>
                               <TableCell>
-                                <div>{userData.email}</div>
-                                <div className="text-gray-500 text-xs">{userData.phone_number}</div>
+                                {userData.email}
+                              </TableCell>
+                              <TableCell>
+                                {userData.phone_number}
                               </TableCell>
                               <TableCell>
                                 {getRoleBadge(userData.role || 'user')}

@@ -19,6 +19,7 @@ export interface SystemStatus {
     message: string;
     php_version: string;
     memory_usage: string;
+    response_time?: string;
   };
   timestamp: string;
 }

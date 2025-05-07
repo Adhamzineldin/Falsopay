@@ -154,12 +154,15 @@ const AdminSystemStatus = () => {
                 </div>
               </div>
               <p className="text-sm text-gray-500">{systemStatus.server.message}</p>
-              <div className="grid grid-cols-2 gap-2 mt-2">
+              <div className="grid grid-cols-3 gap-2 mt-2">
                 <div className="text-xs bg-gray-50 p-2 rounded">
                   <span className="font-medium">PHP Version:</span> {systemStatus.server.php_version}
                 </div>
                 <div className="text-xs bg-gray-50 p-2 rounded">
                   <span className="font-medium">Memory Usage:</span> {systemStatus.server.memory_usage}
+                </div>
+                <div className="text-xs bg-gray-50 p-2 rounded">
+                  <span className="font-medium">Response Time:</span> {systemStatus.server.response_time || 'N/A'}
                 </div>
               </div>
             </div>

@@ -206,10 +206,22 @@ class SystemController
         $startTime = microtime(true);
         
         try {
-            // Simple DB query to test connection
-            $query = "SELECT 1";
+            // Use a more complex query that exercises the database more realistically
+            // This performs a set of common database operations similar to what the app uses
+            $query = "
+                SELECT 
+                    (SELECT COUNT(*) FROM users) as user_count,
+                    (SELECT COUNT(*) FROM money_requests WHERE status = 'pending') as pending_requests,
+                    (SELECT COUNT(*) FROM transactions) as transaction_count,
+                    (SELECT COUNT(*) FROM instant_payment_addresses) as ipa_count,
+                    (SELECT COUNT(*) FROM bank_accounts) as account_count;
+            ";
+            
             $stmt = $this->systemSettingsModel->getPdo()->prepare($query);
             $stmt->execute();
+            
+            // Actually fetch the data to simulate real application behavior
+            $counts = $stmt->fetch(\PDO::FETCH_ASSOC);
             
             $responseTime = round((microtime(true) - $startTime) * 1000, 2);
             
@@ -245,27 +257,59 @@ class SystemController
      */
     private function checkServerStatus(): array
     {
+        $startTime = microtime(true);
+        
+        // Get basic server info
         $memoryUsage = memory_get_usage(true);
         $humanMemory = $this->formatBytes($memoryUsage);
         $phpVersion = phpversion();
         
-        // High memory usage might be a warning
-        if ($memoryUsage > 50 * 1024 * 1024) { // Over 50MB
-            return [
-                'status' => 'warning',
-                'label' => 'Degraded',
-                'message' => 'Server memory usage is high',
-                'php_version' => $phpVersion,
-                'memory_usage' => $humanMemory
-            ];
+        // Do a simple file I/O operation to test disk performance
+        $tempFile = sys_get_temp_dir() . '/falsopay_perf_test_' . uniqid() . '.tmp';
+        $fileIoSuccessful = false;
+        
+        try {
+            // Write test
+            $dataToWrite = str_repeat('A', 1024 * 10); // 10KB of data
+            $bytesWritten = @file_put_contents($tempFile, $dataToWrite);
+            
+            // Read test
+            if ($bytesWritten === strlen($dataToWrite)) {
+                $readData = @file_get_contents($tempFile);
+                $fileIoSuccessful = ($readData === $dataToWrite);
+            }
+            
+            // Clean up
+            @unlink($tempFile);
+        } catch (Exception $e) {
+            $this->logger->error("Server check file I/O error: " . $e->getMessage());
+        }
+        
+        // Calculate total response time
+        $responseTime = round((microtime(true) - $startTime) * 1000, 2);
+        
+        // Check for server issues
+        $statusMessage = 'Server is operating normally';
+        $status = 'operational';
+        $label = 'Operational';
+        
+        if (!$fileIoSuccessful) {
+            $status = 'error';
+            $label = 'Outage';
+            $statusMessage = 'Server file I/O operations are failing';
+        } else if ($memoryUsage > 50 * 1024 * 1024 || $responseTime > 200) { // Over 50MB or slow response
+            $status = 'warning';
+            $label = 'Degraded';
+            $statusMessage = 'Server performance is degraded';
         }
         
         return [
-            'status' => 'operational',
-            'label' => 'Operational',
-            'message' => 'Server is operating normally',
+            'status' => $status,
+            'label' => $label,
+            'message' => $statusMessage,
             'php_version' => $phpVersion,
-            'memory_usage' => $humanMemory
+            'memory_usage' => $humanMemory,
+            'response_time' => $responseTime . 'ms'
         ];
     }
     
@@ -276,12 +320,25 @@ class SystemController
      */
     private function checkWebsocketStatus(): array
     {
-        // Simulate WebSocket check - in a real app, you'd connect to the WebSocket server
         $startTime = microtime(true);
-        $isWebsocketRunning = true; // In a real app, this would check the WebSocket server
+        $isWebsocketRunning = false;
+        $websocketPort = $_ENV['WEBSOCKET_PORT'] ?? '8080';
+        $websocketHost = $_ENV['WEBSOCKET_HOST'] ?? 'localhost';
         
-        // Simulate a delay
-        usleep(rand(5000, 30000));
+        try {
+            // Try to actually connect to the WebSocket server
+            $socket = @fsockopen($websocketHost, $websocketPort, $errorCode, $errorMessage, 2);
+            
+            if ($socket) {
+                $isWebsocketRunning = true;
+                fclose($socket);
+            } else {
+                // Failed to connect
+                $this->logger->error("WebSocket connection failed: $errorCode - $errorMessage");
+            }
+        } catch (Exception $e) {
+            $this->logger->error("WebSocket check error: " . $e->getMessage());
+        }
         
         $responseTime = round((microtime(true) - $startTime) * 1000, 2);
         

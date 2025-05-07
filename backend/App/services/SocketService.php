@@ -45,6 +45,22 @@ class SocketService
         $this->postToWebSocketServer($payload);
     }
 
+    /**
+     * Send a generic notification to a user
+     * 
+     * @param int $userId The user ID to send the notification to
+     * @param array $data The notification data
+     * @return void
+     */
+    public function sendNotification(int $userId, array $data): void
+    {
+        // Add the user ID to the notification data
+        $payload = array_merge(['to' => $userId], $data);
+        
+        // Send the notification
+        $this->postToWebSocketServer($payload);
+    }
+
     protected function postToWebSocketServer(array $data): void
     {
         try {

@@ -456,28 +456,10 @@ class MoneyRequestController {
      * @return void
      */
     private function notifyUser($userId, $data) {
-        $pushEndpoint = $_ENV['PUSH_ENDPOINT'] ?? 'http://localhost:4101/push';
+        // Use the SocketService instead of direct curl calls
+        $socketService = new \App\services\SocketService();
         
-        // Add the user ID to the notification data
-        $notificationData = array_merge(['to' => $userId], $data);
-        
-        // Send the notification via the WebSocket server's HTTP push endpoint
-        $curl = \curl_init();
-        \curl_setopt_array($curl, [
-            CURLOPT_URL => $pushEndpoint,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => json_encode($notificationData),
-            CURLOPT_HTTPHEADER => ['Content-Type: application/json']
-        ]);
-        
-        $response = \curl_exec($curl);
-        $error = \curl_error($curl);
-        $httpCode = \curl_getinfo($curl, CURLINFO_HTTP_CODE);
-        \curl_close($curl);
-        
-        if ($httpCode !== 200 || $error) {
-            error_log("Error sending WebSocket notification: $error, HTTP code: $httpCode, Response: $response");
-        }
+        // Send the notification via the SocketService
+        $socketService->sendNotification($userId, $data);
     }
 } 

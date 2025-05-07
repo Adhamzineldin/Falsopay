@@ -601,6 +601,7 @@ const SendMoney = () => {
                                                         userId={user.user_id} 
                                                         method={form.getValues('method')}
                                                         onSelectFavorite={handleSelectFavorite}
+                                                        recipientValidated={!!recipient} 
                                                         currentRecipient={form.getValues('identifier') ? {
                                                             identifier: form.getValues('identifier'),
                                                             name: recipient?.name || form.getValues('identifier'),

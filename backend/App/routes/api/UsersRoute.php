@@ -27,5 +27,8 @@ class UsersRoute extends Route
         // Route for getting and setting the default account for a user
         $router->add('GET', '/api/users/{id}/default-account', [UserController::class, 'getDefaultAccount']);
         $router->add('PUT', '/api/users/{id}/default-account', [UserController::class, 'setDefaultAccount'], $middlewares);
+        
+        // Route for securely getting user role (requires authentication)
+        $router->add('GET', '/api/users/{id}/role', [UserController::class, 'getUserRole'], $middlewares);
     }
 }

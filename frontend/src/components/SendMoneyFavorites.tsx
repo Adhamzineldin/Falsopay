@@ -39,7 +39,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 
 interface SendMoneyFavoritesProps {
@@ -51,6 +50,7 @@ interface SendMoneyFavoritesProps {
     name: string;
     bankId?: number;
   };
+  recipientValidated: boolean;
 }
 
 const SendMoneyFavorites = ({ 
@@ -58,6 +58,7 @@ const SendMoneyFavorites = ({
   method, 
   onSelectFavorite,
   currentRecipient,
+  recipientValidated
 }: SendMoneyFavoritesProps) => {
   const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -93,10 +94,10 @@ const SendMoneyFavorites = ({
   };
 
   const handleOpenAddDialog = () => {
-    if (!currentRecipient) {
+    if (!currentRecipient || !recipientValidated) {
       toast({
-        title: "No recipient selected",
-        description: "Please select a recipient first",
+        title: "No valid recipient",
+        description: "Please select a valid recipient first",
         variant: "destructive",
       });
       return;
@@ -115,10 +116,10 @@ const SendMoneyFavorites = ({
   };
 
   const handleAddToFavorites = async () => {
-    if (!currentRecipient) {
+    if (!currentRecipient || !recipientValidated) {
       toast({
-        title: "No recipient selected",
-        description: "Please select a recipient first",
+        title: "No valid recipient",
+        description: "Please select a valid recipient first",
         variant: "destructive",
       });
       return;
@@ -225,7 +226,8 @@ const SendMoneyFavorites = ({
 
   return (
     <div className="flex items-center gap-2">
-      {currentRecipient && (
+      {/* Only show Add to Favorites when recipient is validated */}
+      {currentRecipient && recipientValidated && (
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -338,7 +340,7 @@ const SendMoneyFavorites = ({
           <DialogHeader>
             <DialogTitle>Add to Favorites</DialogTitle>
             <DialogDescription>
-              Save this recipient for quick access in future transfers
+              Save this recipient to your favorites for quick access
             </DialogDescription>
           </DialogHeader>
           

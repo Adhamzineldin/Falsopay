@@ -111,5 +111,15 @@ export const UserService = {
   setUserRole: async (userId: number, role: string) => {
     const response = await api.put(`/api/users/${userId}`, { role });
     return response.data.data;
+  },
+  
+  getUserRole: async (userId: number): Promise<string | null> => {
+    try {
+      const response = await api.get(`/api/users/${userId}/role`);
+      return response.data.role;
+    } catch (error) {
+      console.error('Error fetching user role:', error);
+      return null;
+    }
   }
 };

@@ -195,6 +195,18 @@ class User
     }
 
     /**
+     * Get user role
+     */
+    public function getUserRole(int $userId): ?string
+    {
+        $sql = "SELECT role FROM users WHERE user_id = :userId";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute(['userId' => $userId]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result ? $result['role'] : null;
+    }
+
+    /**
      * Check if user has admin role
      */
     public function isAdmin(int $userId): bool

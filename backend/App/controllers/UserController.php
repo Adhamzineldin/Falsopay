@@ -117,7 +117,16 @@ class UserController
             : self::json(['error' => 'User not found or no default account'], 404);
     }
 
-   
+    /**
+     * Get user role securely from backend
+     */
+    #[NoReturn] public static function getUserRole(int $userId): void
+    {
+        $userModel = new User();
+        $role = $userModel->getUserRole($userId);
+        $role ? self::json(['role' => $role]) : self::json(['error' => 'User not found'], 404);
+    }
+
     #[NoReturn] private static function json($data, int $code = 200): void
     {
         http_response_code($code);

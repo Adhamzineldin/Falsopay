@@ -55,9 +55,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             setUser(parsedUser);
             setIsAuthenticated(true);
             
-            setIsAdmin(parsedUser.role === 'admin');
-
+            // Fetch user role from backend to prevent tampering
             if (parsedUser.user_id) {
+              const role = await UserService.getUserRole(parsedUser.user_id);
+              setIsAdmin(role === 'admin');
+              // Update local user data with fresh role from backend
+              if (role) {
+                parsedUser.role = role;
+                localStorage.setItem('falsopay_user', JSON.stringify(parsedUser));
+              }
+              
               WebSocketService.connect(parsedUser.user_id.toString());
               console.log('User authenticated and set:', parsedUser.user_id);
             }

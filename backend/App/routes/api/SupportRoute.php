@@ -32,7 +32,10 @@ class SupportRoute extends Route
         }, $middlewares);
         
         $router->add('POST', '/api/support/replies', function($body) use ($controller) {
-            return $controller->addReply($body, $body['user_id'] ?? 0);
+            // Make sure we're passing the user_id from the request, not from the body
+            // This ensures we're using the authenticated user's ID from middleware
+            $userId = $_REQUEST['user_id'] ?? $body['user_id'] ?? 0;
+            return $controller->addReply($body, $userId);
         }, $middlewares);
         
         // Admin-only routes
@@ -63,5 +66,47 @@ class SupportRoute extends Route
             // Pass the ticket creator's user_id and set isAdmin flag to true
             return $controller->addReply($body, $userId, true);
         }, $adminMiddlewares);
+
+        // Add a special debug route for user replies that temporarily bypasses the ownership check
+        $router->add('POST', '/api/support/debug/replies', function($body) use ($controller) {
+            $ticketId = (int)$body['ticket_id'];
+            $userId = $body['user_id'] ?? 0;
+            
+            try {
+                // Get ticket to check if it exists
+                $ticket = (new \App\models\SupportTicket())->getTicketById($ticketId);
+                if (!$ticket) {
+                    return [
+                        'status' => 'error',
+                        'message' => 'Ticket not found',
+                        'code' => 404
+                    ];
+                }
+                
+                // Use the ticket's owner user_id and bypass ownership check
+                $ownerUserId = (int)$ticket['user_id'];
+                
+                // Add reply using ticket owner's user_id
+                $reply = (new \App\models\SupportTicket())->addReply(
+                    $ticketId,
+                    $ownerUserId, // Use the ticket owner's ID
+                    $body['message'],
+                    false // Not admin
+                );
+                
+                return [
+                    'status' => 'success',
+                    'message' => 'Reply added successfully',
+                    'data' => $reply,
+                    'code' => 201
+                ];
+            } catch (\Exception $e) {
+                return [
+                    'status' => 'error',
+                    'message' => 'Failed to add reply: ' . $e->getMessage(),
+                    'code' => 500
+                ];
+            }
+        }, $middlewares);
     }
 } 

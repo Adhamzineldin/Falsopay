@@ -179,6 +179,13 @@ class SupportController
 
             // If not admin, ensure the ticket belongs to the user
             if (!$isAdmin && (int)$ticket['user_id'] !== $userId) {
+                error_log("Authorization failed: User $userId trying to reply to ticket {$ticketId} which belongs to user {$ticket['user_id']}");
+                
+                // Debug info
+                error_log("Request user_id: " . ($userId ?? 'null'));
+                error_log("Ticket user_id: " . ($ticket['user_id'] ?? 'null'));
+                error_log("isAdmin: " . ($isAdmin ? 'true' : 'false'));
+                
                 return [
                     'status' => 'error',
                     'message' => 'Unauthorized access to this ticket',

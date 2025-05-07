@@ -151,6 +151,7 @@ const Support = () => {
       await SupportService.addReply({
         ticket_id: activeTicket.ticket.ticket_id,
         message: reply.trim(),
+        user_id: user.user_id
       });
       
       setReply('');

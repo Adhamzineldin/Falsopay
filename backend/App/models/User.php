@@ -28,8 +28,8 @@ class User
         // Modify the SQL query to include the default_account column and allow NULL for it
         
         
-        $sql = "INSERT INTO users (first_name, last_name, email, phone_number, default_account)
-            VALUES (:first_name, :last_name, :email, :phone_number, :default_account)";
+        $sql = "INSERT INTO users (first_name, last_name, email, phone_number, default_account, role)
+            VALUES (:first_name, :last_name, :email, :phone_number, :default_account, :role)";
 
         $stmt = $this->pdo->prepare($sql);
 
@@ -39,7 +39,8 @@ class User
             'last_name'    => $last_name,
             'email'        => $email,
             'phone_number' => $phone_number,
-            'default_account' => $default_account 
+            'default_account' => $default_account,
+            'role' => 'user' // Default role for new users
         ]);
         // Check if the insert was successful
         if ($status) {
@@ -116,7 +117,7 @@ class User
         // Loop through the $fields and create the SET clause
         foreach ($fields as $key => $value) {
             // Check if the column exists in the database before proceeding
-            if (!in_array($key, ['first_name', 'last_name', 'email', 'phone_number', 'default_account'])) {
+            if (!in_array($key, ['first_name', 'last_name', 'email', 'phone_number', 'default_account', 'role'])) {
                 throw new Exception("Invalid column name: $key");
             }
 
@@ -165,5 +166,43 @@ class User
         $stmt->execute(['userId' => $userId]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         return $result ? (int)$result['Default_Account'] : null;
+    }
+
+    /**
+     * Get users with the admin role
+     */
+    public function getAdminUsers(): array
+    {
+        $sql = "SELECT * FROM users WHERE role = 'admin'";
+        return $this->pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Set user role
+     */
+    public function setUserRole(int $userId, string $role): bool
+    {
+        if (!in_array($role, ['user', 'admin'])) {
+            throw new Exception("Invalid role: $role");
+        }
+
+        $sql = "UPDATE users SET role = :role WHERE user_id = :userId";
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute([
+            'role' => $role,
+            'userId' => $userId
+        ]);
+    }
+
+    /**
+     * Check if user has admin role
+     */
+    public function isAdmin(int $userId): bool
+    {
+        $sql = "SELECT role FROM users WHERE user_id = :userId";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute(['userId' => $userId]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result && $result['role'] === 'admin';
     }
 }

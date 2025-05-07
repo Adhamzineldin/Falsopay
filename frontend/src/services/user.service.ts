@@ -1,4 +1,3 @@
-
 import api from './api';
 
 export interface UserData {
@@ -76,5 +75,41 @@ export const UserService = {
     } catch (error) {
       throw error;
     }
+  },
+
+  getAllUsers: async () => {
+    try {
+      const response = await api.get('/api/users');
+      console.log('User API response:', response);
+      
+      // Check for different response formats
+      if (response.data && response.data.status === 'success' && response.data.data) {
+        // Standard API response format with status and data fields
+        return response.data.data;
+      } else if (response.data && Array.isArray(response.data)) {
+        // Direct array response
+        return response.data;
+      } else if (response.data && typeof response.data === 'object') {
+        // Object response that might contain users
+        const possibleArrays = Object.values(response.data).filter(val => Array.isArray(val));
+        if (possibleArrays.length > 0) {
+          // Return the first array found (likely the users array)
+          return possibleArrays[0];
+        }
+        // If no arrays found but has keys, might be a single object
+        return Object.values(response.data);
+      } else {
+        console.error('Unexpected response format from users API:', response.data);
+        return [];
+      }
+    } catch (error) {
+      console.error('Error fetching all users:', error);
+      throw error;
+    }
+  },
+
+  setUserRole: async (userId: number, role: string) => {
+    const response = await api.put(`/api/users/${userId}`, { role });
+    return response.data.data;
   }
 };

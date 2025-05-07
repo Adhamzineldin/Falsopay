@@ -13,6 +13,7 @@ interface User {
   phone_number: string;
   default_account?: number;
   created_at?: string;
+  role?: string;
   [key: string]: any;
 }
 
@@ -20,6 +21,7 @@ interface AppContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isAdmin: boolean;
   login: (phone: string, ipa: string | null) => Promise<{success: boolean, code?: string, user?: User, token?: string} | false>;
   verifyLoginCode: (phone: string, code: string, pendingData?: {user: User, token?: string}) => Promise<void>;
   logout: () => void;
@@ -32,6 +34,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [pendingLoginData, setPendingLoginData] = useState<{token?: string, user: User} | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -51,6 +54,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             const parsedUser = JSON.parse(userData);
             setUser(parsedUser);
             setIsAuthenticated(true);
+            
+            setIsAdmin(parsedUser.role === 'admin');
 
             if (parsedUser.user_id) {
               WebSocketService.connect(parsedUser.user_id.toString());
@@ -59,15 +64,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           } else {
             AuthService.logout();
             setIsAuthenticated(false);
+            setIsAdmin(false);
           }
         } else {
           console.log('Not authenticated, token invalid or expired');
           setIsAuthenticated(false);
+          setIsAdmin(false);
         }
       } catch (error) {
         console.error('Error checking authentication:', error);
         AuthService.logout();
         setIsAuthenticated(false);
+        setIsAdmin(false);
       } finally {
         setIsLoading(false);
       }
@@ -184,6 +192,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     AuthService.logout();
     setUser(null);
     setIsAuthenticated(false);
+    setIsAdmin(false);
 
     WebSocketService.disconnect();
 
@@ -199,9 +208,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     try {
       const updatedUser = await UserService.updateUser(user.user_id, data);
-      setUser({ ...user, ...updatedUser });
+      const mergedUser = { ...user, ...updatedUser };
+      setUser(mergedUser);
+      
+      if (data.role) {
+        setIsAdmin(data.role === 'admin');
+      }
 
-      localStorage.setItem('falsopay_user', JSON.stringify({ ...user, ...updatedUser }));
+      localStorage.setItem('falsopay_user', JSON.stringify(mergedUser));
 
       toast({
         title: "Profile Updated",
@@ -224,6 +238,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             user,
             isAuthenticated,
             isLoading,
+            isAdmin,
             login,
             verifyLoginCode,
             logout,

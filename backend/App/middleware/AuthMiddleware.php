@@ -60,6 +60,25 @@ class AuthMiddleware
     }
 
     /**
+     * Instance method for middleware processing
+     */
+    public function process(array $request = []): array|bool
+    {
+        $payload = self::validateToken();
+        if (!$payload || !isset($payload->user_id)) {
+            return false;
+        }
+
+        // Add user_id to request
+        $request['user_id'] = $payload->user_id;
+        
+        // Store user ID globally for backward compatibility
+        $_SERVER['AUTHENTICATED_USER_ID'] = $payload->user_id;
+        
+        return $request;
+    }
+
+    /**
      * Middleware callable to be used in route:
      * call_user_func([$authMiddleware, 'ensureAuthenticated'])
      */

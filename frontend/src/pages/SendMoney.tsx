@@ -43,6 +43,8 @@ import {useForm} from 'react-hook-form';
 import BankSelect from '@/components/BankSelect';
 import {BankService} from "@/services/bank.service.ts";
 import {CardService} from "@/services/card.service.ts";
+import SendMoneyFavorites from '@/components/SendMoneyFavorites';
+import { Favorite } from '@/services/favorites.service';
 
 type TransferMethod = 'ipa' | 'mobile' | 'card' | 'account' | 'iban';
 
@@ -434,6 +436,24 @@ const SendMoney = () => {
         }
     };
 
+    const handleSelectFavorite = (favorite: Favorite) => {
+        // Set the form values based on the selected favorite
+        form.setValue('method', favorite.method as TransferMethod);
+        form.setValue('identifier', favorite.recipient_identifier);
+        
+        if (favorite.bank_id) {
+            form.setValue('bank_id', favorite.bank_id.toString());
+        }
+        
+        // Trigger the search automatically
+        searchRecipient({
+            ...form.getValues(),
+            method: favorite.method as TransferMethod,
+            identifier: favorite.recipient_identifier,
+            bank_id: favorite.bank_id?.toString()
+        });
+    };
+
     return (
         <MainLayout>
             {/* Responsive container - Adjusted for multiple screen sizes */}
@@ -574,6 +594,21 @@ const SendMoney = () => {
                                                 )}
                                             />
 
+                                            {/* Add the Favorites component */}
+                                            {user && (
+                                                <div className="flex justify-end">
+                                                    <SendMoneyFavorites 
+                                                        userId={user.user_id} 
+                                                        method={form.getValues('method')}
+                                                        onSelectFavorite={handleSelectFavorite}
+                                                        currentRecipient={form.getValues('identifier') ? {
+                                                            identifier: form.getValues('identifier'),
+                                                            name: recipient?.name || form.getValues('identifier'),
+                                                            bankId: form.getValues('bank_id') ? parseInt(form.getValues('bank_id')) : undefined
+                                                        } : undefined}
+                                                    />
+                                                </div>
+                                            )}
 
                                             {(form.watch("method") === "account" || form.watch("method") === "card") && (
                                                 <FormField

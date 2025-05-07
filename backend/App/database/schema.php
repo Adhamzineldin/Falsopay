@@ -58,7 +58,8 @@ try {
         email VARCHAR(255) NOT NULL UNIQUE,
         phone_number VARCHAR(15) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        default_account INT DEFAULT NULL  -- Add the Default_Account column here (no FK yet)
+        default_account INT DEFAULT NULL,  -- Add the Default_Account column here (no FK yet)
+        role VARCHAR(20) DEFAULT 'user'  -- Add role column with default 'user'
     );
 
     -- 4. Bank_Accounts Table
@@ -128,6 +129,43 @@ try {
         FOREIGN KEY (sender_bank_id, sender_account_number) REFERENCES bank_accounts(bank_id, account_number) ON DELETE CASCADE ON UPDATE CASCADE,
         FOREIGN KEY (receiver_bank_id, receiver_account_number) REFERENCES bank_accounts(bank_id, account_number) ON DELETE CASCADE ON UPDATE CASCADE
     );
+
+    -- Favorites Table for storing user's favorite recipients
+    CREATE TABLE IF NOT EXISTS favorites (
+        favorite_id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        recipient_identifier VARCHAR(255) NOT NULL,
+        recipient_name VARCHAR(255) NOT NULL,
+        method ENUM('ipa', 'mobile', 'card', 'account', 'iban') NOT NULL,
+        bank_id INT DEFAULT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE ON UPDATE CASCADE,
+        FOREIGN KEY (bank_id) REFERENCES banks(bank_id) ON DELETE SET NULL ON UPDATE CASCADE
+    );
+
+    -- Support Tickets Table
+    CREATE TABLE IF NOT EXISTS support_tickets (
+        ticket_id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        subject VARCHAR(255) NOT NULL,
+        message TEXT NOT NULL,
+        status ENUM('open', 'in_progress', 'closed') NOT NULL DEFAULT 'open',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE ON UPDATE CASCADE
+    );
+
+    -- Support Ticket Replies Table
+    CREATE TABLE IF NOT EXISTS support_replies (
+        reply_id INT AUTO_INCREMENT PRIMARY KEY,
+        ticket_id INT NOT NULL,
+        user_id INT NOT NULL,
+        is_admin BOOLEAN NOT NULL DEFAULT FALSE,
+        message TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (ticket_id) REFERENCES support_tickets(ticket_id) ON DELETE CASCADE ON UPDATE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE ON UPDATE CASCADE
+    );
     ";
 
     // Execute the query to create the tables
@@ -187,6 +225,19 @@ try {
             CREATE INDEX  idx_transaction_receiver_iban ON transactions(receiver_iban);
             CREATE INDEX  idx_transaction_method ON transactions(transfer_method);
             CREATE INDEX  idx_transaction_time ON transactions(transaction_time);
+
+            -- Indexes for favorites table
+            CREATE INDEX idx_favorites_user ON favorites(user_id);
+            CREATE INDEX idx_favorites_method ON favorites(method);
+            CREATE INDEX idx_favorites_recipient ON favorites(recipient_identifier);
+            
+            -- Indexes for support tickets
+            CREATE INDEX idx_ticket_user ON support_tickets(user_id);
+            CREATE INDEX idx_ticket_status ON support_tickets(status);
+            
+            -- Indexes for support replies
+            CREATE INDEX idx_reply_ticket ON support_replies(ticket_id);
+            CREATE INDEX idx_reply_user ON support_replies(user_id);
 ");
 
     // Re-enable foreign key checks

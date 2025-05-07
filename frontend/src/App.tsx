@@ -18,6 +18,9 @@ const Profile = React.lazy(() => import("@/pages/Profile"));
 const LinkAccount = React.lazy(() => import("@/pages/LinkAccount"));
 const NotFound = React.lazy(() => import("@/pages/NotFound"));
 const Accounts = React.lazy(() => import("@/pages/Accounts"));
+const Support = React.lazy(() => import("@/pages/Support"));
+const AdminDashboard = React.lazy(() => import("@/pages/admin/AdminDashboard"));
+const ManageFavorites = React.lazy(() => import("@/pages/ManageFavorites"));
 
 const queryClient = new QueryClient();
 
@@ -37,6 +40,9 @@ const App = () => {
             import("@/pages/NotFound");
             import("@/pages/Accounts");
             import("@/pages/Landing");
+            import("@/pages/Support");
+            import("@/pages/admin/AdminDashboard");
+            import("@/pages/ManageFavorites");
           });
         });
       });
@@ -103,6 +109,38 @@ const App = () => {
                       element={
                         <ProtectedRoute>
                           <LinkAccount />
+                        </ProtectedRoute>
+                      }
+                  />
+                  <Route
+                      path="/support"
+                      element={
+                        <ProtectedRoute>
+                          <Support />
+                        </ProtectedRoute>
+                      }
+                  />
+                  <Route
+                      path="/support/ticket/:ticketId"
+                      element={
+                        <ProtectedRoute>
+                          <Support />
+                        </ProtectedRoute>
+                      }
+                  />
+                  <Route
+                      path="/admin"
+                      element={
+                        <ProtectedRoute adminOnly={true}>
+                          <AdminDashboard />
+                        </ProtectedRoute>
+                      }
+                  />
+                  <Route
+                      path="/manage-favorites"
+                      element={
+                        <ProtectedRoute>
+                          <ManageFavorites />
                         </ProtectedRoute>
                       }
                   />

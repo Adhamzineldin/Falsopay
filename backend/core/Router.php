@@ -7,7 +7,7 @@ class Router
 {
     private array $routes = [];
 
-    public function add(string $method, string $path, callable $handler, array $middlewares = []): void
+    public function add(string $method, string $path, $handler, array $middlewares = []): void
     {
         $this->routes[strtoupper($method)][] = [
             'path'        => $path,
@@ -33,10 +33,26 @@ class Router
                 array_shift($matches); // drop full match
 
                 // run middleware
+                $request = [];
                 foreach ($route['middlewares'] as $mw) {
-                    if (!call_user_func($mw)) {
-                        $this->sendUnauthorized();
-                        return;
+                    // Check if middleware is an object with a process method
+                    if (is_object($mw) && method_exists($mw, 'process')) {
+                        $result = $mw->process($request);
+                        if ($result === false) {
+                            $this->sendUnauthorized();
+                            return;
+                        }
+                        // Update request with middleware result if it's an array
+                        if (is_array($result)) {
+                            $request = $result;
+                        }
+                    } 
+                    // Check if middleware is a callable
+                    else if (is_callable($mw)) {
+                        if (!call_user_func($mw)) {
+                            $this->sendUnauthorized();
+                            return;
+                        }
                     }
                 }
 
@@ -60,8 +76,28 @@ class Router
                 // always pass the body (even if empty array) as the last parameter
                 $matches[] = $body;
 
-                // call handler with URL params + body
-                call_user_func_array($route['handler'], $matches);
+                // Handle controller class methods
+                $handler = $route['handler'];
+                if (is_array($handler) && count($handler) == 2 && is_string($handler[0]) && is_string($handler[1])) {
+                    $className = $handler[0];
+                    $methodName = $handler[1];
+                    
+                    // Instantiate the class
+                    $instance = new $className();
+                    
+                    // Call the method on the instance and get the response
+                    $response = $instance->$methodName(...$matches);
+                    
+                    // Process the response
+                    $this->handleResponse($response);
+                } else {
+                    // For other types of handlers (closures, etc.), use call_user_func_array
+                    $response = call_user_func_array($handler, $matches);
+                    
+                    // Process the response
+                    $this->handleResponse($response);
+                }
+                
                 return;
             }
         }
@@ -69,16 +105,60 @@ class Router
         $this->sendNotFound();
     }
 
+    /**
+     * Handle different types of responses
+     * 
+     * @param mixed $response The response from the controller
+     */
+    private function handleResponse($response): void
+    {
+        // If the response is an array, convert it to JSON and set the appropriate headers
+        if (is_array($response)) {
+            // Set response code if provided
+            if (isset($response['code'])) {
+                http_response_code($response['code']);
+                unset($response['code']); // Remove code from response data
+            } else {
+                http_response_code(200); // Default to 200 OK
+            }
+            
+            // Set Content-Type header for JSON
+            header('Content-Type: application/json');
+            
+            // Output JSON response
+            echo json_encode($response);
+        } 
+        // If it's a string, it might be already formatted JSON or plain text
+        else if (is_string($response)) {
+            // Check if it looks like JSON
+            $firstChar = substr(trim($response), 0, 1);
+            if ($firstChar === '{' || $firstChar === '[') {
+                header('Content-Type: application/json');
+            }
+            
+            echo $response;
+        }
+        // For other types or null (void), do nothing
+    }
+
     private function sendNotFound(): void
     {
         http_response_code(404);
-        echo file_get_contents(__DIR__ . '/../public/404.html');
+        header('Content-Type: application/json');
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'Resource not found'
+        ]);
     }
 
     private function sendUnauthorized(): void
     {
         http_response_code(401);
-        echo file_get_contents(__DIR__ . '/../public/401.html');
+        header('Content-Type: application/json');
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'Unauthorized access'
+        ]);
     }
 
     private function convertRouteToRegex(string $path): string

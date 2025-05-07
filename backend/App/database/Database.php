@@ -54,22 +54,30 @@ class Database {
             if (!$host || !$dbName || !$username || !$password) {
                 throw new Exception('Database credentials not found in .env');
             }
-            if ($port){
+            
+            // Build DSN with proper formatting
+            if ($port) {
                 $dsn = "mysql:host={$host};port={$port};dbname={$dbName}";
-            }
-            else{
+            } else {
                 $dsn = "mysql:host={$host};dbname={$dbName}";
             }
+            
+            // Simpler options without performance optimizations
+            $options = [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+            ];
            
-            $this->conn = new PDO($dsn, $username, $password);
-            $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $this->conn = new PDO($dsn, $username, $password, $options);
         } catch (PDOException $e) {
             error_log("Database connection error: " . $e->getMessage());
-            throw new Exception('Database connection failed');
+            throw new Exception('Database connection failed: ' . $e->getMessage());
         }
     }
 
- 
+    /**
+     * Get the database connection
+     */
     public function getConnection(): ?PDO {
         return $this->conn;
     }

@@ -13,6 +13,8 @@ use App\routes\api\CardsRoute;
 use App\routes\api\InstantPaymentAddressesRoute;
 use App\routes\api\TransactionRoutes;
 use App\routes\api\UsersRoute;
+use App\routes\api\FavoritesRoute;
+use App\routes\api\SupportRoute;
 use App\routes\auth\AuthRoutes;
 use core\Router;
 use JetBrains\PhpStorm\NoReturn;
@@ -129,7 +131,9 @@ $routes = [
     BankUsersRoute::class,
     CardsRoute::class,
     InstantPaymentAddressesRoute::class,
-    TransactionRoutes::class
+    TransactionRoutes::class,
+    FavoritesRoute::class,
+    SupportRoute::class
 ];
 
 $middleware = [[AuthMiddleware::class, 'ensureAuthenticated']];

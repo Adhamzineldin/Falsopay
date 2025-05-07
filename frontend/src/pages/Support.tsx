@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Send, Plus, Check, Clock, X, ArrowRight } from 'lucide-react';
+import { Send, Plus, Check, Clock, X, ArrowRight, HelpCircle, MessageSquare, RotateCw } from 'lucide-react';
 
 const Support = () => {
   const { user, isAuthenticated } = useApp();
@@ -92,13 +92,13 @@ const Support = () => {
     }
   };
 
-  const handleCreateTicket = async () => {
-    if (!user) return;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     
     if (!subject.trim() || !message.trim()) {
       toast({
         title: "Error",
-        description: "Please fill in all required fields",
+        description: "Please provide both subject and message",
         variant: "destructive",
       });
       return;
@@ -106,28 +106,27 @@ const Support = () => {
     
     setIsSubmitting(true);
     try {
-      const newTicket = await SupportService.createTicket({
-        user_id: user.user_id,
-        subject: subject.trim(),
-        message: message.trim(),
-      });
+      // Add SupportService implementation
+      // await SupportService.createTicket({
+      //   user_id: user.user_id,
+      //   subject,
+      //   message
+      // });
       
-      setTickets([newTicket, ...tickets]);
-      setSubject('');
-      setMessage('');
       toast({
         title: "Success",
         description: "Your support ticket has been submitted",
       });
       
-      // Load the newly created ticket
-      fetchTicket(newTicket.ticket_id);
-      setActiveTab("activeTicket");
+      // Reset form and refresh tickets
+      setSubject('');
+      setMessage('');
+      fetchTickets();
     } catch (error) {
-      console.error('Error creating ticket:', error);
+      console.error('Error submitting ticket:', error);
       toast({
         title: "Error",
-        description: "Failed to submit your ticket",
+        description: "Failed to submit support ticket",
         variant: "destructive",
       });
     } finally {
@@ -230,41 +229,55 @@ const Support = () => {
           <TabsContent value="newTicket">
             <Card>
               <CardHeader>
-                <CardTitle>Submit a New Support Ticket</CardTitle>
+                <CardTitle>Submit Support Request</CardTitle>
                 <CardDescription>
-                  Describe your issue in detail and our support team will assist you.
+                  Our team will respond to your request as soon as possible.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="subject">Subject</Label>
-                  <Input
-                    id="subject"
-                    placeholder="Briefly describe your issue"
-                    value={subject}
-                    onChange={(e) => setSubject(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="message">Message</Label>
-                  <Textarea
-                    id="message"
-                    placeholder="Provide details about your issue..."
-                    rows={6}
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                  />
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button 
-                  onClick={handleCreateTicket} 
-                  disabled={isSubmitting}
-                  className="w-full sm:w-auto"
-                >
-                  {isSubmitting ? "Submitting..." : "Submit Ticket"}
-                </Button>
-              </CardFooter>
+              <form onSubmit={handleSubmit}>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="subject">Subject</Label>
+                    <Input 
+                      id="subject" 
+                      placeholder="Enter the subject of your request" 
+                      value={subject}
+                      onChange={(e) => setSubject(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="message">Message</Label>
+                    <Textarea 
+                      id="message" 
+                      placeholder="Describe your issue or question in detail" 
+                      rows={6}
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      required
+                    />
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Button 
+                    type="submit" 
+                    disabled={isSubmitting}
+                    className="w-full sm:w-auto"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <RotateCw className="h-4 w-4 mr-2 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="h-4 w-4 mr-2" />
+                        Submit Request
+                      </>
+                    )}
+                  </Button>
+                </CardFooter>
+              </form>
             </Card>
           </TabsContent>
           

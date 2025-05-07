@@ -32,5 +32,10 @@ class FavoritesRoute extends Route
         $router->add('DELETE', '/api/favorites/{id}/{user_id}', function($id, $user_id) use ($controller) {
             return $controller->deleteFavorite((int)$id, (int)$user_id);
         }, $middlewares);
+        
+        // Route for updating a favorite
+        $router->add('PUT', '/api/favorites/{id}', function($id, $body) use ($controller) {
+            return $controller->updateFavorite((int)$id, $body);
+        }, $middlewares);
     }
 } 

@@ -12,7 +12,10 @@ import {
   X,
   ArrowRight,
   Wallet, 
-  BarChart4
+  BarChart4,
+  Star,
+  HelpCircle,
+  ShieldCheck
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -34,7 +37,7 @@ interface MainLayoutProps {
 }
 
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
-  const { user, logout } = useApp();
+  const { user, logout, isAdmin } = useApp();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -86,7 +89,14 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     { path: '/send-money', label: 'Send Money', icon: Send },
     { path: '/transactions', label: 'Transactions', icon: CreditCard },
     { path: '/accounts', label: 'Accounts', icon: BarChart4 },
+    { path: '/manage-favorites', label: 'Favorites', icon: Star },
+    { path: '/support', label: 'Support', icon: HelpCircle },
     { path: '/profile', label: 'Profile', icon: User },
+  ];
+
+  // Admin navigation items (only shown to admin users)
+  const adminItems = [
+    { path: '/admin', label: 'Admin Dashboard', icon: ShieldCheck },
   ];
 
   const getInitials = () => {
@@ -222,6 +232,36 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                   {item.label}
                 </Link>
               ))}
+              
+              {/* Admin section - only shown to admins */}
+              {isAdmin && (
+                <>
+                  <Separator className="my-4" />
+                  <div className="mb-2 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Admin
+                  </div>
+                  {adminItems.map((item) => (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      className={cn(
+                        "flex items-center px-4 py-3 text-sm font-medium rounded-md transition-colors",
+                        location.pathname === item.path
+                          ? "bg-falsopay-primary text-white"
+                          : "text-gray-700 hover:bg-gray-50"
+                      )}
+                    >
+                      <item.icon className={cn(
+                        "h-5 w-5 mr-3",
+                        location.pathname === item.path
+                          ? "text-white"
+                          : "text-gray-400 group-hover:text-gray-500"
+                      )} />
+                      {item.label}
+                    </Link>
+                  ))}
+                </>
+              )}
             </nav>
             
             <div className="mt-6 px-6">
@@ -293,6 +333,36 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                     {item.label}
                   </Link>
                 ))}
+                
+                {/* Admin section - only shown to admins in mobile view */}
+                {isAdmin && (
+                  <>
+                    <Separator className="my-4" />
+                    <div className="mb-2 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Admin
+                    </div>
+                    {adminItems.map((item) => (
+                      <Link
+                        key={item.path}
+                        to={item.path}
+                        className={cn(
+                          "flex items-center px-4 py-3 text-sm font-medium rounded-md transition-colors",
+                          location.pathname === item.path
+                            ? "bg-falsopay-primary text-white"
+                            : "text-gray-700 hover:bg-gray-50"
+                        )}
+                      >
+                        <item.icon className={cn(
+                          "h-5 w-5 mr-3",
+                          location.pathname === item.path
+                            ? "text-white"
+                            : "text-gray-400 group-hover:text-gray-500"
+                        )} />
+                        {item.label}
+                      </Link>
+                    ))}
+                  </>
+                )}
               </nav>
               
               <div className="p-4 border-t border-gray-200">

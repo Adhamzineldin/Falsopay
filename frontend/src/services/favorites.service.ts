@@ -93,4 +93,14 @@ export class FavoritesService {
       return false;
     }
   }
+
+  static async updateFavorite(favoriteId: number, data: Partial<Favorite>): Promise<boolean> {
+    try {
+      const response = await api.put(`/api/favorites/${favoriteId}`, data);
+      return response.data && response.data.status === 'success';
+    } catch (error) {
+      console.error('Error updating favorite:', error);
+      return false;
+    }
+  }
 } 

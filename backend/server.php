@@ -219,6 +219,28 @@ $router->add('GET', '/api', function () use ($dbStatusInfo, $wsStatusInfo) {
     home($dbStatusInfo, $wsStatusInfo);
 });
 
+// API endpoint for system status in JSON format (for admin dashboard)
+$router->add('GET', '/api/admin/system/status', function () use ($dbStatusInfo, $wsStatusInfo) {
+    header('Content-Type: application/json');
+    header('Access-Control-Allow-Origin: *'); // Ensure CORS is enabled
+    echo json_encode([
+        'status' => 'success',
+        'code' => 200,
+        'data' => [
+            'database' => $dbStatusInfo,
+            'websocket' => $wsStatusInfo,
+            'timestamp' => date('Y-m-d H:i:s'),
+            'server' => [
+                'status' => 'operational',
+                'label' => 'Operational',
+                'message' => 'API server is running normally',
+                'php_version' => PHP_VERSION,
+                'memory_usage' => round(memory_get_usage() / 1024 / 1024, 2) . ' MB'
+            ]
+        ]
+    ]);
+    exit();
+});
 
 // Handle all requests
 $router->handleRequest();

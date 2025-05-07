@@ -37,14 +37,28 @@ import {
     RadioGroupItem,
 } from "@/components/ui/radio-group";
 import {useToast} from '@/hooks/use-toast';
-import {ArrowRight, CheckCircle, Search, User, Send, CreditCard, Phone, Banknote, AlertCircle} from 'lucide-react';
+import {ArrowRight, CheckCircle, Search, User, Send, CreditCard, Phone, Banknote, AlertCircle, Star} from 'lucide-react';
 import PinVerification from '@/components/PinVerification';
 import {useForm} from 'react-hook-form';
 import BankSelect from '@/components/BankSelect';
 import {BankService} from "@/services/bank.service.ts";
 import {CardService} from "@/services/card.service.ts";
 import SendMoneyFavorites from '@/components/SendMoneyFavorites';
-import { Favorite } from '@/services/favorites.service';
+import {FavoritesService, Favorite} from '@/services/favorites.service';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 
 type TransferMethod = 'ipa' | 'mobile' | 'card' | 'account' | 'iban';
 
@@ -86,6 +100,12 @@ const SendMoney = () => {
     const [linkedAccounts, setLinkedAccounts] = useState<EnhancedIpaData[]>([]);
     const [isLoadingAccounts, setIsLoadingAccounts] = useState(false);
     const [selectedAccount, setSelectedAccount] = useState<EnhancedIpaData | null>(null);
+    const [showAddFavoriteDialog, setShowAddFavoriteDialog] = useState(false);
+    const [favorites, setFavorites] = useState<Favorite[]>([]);
+    const [customFavoriteName, setCustomFavoriteName] = useState('');
+    const [isSavingFavorite, setIsSavingFavorite] = useState(false);
+    const [favoriteToRemove, setFavoriteToRemove] = useState<Favorite | null>(null);
+    const [showRemoveDialog, setShowRemoveDialog] = useState(false);
     const {toast} = useToast();
     const navigate = useNavigate();
 
@@ -146,6 +166,33 @@ const SendMoney = () => {
 
         fetchLinkedAccounts();
     }, [user, form, toast]);
+
+    useEffect(() => {
+        const fetchFavorites = async () => {
+            if (!user?.user_id) return;
+
+            try {
+                const favorites = await FavoritesService.getUserFavorites(user.user_id);
+                setFavorites(favorites);
+            } catch (error) {
+                console.error('Error fetching favorites:', error);
+                toast({
+                    title: "Error",
+                    description: "Could not load your favorites",
+                    variant: "destructive",
+                });
+            }
+        };
+
+        fetchFavorites();
+    }, [user, toast]);
+
+    // Set custom name when recipient changes
+    useEffect(() => {
+        if (recipient) {
+            setCustomFavoriteName(recipient.name);
+        }
+    }, [recipient]);
 
     const searchRecipient = async (data: FormValues) => {
         if (!data.identifier) {
@@ -436,6 +483,7 @@ const SendMoney = () => {
         }
     };
 
+    // Handle selecting a favorite
     const handleSelectFavorite = (favorite: Favorite) => {
         // Set the form values based on the selected favorite
         form.setValue('method', favorite.method as TransferMethod);
@@ -452,6 +500,89 @@ const SendMoney = () => {
             identifier: favorite.recipient_identifier,
             bank_id: favorite.bank_id?.toString()
         });
+    };
+    
+    // Handle adding to favorites
+    const handleAddToFavorites = async () => {
+        if (!recipient || !user) return;
+        
+        if (!customFavoriteName.trim()) {
+            toast({
+                title: "Name required",
+                description: "Please enter a display name for this favorite",
+                variant: "destructive",
+            });
+            return;
+        }
+        
+        setIsSavingFavorite(true);
+        try {
+            await FavoritesService.createFavorite({
+                user_id: user.user_id,
+                recipient_identifier: recipient.identifier,
+                recipient_name: customFavoriteName.trim(),
+                method: form.getValues("method") as any,
+                bank_id: form.getValues('bank_id') ? parseInt(form.getValues('bank_id')) : undefined
+            });
+            
+            // Refresh favorites
+            const updatedFavorites = await FavoritesService.getUserFavorites(user.user_id);
+            setFavorites(updatedFavorites);
+            
+            toast({
+                title: "Success",
+                description: "Recipient added to favorites",
+            });
+            
+            // Close dialog
+            setShowAddFavoriteDialog(false);
+        } catch (error: any) {
+            console.error('Error adding favorite:', error);
+            if (error.response?.status === 409) {
+                toast({
+                    title: "Already in favorites",
+                    description: "This recipient is already in your favorites",
+                    variant: "default",
+                });
+            } else {
+                toast({
+                    title: "Error",
+                    description: "Failed to add to favorites",
+                    variant: "destructive",
+                });
+            }
+        } finally {
+            setIsSavingFavorite(false);
+        }
+    };
+    
+    // Handle removing from favorites
+    const handleRemoveFavorite = async (favoriteId: number) => {
+        if (!user) return;
+        
+        try {
+            await FavoritesService.deleteFavorite(favoriteId, user.user_id);
+            
+            // Refresh favorites
+            const updatedFavorites = await FavoritesService.getUserFavorites(user.user_id);
+            setFavorites(updatedFavorites);
+            
+            toast({
+                title: "Success",
+                description: "Removed from favorites",
+            });
+            
+            // Close dialog
+            setShowRemoveDialog(false);
+            setFavoriteToRemove(null);
+        } catch (error) {
+            console.error('Error removing favorite:', error);
+            toast({
+                title: "Error",
+                description: "Failed to remove from favorites",
+                variant: "destructive",
+            });
+        }
     };
 
     return (
@@ -594,23 +725,6 @@ const SendMoney = () => {
                                                 )}
                                             />
 
-                                            {/* Add the Favorites component */}
-                                            {user && (
-                                                <div className="flex justify-end">
-                                                    <SendMoneyFavorites 
-                                                        userId={user.user_id} 
-                                                        method={form.getValues('method')}
-                                                        onSelectFavorite={handleSelectFavorite}
-                                                        recipientValidated={!!recipient} 
-                                                        currentRecipient={form.getValues('identifier') ? {
-                                                            identifier: form.getValues('identifier'),
-                                                            name: recipient?.name || form.getValues('identifier'),
-                                                            bankId: form.getValues('bank_id') ? parseInt(form.getValues('bank_id')) : undefined
-                                                        } : undefined}
-                                                    />
-                                                </div>
-                                            )}
-
                                             {(form.watch("method") === "account" || form.watch("method") === "card") && (
                                                 <FormField
                                                     control={form.control}
@@ -630,7 +744,6 @@ const SendMoney = () => {
                                                     )}
                                                 />
                                             )}
-
 
                                             <FormField
                                                 control={form.control}
@@ -662,6 +775,19 @@ const SendMoney = () => {
                                         </form>
                                     </Form>
                                 )}
+                                
+                                {/* Add the Favorites list in step 1 for selecting contacts */}
+                                {user && (
+                                    <div className="flex justify-end mt-4">
+                                        <SendMoneyFavorites 
+                                            userId={user.user_id} 
+                                            method={form.getValues('method')}
+                                            onSelectFavorite={handleSelectFavorite}
+                                            recipientValidated={false}
+                                            showOnlyFavoriteButton={false}
+                                        />
+                                    </div>
+                                )}
                             </CardContent>
                         </>
                     )}
@@ -675,7 +801,7 @@ const SendMoney = () => {
 
                             <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
                                 <div
-                                    className="flex items-center justify-center p-3 sm:p-4 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+                                    className="flex items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-lg border border-dashed border-gray-200">
                                     <div className="flex items-center space-x-3 sm:space-x-4">
                                         <div
                                             className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-falsopay-primary flex items-center justify-center text-white">
@@ -687,13 +813,73 @@ const SendMoney = () => {
                                                 {getMethodIcon(form.getValues("method") as TransferMethod)}
                                                 <span className="ml-1">{recipient.identifier}</span>
                                             </p>
-                                            {recipient.bank_name && (
-                                                <p className="text-xs sm:text-sm text-gray-500">
-                                                    {recipient.bank_name}
-                                                </p>
-                                            )}
+                                                    {recipient.bank_name && (
+                                                        <p className="text-xs sm:text-sm text-gray-500">
+                                                            {recipient.bank_name}
+                                                        </p>
+                                                    )}
                                         </div>
                                     </div>
+                                    
+                                    {/* Add ONLY Favorite button in recipient card */}
+                                    {user && (
+                                        <TooltipProvider>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Button
+                                                        variant="outline"
+                                                        size="icon"
+                                                        onClick={(e) => {
+                                                            // Prevent default to avoid form submission
+                                                            e.preventDefault();
+                                                            
+                                                            const isInFavorites = favorites.some(fav => 
+                                                                fav.recipient_identifier === recipient.identifier && 
+                                                                fav.method === form.getValues("method")
+                                                            );
+                                                            
+                                                            if (isInFavorites) {
+                                                                // Find the favorite ID
+                                                                const favorite = favorites.find(fav => 
+                                                                    fav.recipient_identifier === recipient.identifier && 
+                                                                    fav.method === form.getValues("method")
+                                                                );
+                                                                
+                                                                if (favorite) {
+                                                                    // Set the favorite to remove and open the dialog
+                                                                    setFavoriteToRemove(favorite);
+                                                                    setShowRemoveDialog(true);
+                                                                    return;
+                                                                }
+                                                                return;
+                                                            }
+                                                            
+                                                            // Show dialog to add to favorites
+                                                            setShowAddFavoriteDialog(true);
+                                                        }}
+                                                    >
+                                                        {favorites.some(fav => 
+                                                            fav.recipient_identifier === recipient.identifier && 
+                                                            fav.method === form.getValues("method")
+                                                        ) ? (
+                                                            <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
+                                                        ) : (
+                                                            <Star className="h-4 w-4" />
+                                                        )}
+                                                    </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    {favorites.some(fav => 
+                                                        fav.recipient_identifier === recipient.identifier && 
+                                                        fav.method === form.getValues("method")
+                                                    )
+                                                        ? "Remove from favorites" 
+                                                        : "Add to favorites"
+                                                    }
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
+                                    )}
                                 </div>
 
                                 {/* Account Balance Card */}
@@ -883,6 +1069,112 @@ const SendMoney = () => {
                     )}
                 </Card>
             </div>
+            
+            {/* Dialog for adding to favorites */}
+            <Dialog open={showAddFavoriteDialog} onOpenChange={setShowAddFavoriteDialog}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Add to Favorites</DialogTitle>
+                        <DialogDescription>
+                            Save this recipient to your favorites for quick access
+                        </DialogDescription>
+                    </DialogHeader>
+                    
+                    <div className="grid gap-4 py-4">
+                        {recipient && (
+                            <>
+                                <div className="space-y-2">
+                                    <Label htmlFor="recipient-info">Recipient Information</Label>
+                                    <div className="flex items-center p-3 bg-gray-50 rounded-md">
+                                        <div className="bg-gray-100 p-2 rounded-full mr-3">
+                                            {getMethodIcon(form.getValues("method") as TransferMethod)}
+                                        </div>
+                                        <div>
+                                            <div>{recipient.name}</div>
+                                            <div className="text-sm text-gray-500">{recipient.identifier}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div className="space-y-2">
+                                    <Label htmlFor="display-name">Display Name</Label>
+                                    <Input
+                                        id="display-name"
+                                        value={customFavoriteName}
+                                        onChange={(e) => setCustomFavoriteName(e.target.value)}
+                                        placeholder="Enter a display name for this favorite"
+                                    />
+                                    <p className="text-xs text-gray-500">
+                                        Choose a memorable name to easily identify this recipient
+                                    </p>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                    
+                    <DialogFooter>
+                        <Button 
+                            variant="outline" 
+                            onClick={() => setShowAddFavoriteDialog(false)}
+                        >
+                            Cancel
+                        </Button>
+                        <Button 
+                            onClick={handleAddToFavorites}
+                            disabled={isSavingFavorite || !customFavoriteName.trim()}
+                        >
+                            {isSavingFavorite ? "Saving..." : "Save to Favorites"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Dialog for removing favorites */}
+            <Dialog open={showRemoveDialog} onOpenChange={setShowRemoveDialog}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Remove from Favorites</DialogTitle>
+                        <DialogDescription>
+                            Are you sure you want to remove this recipient from your favorites?
+                        </DialogDescription>
+                    </DialogHeader>
+                    
+                    <div className="py-4">
+                        {favoriteToRemove && (
+                            <div className="flex items-center p-3 bg-gray-50 rounded-md">
+                                <div className="bg-gray-100 p-2 rounded-full mr-3">
+                                    {favoriteToRemove.method === 'ipa' && <User className="h-4 w-4"/>}
+                                    {favoriteToRemove.method === 'mobile' && <Phone className="h-4 w-4"/>}
+                                    {favoriteToRemove.method === 'card' && <CreditCard className="h-4 w-4"/>}
+                                    {(favoriteToRemove.method === 'account' || favoriteToRemove.method === 'iban') && <Banknote className="h-4 w-4"/>}
+                                </div>
+                                <div>
+                                    <div>{favoriteToRemove.recipient_name}</div>
+                                    <div className="text-sm text-gray-500">{favoriteToRemove.recipient_identifier}</div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                    
+                    <DialogFooter>
+                        <Button 
+                            variant="outline" 
+                            onClick={() => {
+                                setShowRemoveDialog(false);
+                                setFavoriteToRemove(null);
+                            }}
+                        >
+                            Cancel
+                        </Button>
+                        <Button 
+                            variant="destructive"
+                            onClick={() => favoriteToRemove && handleRemoveFavorite(favoriteToRemove.favorite_id)}
+                        >
+                            Remove
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </MainLayout>
     );
 };

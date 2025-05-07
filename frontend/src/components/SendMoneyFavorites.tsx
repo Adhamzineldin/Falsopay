@@ -51,6 +51,7 @@ interface SendMoneyFavoritesProps {
     bankId?: number;
   };
   recipientValidated: boolean;
+  showOnlyFavoriteButton?: boolean;
 }
 
 const SendMoneyFavorites = ({ 
@@ -58,7 +59,8 @@ const SendMoneyFavorites = ({
   method, 
   onSelectFavorite,
   currentRecipient,
-  recipientValidated
+  recipientValidated,
+  showOnlyFavoriteButton = false
 }: SendMoneyFavoritesProps) => {
   const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -253,86 +255,88 @@ const SendMoneyFavorites = ({
         </TooltipProvider>
       )}
 
-      <Sheet>
-        <SheetTrigger asChild>
-          <Button variant="outline" size="sm" className="flex items-center gap-2">
-            <Star className="h-4 w-4" />
-            <span>Favorites</span>
-            {favorites.length > 0 && (
-              <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
-                {favorites.length}
-              </Badge>
-            )}
-          </Button>
-        </SheetTrigger>
-        <SheetContent side="right">
-          <SheetHeader>
-            <SheetTitle>Your Favorite Recipients</SheetTitle>
-            <SheetDescription>
-              Quickly select a saved recipient
-            </SheetDescription>
-          </SheetHeader>
-          
-          <div className="mt-6">
-            {isLoading ? (
-              <div className="flex justify-center py-8">
-                <div className="loader">Loading...</div>
-              </div>
-            ) : favorites.length === 0 ? (
-              <div className="text-center py-8">
-                <StarOff className="h-8 w-8 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">You don't have any favorites yet</p>
-                <p className="text-sm text-gray-400 mt-2">
-                  Save recipients for quick access
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {favorites.map((favorite) => (
-                  <div 
-                    key={favorite.favorite_id}
-                    className="border rounded-lg p-3 cursor-pointer hover:bg-gray-50 transition-colors flex justify-between items-center"
-                    onClick={() => onSelectFavorite(favorite)}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="bg-gray-100 p-2 rounded-full">
-                        {getMethodIcon(favorite.method)}
-                      </div>
-                      <div>
-                        <div className="font-medium">{favorite.recipient_name}</div>
-                        <div className="text-sm text-gray-500">{favorite.recipient_identifier}</div>
-                        {favorite.bank_name && (
-                          <div className="text-xs text-gray-400">{favorite.bank_name}</div>
-                        )}
-                      </div>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRemoveFavorite(favorite.favorite_id);
-                      }}
-                      disabled={isDeleting}
-                    >
-                      <Trash2 className="h-4 w-4 text-gray-400 hover:text-red-500" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <SheetFooter className="mt-6 flex-col items-start sm:items-end gap-2">
-            <Button asChild variant="outline" size="sm" className="w-full">
-              <Link to="/manage-favorites">
-                <Settings className="h-4 w-4 mr-2" />
-                Manage Favorites
-              </Link>
+      {showOnlyFavoriteButton === false && (
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="sm" className="flex items-center gap-2">
+              <Star className="h-4 w-4" />
+              <span>Favorites</span>
+              {favorites.length > 0 && (
+                <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                  {favorites.length}
+                </Badge>
+              )}
             </Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
+          </SheetTrigger>
+          <SheetContent side="right">
+            <SheetHeader>
+              <SheetTitle>Your Favorite Recipients</SheetTitle>
+              <SheetDescription>
+                Quickly select a saved recipient
+              </SheetDescription>
+            </SheetHeader>
+            
+            <div className="mt-6">
+              {isLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="loader">Loading...</div>
+                </div>
+              ) : favorites.length === 0 ? (
+                <div className="text-center py-8">
+                  <StarOff className="h-8 w-8 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500">You don't have any favorites yet</p>
+                  <p className="text-sm text-gray-400 mt-2">
+                    Save recipients for quick access
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {favorites.map((favorite) => (
+                    <div 
+                      key={favorite.favorite_id}
+                      className="border rounded-lg p-3 cursor-pointer hover:bg-gray-50 transition-colors flex justify-between items-center"
+                      onClick={() => onSelectFavorite(favorite)}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="bg-gray-100 p-2 rounded-full">
+                          {getMethodIcon(favorite.method)}
+                        </div>
+                        <div>
+                          <div className="font-medium">{favorite.recipient_name}</div>
+                          <div className="text-sm text-gray-500">{favorite.recipient_identifier}</div>
+                          {favorite.bank_name && (
+                            <div className="text-xs text-gray-400">{favorite.bank_name}</div>
+                          )}
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveFavorite(favorite.favorite_id);
+                        }}
+                        disabled={isDeleting}
+                      >
+                        <Trash2 className="h-4 w-4 text-gray-400 hover:text-red-500" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <SheetFooter className="mt-6 flex-col items-start sm:items-end gap-2">
+              <Button asChild variant="outline" size="sm" className="w-full">
+                <Link to="/manage-favorites">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Manage Favorites
+                </Link>
+              </Button>
+            </SheetFooter>
+          </SheetContent>
+        </Sheet>
+      )}
 
       {/* Add to Favorites Dialog */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>

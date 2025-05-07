@@ -23,7 +23,8 @@ import {
   Clock,
   X,
   ShieldAlert,
-  ShieldCheck
+  ShieldCheck,
+  Activity
 } from 'lucide-react';
 import {
   Table,
@@ -50,6 +51,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import AdminSystemStatus from '@/components/admin/AdminSystemStatus';
 
 interface UserData {
   user_id: number;
@@ -318,6 +320,10 @@ const AdminDashboard = () => {
             <TabsTrigger value="users">
               <Users className="h-4 w-4 mr-2" />
               User Management
+            </TabsTrigger>
+            <TabsTrigger value="system">
+              <Activity className="h-4 w-4 mr-2" />
+              System Status
             </TabsTrigger>
           </TabsList>
           
@@ -639,6 +645,12 @@ const AdminDashboard = () => {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+          
+          <TabsContent value="system">
+            <div className="grid grid-cols-1 gap-6">
+              <AdminSystemStatus />
+            </div>
           </TabsContent>
         </Tabs>
       </div>

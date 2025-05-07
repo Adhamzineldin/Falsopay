@@ -184,4 +184,64 @@ class FavoriteController
             ];
         }
     }
+
+    /**
+     * Update a favorite
+     * 
+     * @param int $favoriteId The favorite ID
+     * @param array $data The updated data
+     * @return array Response data
+     */
+    public function updateFavorite(int $favoriteId, array $data): array
+    {
+        try {
+            // First, get the favorite to check if it exists
+            $favorite = $this->favoriteModel->getFavoriteById($favoriteId);
+            
+            if (!$favorite) {
+                return [
+                    'status' => 'error',
+                    'message' => 'Favorite not found',
+                    'code' => 404
+                ];
+            }
+
+            // Ensure the favorite belongs to the user making the request
+            if (isset($data['user_id']) && (int)$favorite['user_id'] !== (int)$data['user_id']) {
+                return [
+                    'status' => 'error',
+                    'message' => 'Unauthorized access to this favorite',
+                    'code' => 403
+                ];
+            }
+
+            // Update the favorite
+            $result = $this->favoriteModel->updateFavorite($favoriteId, $data);
+
+            if ($result) {
+                // Get the updated favorite
+                $updatedFavorite = $this->favoriteModel->getFavoriteById($favoriteId);
+                
+                return [
+                    'status' => 'success',
+                    'message' => 'Favorite updated successfully',
+                    'data' => $updatedFavorite,
+                    'code' => 200
+                ];
+            } else {
+                return [
+                    'status' => 'error',
+                    'message' => 'Failed to update favorite',
+                    'code' => 500
+                ];
+            }
+
+        } catch (Exception $e) {
+            return [
+                'status' => 'error',
+                'message' => 'Failed to update favorite: ' . $e->getMessage(),
+                'code' => 500
+            ];
+        }
+    }
 } 

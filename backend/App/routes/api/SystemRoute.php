@@ -27,8 +27,21 @@ class SystemRoute extends Route
         }, $adminMiddlewares);
         
         $router->add('PUT', '/api/admin/system/settings', function($body) use ($controller) {
-            $userId = $_REQUEST['user_id'] ?? $body['user_id'] ?? 0;
-            return $controller->updateSettings($body, (int)$userId);
+            // Check if user_id is provided and ensure it's a valid integer
+            $userId = null;
+            
+            if (isset($_REQUEST['user_id']) && is_numeric($_REQUEST['user_id']) && (int)$_REQUEST['user_id'] > 0) {
+                $userId = (int)$_REQUEST['user_id'];
+            } elseif (isset($body['user_id']) && is_numeric($body['user_id']) && (int)$body['user_id'] > 0) {
+                $userId = (int)$body['user_id'];
+            }
+            
+            // If user_id isn't valid, check if we have authenticated user in session
+            if (!$userId && isset($_SESSION['user_id']) && (int)$_SESSION['user_id'] > 0) {
+                $userId = (int)$_SESSION['user_id'];
+            }
+            
+            return $controller->updateSettings($body, $userId);
         }, $adminMiddlewares);
     }
 } 

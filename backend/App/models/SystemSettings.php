@@ -127,16 +127,28 @@ class SystemSettings
             $newSettings['last_updated'] = date('Y-m-d H:i:s');
             $newSettings['updated_by'] = $userId;
             
-            // Update in database
-            $stmt = $this->pdo->prepare("
-                UPDATE system_settings 
-                SET setting_value = :settings, updated_by = :userId
-                WHERE setting_key = 'transfer_settings'
-            ");
-            $result = $stmt->execute([
-                'settings' => json_encode($newSettings),
-                'userId' => $userId
-            ]);
+            // Update in database - handle case when userId is null
+            if ($userId !== null) {
+                $stmt = $this->pdo->prepare("
+                    UPDATE system_settings 
+                    SET setting_value = :settings, updated_by = :userId
+                    WHERE setting_key = 'transfer_settings'
+                ");
+                $result = $stmt->execute([
+                    'settings' => json_encode($newSettings),
+                    'userId' => $userId
+                ]);
+            } else {
+                // If userId is null, don't update the updated_by field
+                $stmt = $this->pdo->prepare("
+                    UPDATE system_settings 
+                    SET setting_value = :settings
+                    WHERE setting_key = 'transfer_settings'
+                ");
+                $result = $stmt->execute([
+                    'settings' => json_encode($newSettings)
+                ]);
+            }
             
             // Update cache
             self::$cache = $newSettings;

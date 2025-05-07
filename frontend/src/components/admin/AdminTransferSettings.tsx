@@ -154,13 +154,13 @@ const AdminTransferSettings = () => {
               <Label htmlFor="transfer-limit">Maximum Transfer Amount</Label>
               <div className="flex items-center mt-1.5">
                 <div className="relative flex-1">
-                  <DollarSign className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <span className="absolute left-3 top-2.5 text-muted-foreground text-sm">EGP</span>
                   <Input
                     id="transfer-limit"
                     type="number"
                     min="1"
                     step="1"
-                    className="pl-9"
+                    className="pl-14"
                     value={transferLimitAmount}
                     onChange={(e) => setTransferLimitAmount(e.target.value)}
                     placeholder="Enter maximum transfer amount"
@@ -217,7 +217,7 @@ const AdminTransferSettings = () => {
               {transactionsBlocked 
                 ? "Transactions are currently blocked" 
                 : transferLimitEnabled 
-                  ? `Transfer limit of $${transferLimitAmount} is active`
+                  ? `Transfer limit of EGP ${transferLimitAmount} is active`
                   : ""}
             </AlertTitle>
             <AlertDescription>

@@ -89,7 +89,7 @@ interface FormValues {
 }
 
 // Format number with commas and 2 decimal places
-const formatCurrency = (value: number, currency = '£') => {
+const formatCurrency = (value: number, currency = 'EGP') => {
     return `${currency} ${value.toLocaleString('en-US', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2

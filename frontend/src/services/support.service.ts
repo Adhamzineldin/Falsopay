@@ -198,8 +198,31 @@ export class SupportService {
     message: string;
   }): Promise<TicketReply> {
     try {
+      // Get the admin user ID from localStorage
+      const userJson = localStorage.getItem('user');
+      let adminUserId = 0;
+      
+      if (userJson) {
+        try {
+          const user = JSON.parse(userJson);
+          adminUserId = user.user_id;
+        } catch (e) {
+          console.error('Error parsing user from localStorage:', e);
+        }
+      }
+      
+      if (!adminUserId) {
+        throw new Error('Admin user ID not found');
+      }
+      
+      // Add admin_user_id to the request
+      const requestData = {
+        ...data,
+        admin_user_id: adminUserId
+      };
+      
       // Use admin endpoint for admin replies
-      const response = await api.post('/api/admin/support/replies', data);
+      const response = await api.post('/api/admin/support/replies', requestData);
       
       if (response.data && response.data.status === 'success' && response.data.data) {
         return response.data.data;
@@ -210,19 +233,7 @@ export class SupportService {
       throw new Error('Invalid admin reply response format');
     } catch (error) {
       console.error('Error adding admin reply:', error);
-      
-      // Even if we get an error, the reply might have been saved
-      // Return a placeholder reply object that conforms to TicketReply type
-      return {
-        reply_id: 0,
-        ticket_id: data.ticket_id,
-        user_id: 0,
-        is_admin: true,
-        message: data.message,
-        created_at: new Date().toISOString(),
-        first_name: 'Admin',
-        last_name: ''
-      };
+      throw error;
     }
   }
 
@@ -231,8 +242,31 @@ export class SupportService {
     message: string;
   }): Promise<TicketReply> {
     try {
+      // Get the admin user ID from localStorage
+      const userJson = localStorage.getItem('user');
+      let adminUserId = 0;
+      
+      if (userJson) {
+        try {
+          const user = JSON.parse(userJson);
+          adminUserId = user.user_id;
+        } catch (e) {
+          console.error('Error parsing user from localStorage:', e);
+        }
+      }
+      
+      if (!adminUserId) {
+        throw new Error('Admin user ID not found');
+      }
+      
+      // Add admin_user_id to the request
+      const requestData = {
+        ...data,
+        admin_user_id: adminUserId
+      };
+      
       // Use admin public endpoint for admin replies to public tickets
-      const response = await api.post('/api/admin/support/public-replies', data);
+      const response = await api.post('/api/admin/support/public-replies', requestData);
       
       if (response.data && response.data.status === 'success' && response.data.data) {
         return response.data.data;
@@ -243,19 +277,7 @@ export class SupportService {
       throw new Error('Invalid public ticket reply response format');
     } catch (error) {
       console.error('Error adding public ticket reply:', error);
-      
-      // Even if we get an error, the reply might have been saved
-      // Return a placeholder reply object that conforms to TicketReply type
-      return {
-        reply_id: 0,
-        ticket_id: data.ticket_id,
-        user_id: 0,
-        is_admin: true,
-        message: data.message,
-        created_at: new Date().toISOString(),
-        first_name: 'Admin',
-        last_name: ''
-      };
+      throw error;
     }
   }
 } 

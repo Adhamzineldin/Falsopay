@@ -111,21 +111,21 @@ class SupportRoute extends Route
                     ];
                 }
                 
-                // Use the authenticated user's ID - IMPORTANT CHANGE
-                $userId = $_SERVER['AUTHENTICATED_USER_ID'] ?? 0;
+                // Use the user ID from the request
+                $userId = $body['user_id'] ?? 0;
                 
                 if (!$userId) {
                     return [
                         'status' => 'error',
-                        'message' => 'User not authenticated',
-                        'code' => 401
+                        'message' => 'User ID is required',
+                        'code' => 400
                     ];
                 }
                 
-                // Add reply using the authenticated user's ID
+                // Add reply using the provided user ID
                 $reply = $ticketModel->addReply(
                     $ticketId,
-                    (int)$userId, // Use the authenticated user ID
+                    (int)$userId,
                     $body['message'],
                     false // Not admin
                 );

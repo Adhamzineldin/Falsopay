@@ -15,7 +15,8 @@ import {
   BarChart4,
   Star,
   HelpCircle,
-  ShieldCheck
+  ShieldCheck,
+  BanknoteIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -63,8 +64,46 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       setUnreadCount(count => count + 1);
     });
     
+    const unsubscribeMoneyRequests = WebSocketService.subscribe('money_request', (data) => {
+      if (data.action === 'new') {
+        const newNotification: Notification = {
+          id: Date.now().toString(),
+          title: 'Money Request',
+          message: `${data.data.requester_name} requested ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'EGP' }).format(data.data.amount)}`,
+          timestamp: new Date().toISOString(),
+          read: false
+        };
+        
+        setNotifications(prev => [newNotification, ...prev]);
+        setUnreadCount(count => count + 1);
+      } else if (data.action === 'accepted') {
+        const newNotification: Notification = {
+          id: Date.now().toString(),
+          title: 'Money Request Accepted',
+          message: `Your request has been accepted and payment received`,
+          timestamp: new Date().toISOString(),
+          read: false
+        };
+        
+        setNotifications(prev => [newNotification, ...prev]);
+        setUnreadCount(count => count + 1);
+      } else if (data.action === 'declined') {
+        const newNotification: Notification = {
+          id: Date.now().toString(),
+          title: 'Money Request Declined',
+          message: `Your request has been declined`,
+          timestamp: new Date().toISOString(),
+          read: false
+        };
+        
+        setNotifications(prev => [newNotification, ...prev]);
+        setUnreadCount(count => count + 1);
+      }
+    });
+    
     return () => {
       unsubscribe();
+      unsubscribeMoneyRequests();
     };
   }, []);
 
@@ -88,6 +127,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     { path: '/dashboard', label: 'Dashboard', icon: Home },
     { path: '/send-money', label: 'Send Money', icon: Send },
     { path: '/transactions', label: 'Transactions', icon: CreditCard },
+    { path: '/money-requests', label: 'Money Requests', icon: BanknoteIcon },
     { path: '/accounts', label: 'Accounts', icon: BarChart4 },
     { path: '/manage-favorites', label: 'Favorites', icon: Star },
     { path: '/support', label: 'Support', icon: HelpCircle },

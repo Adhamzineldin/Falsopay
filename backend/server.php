@@ -3,6 +3,7 @@
 // Autoload dependencies
 require_once __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/App/routes/api/UsersRoute.php';
+require_once __DIR__ . '/App/routes/api/MoneyRequestsRoute.php';
 require_once __DIR__ . '/App/config/ErrorLogger.php';
 
 use App\database\Database;
@@ -19,6 +20,7 @@ use App\routes\api\FavoritesRoute;
 use App\routes\api\SupportRoute;
 use App\routes\api\SystemRoute;
 use App\routes\api\UserAdminRoutes;
+use App\routes\api\MoneyRequestsRoute;
 use App\routes\auth\AuthRoutes;
 use core\Router;
 use JetBrains\PhpStorm\NoReturn;
@@ -185,7 +187,8 @@ $routes = [
     FavoritesRoute::class,
     SupportRoute::class,
     SystemRoute::class,
-    UserAdminRoutes::class
+    UserAdminRoutes::class,
+    MoneyRequestsRoute::class
 ];
 
 $middleware = [[AuthMiddleware::class, 'ensureAuthenticated']];

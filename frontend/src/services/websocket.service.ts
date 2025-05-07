@@ -1,4 +1,3 @@
-
 import { toast } from '@/components/ui/sonner';
 
 class WebSocketService {
@@ -36,13 +35,14 @@ class WebSocketService {
         const data = JSON.parse(event.data);
         console.log('WebSocket message received:', data);
 
-        // Handle transaction notification messages
+        // Handle transaction notifications
         if (data.type === 'transaction_notification') {
-          const { from_name, amount, transaction_id } = data;
-
-          toast(`Transaction from ${from_name}`, {
-            description: `You received EGP ${amount} (ID: ${transaction_id})`,
-          });
+          this.notifySubscribers('transaction_notification', data);
+        }
+        
+        // Handle money request notifications
+        if (data.type === 'money_request') {
+          this.notifySubscribers('money_request', data);
         }
 
         // General fallback for any other notification type
@@ -114,6 +114,11 @@ class WebSocketService {
     };
   }
   
+  private notifySubscribers(eventType: string, data: any) {
+    const eventListeners = this.listeners.get(eventType) || [];
+    eventListeners.forEach(listener => listener(data));
+  }
+
   send(data: any) {
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
       this.socket.send(JSON.stringify(data));

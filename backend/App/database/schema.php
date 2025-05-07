@@ -131,6 +131,26 @@ try {
         FOREIGN KEY (receiver_bank_id, receiver_account_number) REFERENCES bank_accounts(bank_id, account_number) ON DELETE CASCADE ON UPDATE CASCADE
     );
 
+    -- Money Requests Table
+    CREATE TABLE IF NOT EXISTS money_requests (
+        request_id INT AUTO_INCREMENT PRIMARY KEY,
+        requester_user_id INT NOT NULL,
+        requested_user_id INT NOT NULL,
+        requester_name VARCHAR(255) NOT NULL,
+        requested_name VARCHAR(255) NOT NULL,
+        amount DECIMAL(25, 2) NOT NULL,
+        requester_ipa_address VARCHAR(255) NOT NULL,
+        requested_ipa_address VARCHAR(255) NOT NULL,
+        message VARCHAR(255),
+        status ENUM('pending', 'accepted', 'declined', 'expired') NOT NULL DEFAULT 'pending',
+        transaction_id INT DEFAULT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (requester_user_id) REFERENCES users(user_id) ON DELETE CASCADE ON UPDATE CASCADE,
+        FOREIGN KEY (requested_user_id) REFERENCES users(user_id) ON DELETE CASCADE ON UPDATE CASCADE,
+        FOREIGN KEY (transaction_id) REFERENCES transactions(transaction_id) ON DELETE SET NULL ON UPDATE CASCADE
+    );
+
     -- Favorites Table for storing user's favorite recipients
     CREATE TABLE IF NOT EXISTS favorites (
         favorite_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -242,6 +262,14 @@ try {
             CREATE INDEX  idx_transaction_method ON transactions(transfer_method);
             CREATE INDEX  idx_transaction_time ON transactions(transaction_time);
 
+            -- Indexes for money_requests table
+            CREATE INDEX idx_money_request_requester ON money_requests(requester_user_id);
+            CREATE INDEX idx_money_request_requested ON money_requests(requested_user_id);
+            CREATE INDEX idx_money_request_status ON money_requests(status);
+            CREATE INDEX idx_money_request_requested_ipa ON money_requests(requested_ipa_address);
+            CREATE INDEX idx_money_request_requester_ipa ON money_requests(requester_ipa_address);
+            CREATE INDEX idx_money_request_transaction ON money_requests(transaction_id);
+            
             -- Indexes for favorites table
             CREATE INDEX idx_favorites_user ON favorites(user_id);
             CREATE INDEX idx_favorites_method ON favorites(method);

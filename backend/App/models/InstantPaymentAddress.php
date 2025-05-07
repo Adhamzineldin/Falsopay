@@ -143,7 +143,53 @@ class InstantPaymentAddress {
         ]);
     }
 
-
-
+    /**
+     * Get the default IPA for a user by user_id
+     * This method finds the IPA that is set as the default account in the users table
+     * 
+     * @param int $userId
+     * @return array|null
+     */
+    public function getDefaultIPAByUserId(int $userId): ?array {
+        // First, get the default_account (ipa_id) from the user record
+        $sql = "SELECT default_account FROM users WHERE user_id = :user_id";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute(['user_id' => $userId]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$result || !$result['default_account']) {
+            // If no default is set, try to get any IPA for this user
+            return $this->getFirstIPAForUser($userId);
+        }
+        
+        // Get the IPA by its ID
+        $default_ipa_id = $result['default_account'];
+        return $this->getByIpaId($default_ipa_id);
+    }
+    
+    /**
+     * Get the first available IPA for a user
+     * Used as a fallback when no default IPA is set
+     * 
+     * @param int $userId
+     * @return array|null
+     */
+    public function getFirstIPAForUser(int $userId): ?array {
+        $sql = "SELECT * FROM instant_payment_addresses WHERE user_id = :user_id LIMIT 1";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute(['user_id' => $userId]);
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    }
+    
+    /**
+     * Get IPA by address
+     * Alias for getByIpaAddress to match usage in controller
+     * 
+     * @param string $ipaAddress
+     * @return array|null
+     */
+    public function getIPAByAddress(string $ipaAddress): ?array {
+        return $this->getByIpaAddress($ipaAddress);
+    }
 
 }

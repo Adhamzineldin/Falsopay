@@ -16,6 +16,7 @@ const AuthFlow = React.lazy(() => import("@/pages/AuthFlow"));
 const Dashboard = React.lazy(() => import("@/pages/Dashboard"));
 const SendMoney = React.lazy(() => import("@/pages/SendMoney"));
 const Transactions = React.lazy(() => import("@/pages/Transactions"));
+const MoneyRequests = React.lazy(() => import("@/pages/MoneyRequests"));
 const Profile = React.lazy(() => import("@/pages/Profile"));
 const LinkAccount = React.lazy(() => import("@/pages/LinkAccount"));
 const NotFound = React.lazy(() => import("@/pages/NotFound"));
@@ -76,6 +77,14 @@ const AppContent = () => {
               element={
                 <ProtectedRoute>
                   <Transactions />
+                </ProtectedRoute>
+              }
+          />
+          <Route
+              path="/money-requests"
+              element={
+                <ProtectedRoute>
+                  <MoneyRequests />
                 </ProtectedRoute>
               }
           />
@@ -155,6 +164,7 @@ const App = () => {
             import("@/pages/Dashboard");
             import("@/pages/SendMoney");
             import("@/pages/Transactions");
+            import("@/pages/MoneyRequests");
             import("@/pages/Profile");
             import("@/pages/LinkAccount");
             import("@/pages/NotFound");

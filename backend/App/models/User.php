@@ -269,9 +269,61 @@ class User
      */
     public function getAdminUser(): ?array
     {
+        // First try to get the dedicated support account
+        $sql = "SELECT * FROM users WHERE role = 'admin' AND email = 'support@falsopay.com' LIMIT 1";
+        $stmt = $this->pdo->query($sql);
+        $supportAdmin = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($supportAdmin) {
+            return $supportAdmin;
+        }
+        
+        // If no dedicated support account exists, try to get any admin
         $sql = "SELECT * FROM users WHERE role = 'admin' LIMIT 1";
         $stmt = $this->pdo->query($sql);
         $admin = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $admin ?: null;
+        
+        if ($admin) {
+            // If we found an admin, let's create a new support team user
+            try {
+                $supportUser = $this->createSupportTeamUser();
+                return $supportUser;
+            } catch (Exception $e) {
+                error_log("Failed to create support team user: " . $e->getMessage());
+                // Return the original admin if we couldn't create a support user
+                return $admin;
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Create or get the dedicated support team user
+     */
+    private function createSupportTeamUser(): array
+    {
+        // Check if support team user already exists
+        $sql = "SELECT * FROM users WHERE email = 'support@falsopay.com' LIMIT 1";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute();
+        $existingUser = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($existingUser) {
+            return $existingUser;
+        }
+        
+        // Create the support team user if it doesn't exist
+        $sql = "INSERT INTO users (first_name, last_name, email, phone_number, role, status) 
+                VALUES ('Support', 'Team', 'support@falsopay.com', '00000000000', 'admin', 'active')";
+        $stmt = $this->pdo->prepare($sql);
+        $result = $stmt->execute();
+        
+        if (!$result) {
+            throw new Exception("Failed to create support team user");
+        }
+        
+        $userId = $this->pdo->lastInsertId();
+        return $this->getUserById($userId);
     }
 }

@@ -193,6 +193,14 @@ class SupportController
                 ];
             }
 
+            // For admin replies, always use the dedicated Support Team user
+            if ($isAdmin) {
+                $adminUser = $this->userModel->getAdminUser();
+                if ($adminUser) {
+                    $userId = $adminUser['user_id'];
+                }
+            }
+
             // Add the reply
             $reply = $this->supportTicketModel->addReply(
                 $ticketId,
@@ -438,7 +446,7 @@ class SupportController
                 ];
             }
 
-            // For public tickets (without user_id), get an admin user to use for the reply
+            // For public tickets, always use the dedicated Support Team admin user
             $adminUser = $this->userModel->getAdminUser();
             if (!$adminUser) {
                 return [

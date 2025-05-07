@@ -32,6 +32,7 @@ const AuthFlow = () => {
     // User account status
     const [userExists, setUserExists] = useState(false);
     const [isDefaultAccount, setIsDefaultAccount] = useState(false);
+    const [isUserBlocked, setIsUserBlocked] = useState(false);
 
     // Hooks
     const { login, verifyLoginCode } = useApp();
@@ -87,6 +88,21 @@ const AuthFlow = () => {
                 console.log("User data:", userData);
                 // Fixed logic: isDefaultAccount should be true if default_account is truthy
                 setIsDefaultAccount(!!userData.default_account);
+                
+                // Check if the user account is blocked
+                if (userData.status === 'blocked') {
+                    setIsUserBlocked(true);
+                    toast({
+                        title: "Account Blocked",
+                        description: "Your account has been blocked. Please contact support for assistance.",
+                        variant: "destructive",
+                    });
+                    setCurrentStep('account-blocked');
+                    setIsLoading(false);
+                    return;
+                } else {
+                    setIsUserBlocked(false);
+                }
             }
 
             // Generate and send verification code locally
@@ -213,19 +229,39 @@ const AuthFlow = () => {
                     navigate(returnTo);
                 }
             } else {
-                toast({
-                    title: "Error",
-                    description: "Invalid IPA address. Please try again.",
-                    variant: "destructive",
-                });
+                // Check if the account is blocked
+                if (result && result.blocked) {
+                    setIsUserBlocked(true);
+                    setCurrentStep('account-blocked');
+                } else {
+                    // Just show error toast but stay on the same screen
+                    toast({
+                        title: "Error",
+                        description: "Invalid IPA address. Please try again.",
+                        variant: "destructive",
+                    });
+                    // Clear the IPA field for a new attempt
+                    setIpaAddress('');
+                }
             }
         } catch (error) {
             console.error('IPA verification error:', error);
-            toast({
-                title: "Error",
-                description: "Failed to verify your IPA address. Please try again.",
-                variant: "destructive",
-            });
+            
+            // Check if the error indicates that the account is blocked
+            if (error?.response?.data?.status === 'blocked' || 
+                error?.response?.data?.message?.includes('blocked') || 
+                error?.response?.data?.error?.includes('blocked')) {
+                setIsUserBlocked(true);
+                setCurrentStep('account-blocked');
+            } else {
+                toast({
+                    title: "Error",
+                    description: "Failed to verify your IPA address. Please try again.",
+                    variant: "destructive",
+                });
+                // Clear the IPA field for a new attempt but stay on the same screen
+                setIpaAddress('');
+            }
         } finally {
             setIsLoading(false);
         }
@@ -265,19 +301,39 @@ const AuthFlow = () => {
                     navigate(returnTo);
                 }
             } else {
-                toast({
-                    title: "Error",
-                    description: "Invalid IPA address. Please try again.",
-                    variant: "destructive",
-                });
+                // Check if the account is blocked
+                if (result && result.blocked) {
+                    setIsUserBlocked(true);
+                    setCurrentStep('account-blocked');
+                } else {
+                    // Just show error toast but stay on the same screen
+                    toast({
+                        title: "Error",
+                        description: "Invalid IPA address. Please try again.",
+                        variant: "destructive",
+                    });
+                    // Clear the IPA field for a new attempt
+                    setIpaAddress('');
+                }
             }
         } catch (error) {
             console.error('Default account IPA verification error:', error);
-            toast({
-                title: "Error",
-                description: "Failed to verify your IPA address. Please try again.",
-                variant: "destructive",
-            });
+            
+            // Check if the error indicates that the account is blocked
+            if (error?.response?.data?.status === 'blocked' || 
+                error?.response?.data?.message?.includes('blocked') || 
+                error?.response?.data?.error?.includes('blocked')) {
+                setIsUserBlocked(true);
+                setCurrentStep('account-blocked');
+            } else {
+                toast({
+                    title: "Error",
+                    description: "Failed to verify your IPA address. Please try again.",
+                    variant: "destructive",
+                });
+                // Clear the IPA field for a new attempt but stay on the same screen
+                setIpaAddress('');
+            }
         } finally {
             setIsLoading(false);
         }
@@ -427,6 +483,10 @@ const AuthFlow = () => {
             setCurrentStep('registration');
         } else if (currentStep === 'default-account' || currentStep === 'ipa-verification' || currentStep === 'registration') {
             setCurrentStep('phone-verification');
+        } else if (currentStep === 'account-blocked') {
+            // Allow users to go back to phone entry from blocked screen
+            setCurrentStep('phone-entry');
+            setIsUserBlocked(false);
         }
     };
 
@@ -522,25 +582,62 @@ const AuthFlow = () => {
                 <Card className="animate-fade-in">
                     <CardHeader>
                         <CardTitle className="text-2xl text-center">
-                            {currentStep === 'phone-entry' && "Welcome to FalsoPay"}
-                            {currentStep === 'phone-verification' && "Verify Your Phone"}
-                            {currentStep === 'email-verification' && "Verify Your Email"}
-                            {currentStep === 'ipa-verification' && "Login to Your Account"}
-                            {currentStep === 'default-account' && "Verify Your Account"}
-                            {currentStep === 'registration' && "Create Your Account"}
+                            {currentStep === 'phone-entry' ? "Welcome to FalsoPay" : null}
+                            {currentStep === 'phone-verification' ? "Verify Your Phone" : null}
+                            {currentStep === 'email-verification' ? "Verify Your Email" : null}
+                            {currentStep === 'ipa-verification' ? "Login to Your Account" : null}
+                            {currentStep === 'default-account' ? "Verify Your Account" : null}
+                            {currentStep === 'registration' ? "Create Your Account" : null}
+                            {currentStep === 'account-blocked' ? "Account Blocked" : null}
                         </CardTitle>
                         <CardDescription className="text-center">
-                            {currentStep === 'phone-entry' && "Enter your phone number to get started"}
-                            {currentStep === 'phone-verification' && "Enter the verification code sent to your phone"}
-                            {currentStep === 'email-verification' && "Enter the verification code sent to your email"}
-                            {currentStep === 'ipa-verification' && "Enter your IPA address to login"}
-                            {currentStep === 'default-account' && "Verify your IPA address or reset your account"}
-                            {currentStep === 'registration' && "Fill in your details to create an account"}
+                            {currentStep === 'phone-entry' ? "Enter your phone number to get started" : null}
+                            {currentStep === 'phone-verification' ? "Enter the verification code sent to your phone" : null}
+                            {currentStep === 'email-verification' ? "Enter the verification code sent to your email" : null}
+                            {currentStep === 'ipa-verification' ? "Enter your IPA address to login" : null}
+                            {currentStep === 'default-account' ? "Verify your IPA address or reset your account" : null}
+                            {currentStep === 'registration' ? "Fill in your details to create an account" : null}
+                            {currentStep === 'account-blocked' ? "Your account has been blocked by an administrator" : null}
                         </CardDescription>
                     </CardHeader>
 
                     <CardContent>
-                        {currentStep === 'phone-entry' && (
+                        {currentStep === 'account-blocked' ? (
+                            <div className="space-y-6">
+                                <div className="flex flex-col items-center justify-center">
+                                    <div className="bg-red-100 rounded-full p-3 mb-4">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m0 0v2m0-2h2m-2 0H9m3-3a3 3 0 100-6 3 3 0 000 6z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                        </svg>
+                                    </div>
+                                    <p className="text-center text-red-600 font-medium mb-4">
+                                        Your account has been blocked by an administrator.
+                                    </p>
+                                    <p className="text-center text-gray-600 mb-6">
+                                        If you believe this is an error or to request your account to be unblocked, 
+                                        please contact our support team for assistance.
+                                    </p>
+                                    <div className="flex flex-col space-y-3 w-full">
+                                        <Link to="/support">
+                                            <Button variant="outline" className="w-full">
+                                                Contact Support
+                                            </Button>
+                                        </Link>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            className="w-full"
+                                            onClick={handleBack}
+                                        >
+                                            Back
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : null}
+                        
+                        {currentStep === 'phone-entry' ? (
                             <form onSubmit={handlePhoneSubmit} className="space-y-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="phoneNumber">Phone Number</Label>
@@ -557,9 +654,9 @@ const AuthFlow = () => {
                                     {isLoading ? 'Processing...' : 'Continue'}
                                 </Button>
                             </form>
-                        )}
+                        ) : null}
 
-                        {currentStep === 'phone-verification' && (
+                        {currentStep === 'phone-verification' ? (
                             <div className="flex flex-col items-center justify-center space-y-4">
                                 <div className="text-center mb-4">
                                     <p className="text-sm text-gray-500">
@@ -587,9 +684,9 @@ const AuthFlow = () => {
                                     Back
                                 </Button>
                             </div>
-                        )}
+                        ) : null}
 
-                        {currentStep === 'email-verification' && (
+                        {currentStep === 'email-verification' ? (
                             <div className="flex flex-col items-center justify-center space-y-4">
                                 <div className="text-center mb-4">
                                     <p className="text-sm text-gray-500">
@@ -617,9 +714,9 @@ const AuthFlow = () => {
                                     Back
                                 </Button>
                             </div>
-                        )}
+                        ) : null}
 
-                        {currentStep === 'ipa-verification' && (
+                        {currentStep === 'ipa-verification' ? (
                             <form onSubmit={handleIpaVerification} className="space-y-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="ipaAddress">IPA Address</Label>
@@ -645,9 +742,9 @@ const AuthFlow = () => {
                                     Back
                                 </Button>
                             </form>
-                        )}
+                        ) : null}
 
-                        {currentStep === 'default-account' && (
+                        {currentStep === 'default-account' ? (
                             <div className="space-y-6">
                                 <div className="text-center">
                                     <p className="text-sm text-gray-500 mb-4">
@@ -693,9 +790,9 @@ const AuthFlow = () => {
                                     </Button>
                                 </div>
                             </div>
-                        )}
+                        ) : null}
 
-                        {currentStep === 'registration' && (
+                        {currentStep === 'registration' ? (
                             <form onSubmit={handleRegistrationSubmit} className="space-y-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="firstName">First Name</Label>
@@ -745,7 +842,7 @@ const AuthFlow = () => {
                                     Back
                                 </Button>
                             </form>
-                        )}
+                        ) : null}
                     </CardContent>
 
                     <CardFooter className="flex flex-col space-y-4">

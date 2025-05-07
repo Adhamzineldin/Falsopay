@@ -30,7 +30,7 @@ interface AppContextType {
   isLoading: boolean;
   isAdmin: boolean;
   maintenance: MaintenanceState;
-  login: (phone: string, ipa: string | null) => Promise<{success: boolean, code?: string, user?: User, token?: string} | false>;
+  login: (phone: string, ipa: string | null) => Promise<{success: boolean, code?: string, user?: User, token?: string, blocked?: boolean} | false>;
   verifyLoginCode: (phone: string, code: string, pendingData?: {user: User, token?: string}) => Promise<void>;
   logout: () => void;
   updateUserData: (data: Partial<User>) => Promise<void>;
@@ -172,7 +172,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     };
   }, []);
 
-  const login = async (phone: string, ipa: string | null): Promise<{success: boolean, code?: string, user?: User, token?: string} | false> => {
+  const login = async (phone: string, ipa: string | null): Promise<{success: boolean, code?: string, user?: User, token?: string, blocked?: boolean} | false> => {
     setIsLoading(true);
 
     try {
@@ -183,6 +183,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           phone_number: phone,
           ipa_address: ipa // This can be null for non-default accounts
         });
+
+        // Check if user is blocked
+        if (loginResponse.user && loginResponse.user.status === 'blocked') {
+          console.log('User account is blocked');
+          setIsLoading(false);
+          toast({
+            title: "Account Blocked",
+            description: "Your account has been blocked. Please contact support for assistance.",
+            variant: "destructive",
+          });
+          return { success: false, blocked: true };
+        }
 
         // Step 2: Store token and user in pending state
         const token = loginResponse.user_token;
@@ -209,22 +221,54 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         return { success: true, code: verificationCode, user: user, token: token };
       } catch (loginError: any) {
         console.error('Login error:', loginError);
+        
+        // Check if the error response indicates a blocked account
+        if (loginError?.response?.data?.status === 'blocked' || 
+            loginError?.response?.data?.message?.includes('blocked') || 
+            loginError?.response?.data?.error?.includes('blocked')) {
+          
+          toast({
+            title: "Account Blocked",
+            description: "Your account has been blocked. Please contact support for assistance.",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return { success: false, blocked: true };
+        }
+        
         toast({
           title: "Login Failed",
           description: ipa ? "Phone Number Or IPA Address is incorrect" : "Failed to login with phone number",
           variant: "destructive",
         });
         setIsLoading(false);
+        // Just return false to indicate failure without any other side effects
         return false;
       }
     } catch (error: any) {
       console.error('Login process error:', error);
+      
+      // Check for blocked account indication in the error
+      if (error?.response?.data?.status === 'blocked' || 
+          error?.response?.data?.message?.includes('blocked') || 
+          error?.response?.data?.error?.includes('blocked')) {
+        
+        toast({
+          title: "Account Blocked",
+          description: "Your account has been blocked. Please contact support for assistance.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return { success: false, blocked: true };
+      }
+      
       toast({
         title: "Login Failed",
         description: error.response?.data?.message || "Please check your credentials and try again",
         variant: "destructive",
       });
       setIsLoading(false);
+      // Just return false to indicate failure without any other side effects
       return false;
     }
   };

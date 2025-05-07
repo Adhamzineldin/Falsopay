@@ -76,9 +76,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 // Check WebSocket status (running on localhost:4100)
 function checkWebSocketStatus(): array {
-    $wsAddress = 'localhost';
-    $wsPort = 4100;
+    $wsAddress = $_ENV['WS_HOST'] ?? 'localhost';
+    $wsPort = $_ENV['WS_PORT'] ?? null;
     $warningThreshold = 150; // in ms
+    
+    // If no port is specified, return a neutral status instead of an error
+    if (empty($wsPort)) {
+        return [
+            'status' => 'not_configured',
+            'label' => 'Not Configured',
+            'message' => 'WebSocket server port not configured',
+            'response_time' => 'N/A'
+        ];
+    }
 
     $startTime = microtime(true);
     $socket = @fsockopen($wsAddress, $wsPort, $errno, $errstr, 3);

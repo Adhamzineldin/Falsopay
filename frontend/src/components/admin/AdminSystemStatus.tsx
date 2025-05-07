@@ -66,8 +66,8 @@ const AdminSystemStatus = () => {
   };
 
   const getStatusBadge = (status: string, label?: string) => {
-    // If a custom label is provided, use it with appropriate styling
-    if (label === 'Not Configured') {
+    // If status is not_configured, return a blue badge regardless of the label
+    if (status === 'not_configured') {
       return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">Not Configured</Badge>;
     }
     

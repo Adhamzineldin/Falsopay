@@ -17,6 +17,7 @@
             --background: #f9fafb;
             --card: #ffffff;
             --primary: #3b82f6;
+            --info: #3b82f6;
         }
 
         * {
@@ -193,6 +194,11 @@
             color: var(--error);
         }
 
+        .status-icon.not_configured {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: var(--info);
+        }
+
         .pulse-ring {
             position: absolute;
             width: 100%;
@@ -258,6 +264,10 @@
             animation: pulse-red 2s infinite;
         }
 
+        .pulse-ring.not_configured {
+            animation: pulse-blue 2s infinite;
+        }
+
         @keyframes pulse-red {
             0% {
                 transform: scale(0.95);
@@ -270,6 +280,21 @@
             100% {
                 transform: scale(0.95);
                 box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+            }
+        }
+
+        @keyframes pulse-blue {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5);
+            }
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+            }
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
             }
         }
 
@@ -289,6 +314,10 @@
 
         .status-label.error {
             color: var(--error);
+        }
+
+        .status-label.not_configured {
+            color: var(--info);
         }
 
         .status-message {

@@ -70,12 +70,25 @@ class User
         return $this->pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function getUserById(int $id): ?array
+    /**
+     * Get a user by ID
+     * 
+     * @param int $userId
+     * @return array|null User data or null if not found
+     */
+    public function getUserById($userId): ?array
     {
-        $sql = "SELECT * FROM users WHERE user_id = :id";
+        $sql = "SELECT * FROM users WHERE user_id = :user_id";
         $stmt = $this->pdo->prepare($sql);
-        $stmt->execute(['id' => $id]);
+        $stmt->execute(['user_id' => $userId]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($user) {
+            // Ensure names are properly trimmed
+            $user['first_name'] = trim($user['first_name']);
+            $user['last_name'] = trim($user['last_name']);
+        }
+        
         return $user ?: null;
     }
 
@@ -174,7 +187,16 @@ class User
     public function getAdminUsers(): array
     {
         $sql = "SELECT * FROM users WHERE role = 'admin'";
-        return $this->pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+        $stmt = $this->pdo->query($sql);
+        $admins = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Clean up any string formatting issues
+        foreach ($admins as &$admin) {
+            $admin['first_name'] = trim($admin['first_name']);
+            $admin['last_name'] = trim($admin['last_name']);
+        }
+        
+        return $admins;
     }
 
     /**
@@ -284,15 +306,10 @@ class User
         $admin = $stmt->fetch(PDO::FETCH_ASSOC);
         
         if ($admin) {
-            // If we found an admin, let's create a new support team user
-            try {
-                $supportUser = $this->createSupportTeamUser();
-                return $supportUser;
-            } catch (Exception $e) {
-                error_log("Failed to create support team user: " . $e->getMessage());
-                // Return the original admin if we couldn't create a support user
-                return $admin;
-            }
+            // If any string trimming is needed, do it here
+            $admin['first_name'] = trim($admin['first_name']);
+            $admin['last_name'] = trim($admin['last_name']);
+            return $admin;
         }
         
         return null;

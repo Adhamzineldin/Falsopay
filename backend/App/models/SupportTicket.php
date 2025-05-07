@@ -175,8 +175,8 @@ class SupportTicket
         $stmt->execute(['id' => $id]);
         $reply = $stmt->fetch(PDO::FETCH_ASSOC);
         
-        // Fix admin name display if needed
-        if ($reply && $reply['is_admin']) {
+        // Clean up names to remove any extra characters
+        if ($reply) {
             $reply['first_name'] = trim($reply['first_name']);
             $reply['last_name'] = trim($reply['last_name']);
         }
@@ -198,12 +198,10 @@ class SupportTicket
         $stmt->execute(['ticket_id' => $ticketId]);
         $replies = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
-        // Fix admin name display
+        // Clean up all names
         foreach ($replies as &$reply) {
-            if ($reply['is_admin']) {
-                $reply['first_name'] = trim($reply['first_name']);
-                $reply['last_name'] = trim($reply['last_name']);
-            }
+            $reply['first_name'] = trim($reply['first_name']);
+            $reply['last_name'] = trim($reply['last_name']);
         }
         
         return $replies;

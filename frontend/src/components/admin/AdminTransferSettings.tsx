@@ -57,10 +57,10 @@ const AdminTransferSettings = () => {
     try {
       // Validate the transfer limit amount
       const amount = parseFloat(transferLimitAmount);
-      if (transferLimitEnabled && (isNaN(amount) || amount <= 0)) {
+      if (transferLimitEnabled && (isNaN(amount) || amount <= 50000)) {
         toast({
           title: "Validation Error",
-          description: "Transfer limit must be a positive number",
+          description: "Transfer limit must be at least 50k",
           variant: "destructive",
         });
         setIsSaving(false);

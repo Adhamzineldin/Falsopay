@@ -4,9 +4,11 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AppProvider } from "@/contexts/AppContext";
+import { AppProvider, useApp } from "@/contexts/AppContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import MaintenanceScreen from "@/components/MaintenanceScreen";
+import SystemStatusMonitor from "@/components/SystemStatusMonitor";
 
 // Lazy load all pages
 const Landing = React.lazy(() => import("@/pages/Landing"));
@@ -23,6 +25,124 @@ const AdminDashboard = React.lazy(() => import("@/pages/admin/AdminDashboard"));
 const ManageFavorites = React.lazy(() => import("@/pages/ManageFavorites"));
 
 const queryClient = new QueryClient();
+
+// Wrapper component that handles the maintenance mode check
+const AppContent = () => {
+  const { maintenance, checkMaintenanceStatus, isLoading } = useApp();
+
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
+
+  if (maintenance.isInMaintenance) {
+    return (
+      <MaintenanceScreen 
+        message={maintenance.message}
+        onRetry={checkMaintenanceStatus}
+        isRetrying={maintenance.isChecking}
+      />
+    );
+  }
+
+  return (
+    <>
+      <SystemStatusMonitor checkInterval={30000} />
+      <Suspense fallback={<LoadingSpinner />}>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<Landing />} />
+          <Route path="/login" element={<AuthFlow />} />
+          <Route path="/register" element={<AuthFlow />} />
+
+          {/* Protected Routes */}
+          <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+          />
+          <Route
+              path="/send-money"
+              element={
+                <ProtectedRoute>
+                  <SendMoney />
+                </ProtectedRoute>
+              }
+          />
+          <Route
+              path="/transactions"
+              element={
+                <ProtectedRoute>
+                  <Transactions />
+                </ProtectedRoute>
+              }
+          />
+          <Route
+              path="/accounts"
+              element={
+                <ProtectedRoute>
+                  <Accounts />
+                </ProtectedRoute>
+              }
+          />
+          <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+          />
+          <Route
+              path="/link-account"
+              element={
+                <ProtectedRoute>
+                  <LinkAccount />
+                </ProtectedRoute>
+              }
+          />
+          <Route
+              path="/support"
+              element={
+                <ProtectedRoute>
+                  <Support />
+                </ProtectedRoute>
+              }
+          />
+          <Route
+              path="/support/ticket/:ticketId"
+              element={
+                <ProtectedRoute>
+                  <Support />
+                </ProtectedRoute>
+              }
+          />
+          <Route
+              path="/admin"
+              element={
+                <ProtectedRoute adminOnly={true}>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              }
+          />
+          <Route
+              path="/manage-favorites"
+              element={
+                <ProtectedRoute>
+                  <ManageFavorites />
+                </ProtectedRoute>
+              }
+          />
+
+          {/* Not Found */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Suspense>
+    </>
+  );
+};
 
 const App = () => {
   useEffect(() => {
@@ -56,99 +176,7 @@ const App = () => {
             <AppProvider>
               <Toaster />
               <Sonner />
-              <Suspense fallback={<LoadingSpinner />}>
-                <Routes>
-                  {/* Public Routes */}
-                  <Route path="/" element={<Landing />} />
-                  <Route path="/login" element={<AuthFlow />} />
-                  <Route path="/register" element={<AuthFlow />} />
-
-                  {/* Protected Routes */}
-                  <Route
-                      path="/dashboard"
-                      element={
-                        <ProtectedRoute>
-                          <Dashboard />
-                        </ProtectedRoute>
-                      }
-                  />
-                  <Route
-                      path="/send-money"
-                      element={
-                        <ProtectedRoute>
-                          <SendMoney />
-                        </ProtectedRoute>
-                      }
-                  />
-                  <Route
-                      path="/transactions"
-                      element={
-                        <ProtectedRoute>
-                          <Transactions />
-                        </ProtectedRoute>
-                      }
-                  />
-                  <Route
-                      path="/accounts"
-                      element={
-                        <ProtectedRoute>
-                          <Accounts />
-                        </ProtectedRoute>
-                      }
-                  />
-                  <Route
-                      path="/profile"
-                      element={
-                        <ProtectedRoute>
-                          <Profile />
-                        </ProtectedRoute>
-                      }
-                  />
-                  <Route
-                      path="/link-account"
-                      element={
-                        <ProtectedRoute>
-                          <LinkAccount />
-                        </ProtectedRoute>
-                      }
-                  />
-                  <Route
-                      path="/support"
-                      element={
-                        <ProtectedRoute>
-                          <Support />
-                        </ProtectedRoute>
-                      }
-                  />
-                  <Route
-                      path="/support/ticket/:ticketId"
-                      element={
-                        <ProtectedRoute>
-                          <Support />
-                        </ProtectedRoute>
-                      }
-                  />
-                  <Route
-                      path="/admin"
-                      element={
-                        <ProtectedRoute adminOnly={true}>
-                          <AdminDashboard />
-                        </ProtectedRoute>
-                      }
-                  />
-                  <Route
-                      path="/manage-favorites"
-                      element={
-                        <ProtectedRoute>
-                          <ManageFavorites />
-                        </ProtectedRoute>
-                      }
-                  />
-
-                  {/* Not Found */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </Suspense>
+              <AppContent />
             </AppProvider>
           </BrowserRouter>
         </TooltipProvider>

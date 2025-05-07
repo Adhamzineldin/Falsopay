@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { AuthService } from '@/services/auth.service';
 import { UserService } from '@/services/user.service';
+import { SystemService } from '@/services/system.service';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import WebSocketService from '@/services/websocket.service';
@@ -17,15 +18,23 @@ interface User {
   [key: string]: any;
 }
 
+interface MaintenanceState {
+  isInMaintenance: boolean;
+  message: string;
+  isChecking: boolean;
+}
+
 interface AppContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   isAdmin: boolean;
+  maintenance: MaintenanceState;
   login: (phone: string, ipa: string | null) => Promise<{success: boolean, code?: string, user?: User, token?: string} | false>;
   verifyLoginCode: (phone: string, code: string, pendingData?: {user: User, token?: string}) => Promise<void>;
   logout: () => void;
   updateUserData: (data: Partial<User>) => Promise<void>;
+  checkMaintenanceStatus: () => Promise<boolean>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -36,12 +45,67 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [pendingLoginData, setPendingLoginData] = useState<{token?: string, user: User} | null>(null);
+  const [maintenance, setMaintenance] = useState<MaintenanceState>({
+    isInMaintenance: false,
+    message: '',
+    isChecking: false
+  });
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  const checkMaintenanceStatus = async (): Promise<boolean> => {
+    setMaintenance(prev => ({ ...prev, isChecking: true }));
+    try {
+      // Try to fetch the system status
+      await SystemService.getPublicSystemStatus();
+      
+      // If no error, the system is online
+      setMaintenance({
+        isInMaintenance: false,
+        message: '',
+        isChecking: false
+      });
+      return false;
+    } catch (error: any) {
+      console.error('Error connecting to backend:', error);
+      
+      // Only set maintenance mode if there's a network error or 5xx server error
+      const isNetworkError = !error.response;
+      const isServerError = error.response && error.response.status >= 500;
+      
+      if (isNetworkError || isServerError) {
+        setMaintenance({
+          isInMaintenance: true,
+          message: error.response?.data?.message || 'The system is currently undergoing maintenance. Please try again later.',
+          isChecking: false
+        });
+        return true;
+      }
+      
+      // Other types of errors (like 4xx) shouldn't trigger maintenance mode
+      setMaintenance({
+        isInMaintenance: false,
+        message: '',
+        isChecking: false
+      });
+      return false;
+    }
+  };
+
   useEffect(() => {
-    const checkAuth = async () => {
+    const initializeApp = async () => {
       setIsLoading(true);
+      
+      // First check if system is in maintenance
+      const isInMaintenance = await checkMaintenanceStatus();
+      
+      // Don't proceed with auth check if in maintenance mode
+      if (isInMaintenance) {
+        setIsLoading(false);
+        return;
+      }
+      
+      // Continue with regular auth check
       try {
         const isAuth = AuthService.isAuthenticated();
         console.log('Auth check result:', isAuth);
@@ -88,7 +152,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       }
     };
 
-    checkAuth();
+    initializeApp();
 
     return () => {
       WebSocketService.disconnect();
@@ -246,10 +310,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             isAuthenticated,
             isLoading,
             isAdmin,
+            maintenance,
             login,
             verifyLoginCode,
             logout,
             updateUserData,
+            checkMaintenanceStatus,
           }}
       >
         {children}

@@ -123,17 +123,36 @@ export class SystemService {
    */
   static async getPublicSystemStatus(): Promise<PublicSystemStatus> {
     try {
-      const response = await api.get('/api/system/status');
+      const response = await api.get('/api/system/status', {
+        // Set a shorter timeout for status checks to fail faster if server is down
+        timeout: 5000
+      });
       
       if (response.data && response.data.status === 'success' && response.data.data) {
         return response.data.data;
       }
       
       throw new Error('Invalid public system status response format');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching public system status:', error);
       
-      // Return default status with transactions enabled
+      // Handle specific network errors for maintenance detection
+      const isNetworkError = !error.response;
+      const isServerError = error.response && error.response.status >= 500;
+      
+      if (isNetworkError || isServerError) {
+        // For network errors or server errors, we should indicate maintenance mode
+        const maintenanceMessage = isServerError && error.response?.data?.message 
+          ? error.response.data.message 
+          : 'The system is currently unavailable. Our team is working to restore service as soon as possible.';
+          
+        console.warn('System appears to be in maintenance mode:', maintenanceMessage);
+        
+        // Rethrow the error to indicate maintenance mode
+        throw error;
+      }
+      
+      // For other errors (like 4xx), return default status with transactions enabled
       return {
         transactions_enabled: true,
         message: null,

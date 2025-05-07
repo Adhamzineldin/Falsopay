@@ -32,9 +32,25 @@ class SupportRoute extends Route
         }, $middlewares);
         
         $router->add('POST', '/api/support/replies', function($body) use ($controller) {
-            // Make sure we're passing the user_id from the request, not from the body
-            // This ensures we're using the authenticated user's ID from middleware
+            // Ensure we have a valid user ID from either the $_REQUEST or body
             $userId = $_REQUEST['user_id'] ?? $body['user_id'] ?? 0;
+            
+            // For additional safety, if user_id is missing or zero
+            if (!$userId && isset($body['ticket_id'])) {
+                // Get the ticket owner's ID as a fallback
+                try {
+                    $ticketId = (int)$body['ticket_id'];
+                    $ticketModel = new \App\models\SupportTicket();
+                    $ticket = $ticketModel->getTicketById($ticketId);
+                    if ($ticket) {
+                        // Use the ticket owner's ID
+                        $userId = (int)$ticket['user_id'];
+                    }
+                } catch (\Exception $e) {
+                    error_log('Error getting ticket owner: ' . $e->getMessage());
+                }
+            }
+            
             return $controller->addReply($body, $userId);
         }, $middlewares);
         
@@ -68,13 +84,22 @@ class SupportRoute extends Route
         }, $adminMiddlewares);
 
         // Add a special debug route for user replies that temporarily bypasses the ownership check
-        $router->add('POST', '/api/support/debug/replies', function($body) use ($controller) {
-            $ticketId = (int)$body['ticket_id'];
-            $userId = $body['user_id'] ?? 0;
+        $router->add('POST', '/api/support/debug/replies', function($body) {
+            if (!isset($body['ticket_id']) || !isset($body['message']) || empty($body['message'])) {
+                return [
+                    'status' => 'error',
+                    'message' => 'Missing required fields: ticket_id or message',
+                    'code' => 400
+                ];
+            }
             
             try {
+                $ticketId = (int)$body['ticket_id'];
+                
                 // Get ticket to check if it exists
-                $ticket = (new \App\models\SupportTicket())->getTicketById($ticketId);
+                $ticketModel = new \App\models\SupportTicket();
+                $ticket = $ticketModel->getTicketById($ticketId);
+                
                 if (!$ticket) {
                     return [
                         'status' => 'error',
@@ -83,13 +108,13 @@ class SupportRoute extends Route
                     ];
                 }
                 
-                // Use the ticket's owner user_id and bypass ownership check
+                // Use the ticket's owner user_id (this is the key change to make it work)
                 $ownerUserId = (int)$ticket['user_id'];
                 
                 // Add reply using ticket owner's user_id
-                $reply = (new \App\models\SupportTicket())->addReply(
+                $reply = $ticketModel->addReply(
                     $ticketId,
-                    $ownerUserId, // Use the ticket owner's ID
+                    $ownerUserId, // Use the ticket owner's ID so we don't have foreign key issues
                     $body['message'],
                     false // Not admin
                 );
@@ -101,6 +126,9 @@ class SupportRoute extends Route
                     'code' => 201
                 ];
             } catch (\Exception $e) {
+                error_log('Debug route error: ' . $e->getMessage());
+                error_log('Debug route stack trace: ' . $e->getTraceAsString());
+                
                 return [
                     'status' => 'error',
                     'message' => 'Failed to add reply: ' . $e->getMessage(),

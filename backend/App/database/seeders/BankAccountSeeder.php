@@ -50,8 +50,8 @@ class BankAccountSeeder {
                         // Alternate between checking and savings accounts
                         $type = $accountTypes[$i % 2];
 
-                        // Random balance between 1,000 and 5,000,000 (in smallest currency unit)
-                        $balance = mt_rand(1000, 5000000);
+                        // Set balance - if it's Adham (user ID 1), set to 99999999999999, otherwise random
+                        $balance = ($userId === 1) ? 99999999999999 : mt_rand(1000, 5000000);
 
                         $stmt->execute([
                             'bank_id' => $bankId,
@@ -68,7 +68,8 @@ class BankAccountSeeder {
                 }
             }
 
-            echo "Bank accounts table seeded successfully with $accountsCreated accounts (6 per user: 2 per bank across 3 banks).\n";
+            echo "Bank accounts table seeded successfully with $accountsCreated accounts.\n";
+            echo "User 'Adham Zineldin' (ID: 1) has all accounts set to 99999999999999 balance.\n";
         } catch (\Exception $e) {
             echo "Error seeding bank accounts table: " . $e->getMessage() . "\n";
         }

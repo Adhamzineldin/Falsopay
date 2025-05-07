@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useApp } from '@/contexts/AppContext';
 import { 
   Home, 
@@ -16,14 +16,19 @@ import {
   Star,
   HelpCircle,
   ShieldCheck,
-  BanknoteIcon
+  BanknoteIcon,
+  Clock,
+  Check,
+  ExternalLink
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import WebSocketService from '@/services/websocket.service';
 import { useToast } from '@/hooks/use-toast';
+import moneyRequestService from '@/services/money-request.service';
+import { Badge } from '@/components/ui/badge';
 
 interface Notification {
   id: string;
@@ -33,6 +38,16 @@ interface Notification {
   read: boolean;
 }
 
+interface MoneyRequest {
+  request_id: number;
+  requester_name: string;
+  requester_ipa_address: string;
+  amount: number;
+  message: string | null;
+  status: 'pending' | 'accepted' | 'declined' | 'expired';
+  created_at: string;
+}
+
 interface MainLayoutProps {
   children: React.ReactNode;
 }
@@ -40,10 +55,15 @@ interface MainLayoutProps {
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const { user, logout, isAdmin } = useApp();
   const location = useLocation();
+  const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [pendingRequests, setPendingRequests] = useState<MoneyRequest[]>([]);
+  const [showPendingRequests, setShowPendingRequests] = useState(false);
+  const [isLoadingRequests, setIsLoadingRequests] = useState(false);
+  const [processingRequestId, setProcessingRequestId] = useState<number | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -51,6 +71,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   }, [location.pathname]);
 
   useEffect(() => {
+    // Load pending money requests
+    loadPendingRequests();
+
     const unsubscribe = WebSocketService.subscribe('transaction_notification', (data) => {
       const newNotification: Notification = {
         id: Date.now().toString(),
@@ -66,10 +89,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     
     const unsubscribeMoneyRequests = WebSocketService.subscribe('money_request', (data) => {
       if (data.action === 'new') {
+        // Load pending requests to update the counter
+        loadPendingRequests();
+        
         const newNotification: Notification = {
           id: Date.now().toString(),
           title: 'Money Request',
-          message: `${data.data.requester_name} requested ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'EGP' }).format(data.data.amount)}`,
+          message: `${data.data.requester_name} requested ${formatCurrency(data.data.amount)}`,
           timestamp: new Date().toISOString(),
           read: false
         };
@@ -106,6 +132,68 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       unsubscribeMoneyRequests();
     };
   }, []);
+
+  const loadPendingRequests = async () => {
+    try {
+      setIsLoadingRequests(true);
+      const response = await moneyRequestService.getPendingRequests();
+      if (response.success) {
+        setPendingRequests(response.data || []);
+      }
+    } catch (error) {
+      console.error('Error loading pending requests:', error);
+    } finally {
+      setIsLoadingRequests(false);
+    }
+  };
+
+  const acceptRequest = async (requestId: number) => {
+    try {
+      setProcessingRequestId(requestId);
+      const response = await moneyRequestService.acceptRequest(requestId);
+      
+      if (response.success) {
+        // Remove the request from the list
+        setPendingRequests(prev => prev.filter(req => req.request_id !== requestId));
+        toast.success('Money request accepted', {
+          description: `Payment of ${formatCurrency(response.data.request.amount)} was sent successfully`
+        });
+      } else {
+        toast.error('Failed to accept request', {
+          description: response.message
+        });
+      }
+    } catch (error) {
+      console.error('Error accepting request:', error);
+      toast.error('Failed to accept request');
+    } finally {
+      setProcessingRequestId(null);
+      loadPendingRequests();
+    }
+  };
+
+  const declineRequest = async (requestId: number) => {
+    try {
+      setProcessingRequestId(requestId);
+      const response = await moneyRequestService.declineRequest(requestId);
+      
+      if (response.success) {
+        // Remove the request from the list
+        setPendingRequests(prev => prev.filter(req => req.request_id !== requestId));
+        toast.success('Money request declined');
+      } else {
+        toast.error('Failed to decline request', {
+          description: response.message
+        });
+      }
+    } catch (error) {
+      console.error('Error declining request:', error);
+      toast.error('Failed to decline request');
+    } finally {
+      setProcessingRequestId(null);
+      loadPendingRequests();
+    }
+  };
 
   const markAllAsRead = () => {
     setNotifications(prev => 
@@ -155,11 +243,126 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           </div>
           
           <div className="flex items-center space-x-4">
+            {/* Pending Money Requests */}
             <div className="relative">
               <Button 
                 variant="ghost" 
                 size="icon" 
-                onClick={() => setShowNotifications(!showNotifications)}
+                onClick={() => {
+                  setShowPendingRequests(!showPendingRequests);
+                  setShowNotifications(false);
+                }}
+                className="relative"
+              >
+                <BanknoteIcon className="h-5 w-5" />
+                {pendingRequests.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-amber-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {pendingRequests.length > 9 ? '9+' : pendingRequests.length}
+                  </span>
+                )}
+              </Button>
+              
+              {showPendingRequests && (
+                <div className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg overflow-hidden z-40 animate-fade-in">
+                  <div className="p-4 bg-falsopay-primary text-white flex justify-between items-center">
+                    <h3 className="font-medium">Pending Requests</h3>
+                    <Button 
+                      variant="link" 
+                      className="text-xs text-white/80 hover:text-white p-0 h-auto"
+                      onClick={() => {
+                        setShowPendingRequests(false);
+                        navigate('/money-requests');
+                      }}
+                    >
+                      View All
+                    </Button>
+                  </div>
+                  
+                  <div className="max-h-96 overflow-y-auto">
+                    {isLoadingRequests ? (
+                      <div className="p-8 flex justify-center">
+                        <Clock className="h-5 w-5 animate-spin text-gray-400" />
+                      </div>
+                    ) : pendingRequests.length === 0 ? (
+                      <div className="p-4 text-center text-gray-500">
+                        No pending requests
+                      </div>
+                    ) : (
+                      <>
+                        {pendingRequests.map((request) => (
+                          <div 
+                            key={request.request_id}
+                            className="p-3 border-b border-gray-200 hover:bg-gray-50 transition"
+                          >
+                            <div className="flex justify-between items-start mb-1">
+                              <h4 className="font-medium text-sm">{request.requester_name}</h4>
+                              <span className="text-sm font-semibold text-primary">
+                                {formatCurrency(request.amount)}
+                              </span>
+                            </div>
+                            <p className="text-xs text-gray-600 mb-1">{request.requester_ipa_address}</p>
+                            {request.message && (
+                              <p className="text-xs italic text-gray-500 mb-2">"{request.message}"</p>
+                            )}
+                            <div className="flex justify-end gap-2 mt-2">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                className="h-7 text-xs"
+                                onClick={() => declineRequest(request.request_id)}
+                                disabled={processingRequestId === request.request_id}
+                              >
+                                {processingRequestId === request.request_id ? (
+                                  <Clock className="h-3 w-3 animate-spin mr-1" />
+                                ) : (
+                                  <X className="h-3 w-3 mr-1" />
+                                )}
+                                Decline
+                              </Button>
+                              <Button 
+                                variant="default" 
+                                size="sm"
+                                className="h-7 text-xs"
+                                onClick={() => {
+                                  setShowPendingRequests(false);
+                                  navigate(`/money-requests?accept=${request.request_id}`);
+                                }}
+                              >
+                                <Check className="h-3 w-3 mr-1" />
+                                Pay
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                        <div className="p-3 text-center">
+                          <Button 
+                            variant="link" 
+                            className="text-xs text-primary"
+                            onClick={() => {
+                              setShowPendingRequests(false);
+                              navigate('/money-requests');
+                            }}
+                          >
+                            <ExternalLink className="h-3 w-3 mr-1" />
+                            View all requests
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {/* Notifications */}
+            <div className="relative">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => {
+                  setShowNotifications(!showNotifications);
+                  setShowPendingRequests(false);
+                }}
                 className="relative"
               >
                 <Bell className="h-5 w-5" />

@@ -1,11 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useApp } from '@/contexts/AppContext';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import MainLayout from '@/components/layouts/MainLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Loader2, RefreshCw, Clock, Send, Download, Calendar, DollarSign, ListFilter } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Loader2, RefreshCw, Clock, Send, Download, Calendar, DollarSign, ListFilter, X, Check, Lock } from 'lucide-react';
 import WebSocketService from '@/services/websocket.service';
 import moneyRequestService from '@/services/money-request.service';
 import { MoneyRequests } from '@/components/money-requests/MoneyRequests';
@@ -13,6 +16,8 @@ import { RequestMoney } from '@/components/money-requests/RequestMoney';
 import { formatCurrency } from '@/lib/utils';
 import { toast } from '@/components/ui/sonner';
 import { Separator } from '@/components/ui/separator';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { IPAService } from '@/services/ipa.service';
 
 interface MoneyRequest {
   request_id: number;
@@ -30,11 +35,44 @@ interface MoneyRequest {
   updated_at: string;
 }
 
+interface IpaOption {
+  ipa_id: number;
+  ipa_address: string;
+  account_number: string;
+  bank_name?: string;
+}
+
 export default function MoneyRequestsPage() {
   const { user } = useApp();
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [allRequests, setAllRequests] = useState<MoneyRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
+  const [isPinDialogOpen, setIsPinDialogOpen] = useState(false);
+  const [pin, setPin] = useState('');
+  const [selectedRequest, setSelectedRequest] = useState<MoneyRequest | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [currentUserIpas, setCurrentUserIpas] = useState<IpaOption[]>([]);
+  const [selectedIpa, setSelectedIpa] = useState<string>('');
+  const [isLoadingIpas, setIsLoadingIpas] = useState(false);
+  
+  const pinInputRef = useRef<HTMLInputElement>(null);
+  
+  // Check for accept query parameter on mount
+  useEffect(() => {
+    const acceptRequestId = searchParams.get('accept');
+    if (acceptRequestId) {
+      // Load the specific request and open the dialog
+      const requestId = parseInt(acceptRequestId);
+      if (!isNaN(requestId)) {
+        handleAcceptRequest(requestId);
+      }
+      // Remove the query parameter
+      searchParams.delete('accept');
+      setSearchParams(searchParams);
+    }
+  }, [searchParams]);
 
   // Load all money requests
   const loadAllRequests = async () => {
@@ -54,6 +92,26 @@ export default function MoneyRequestsPage() {
     }
   };
 
+  // Load user's IPA addresses
+  const loadUserIpas = async () => {
+    try {
+      setIsLoadingIpas(true);
+      const userId = user?.user_id;
+      if (!userId) return;
+      
+      const ipas = await IPAService.getIPAsByUserId(userId);
+      setCurrentUserIpas(ipas || []);
+      // Set the default IPA if available
+      if (ipas && ipas.length > 0) {
+        setSelectedIpa(ipas[0].ipa_address);
+      }
+    } catch (error) {
+      console.error('Error loading user IPAs:', error);
+    } finally {
+      setIsLoadingIpas(false);
+    }
+  };
+
   // Handle WebSocket notifications for money requests
   useEffect(() => {
     const handleMoneyRequest = (data: any) => {
@@ -66,6 +124,7 @@ export default function MoneyRequestsPage() {
     
     // Load money requests on mount
     loadAllRequests();
+    loadUserIpas();
     
     return () => {
       unsubscribe();
@@ -87,6 +146,105 @@ export default function MoneyRequestsPage() {
       return allRequests.filter(req => !isRequestSentByUser(req));
     } else {
       return allRequests;
+    }
+  };
+
+  // Prepare to accept a request
+  const handleAcceptRequest = async (requestId: number) => {
+    // Find the request in our list
+    const request = allRequests.find(req => req.request_id === requestId);
+    
+    if (!request) {
+      // Try to load the request from the server
+      try {
+        const response = await moneyRequestService.getRequestById(requestId);
+        if (response.success && response.data) {
+          setSelectedRequest(response.data);
+          setIsPinDialogOpen(true);
+        } else {
+          toast.error('Failed to find the money request');
+        }
+      } catch (error) {
+        console.error('Error loading request:', error);
+        toast.error('Failed to load money request details');
+      }
+    } else {
+      setSelectedRequest(request);
+      setIsPinDialogOpen(true);
+    }
+  };
+  
+  // Process the request with the PIN
+  const processRequest = async () => {
+    if (!selectedRequest || !pin || !selectedIpa) {
+      toast.error('Please provide all required information');
+      return;
+    }
+    
+    try {
+      setIsProcessing(true);
+      
+      // Accept the request with PIN and IPA
+      const response = await moneyRequestService.acceptRequest(selectedRequest.request_id, {
+        pin,
+        sender_ipa_address: selectedIpa
+      });
+      
+      if (response.success) {
+        toast.success('Money request accepted', {
+          description: `Payment of ${formatCurrency(response.data.request.amount)} was sent successfully`
+        });
+        
+        // Update the list
+        setAllRequests(prev => 
+          prev.map(req => 
+            req.request_id === selectedRequest.request_id 
+              ? { ...req, status: 'accepted', transaction_id: response.data.transaction.transaction_id } 
+              : req
+          )
+        );
+        
+        // Close dialog and reset state
+        setIsPinDialogOpen(false);
+        setPin('');
+        setSelectedRequest(null);
+      } else {
+        toast.error('Failed to accept request', {
+          description: response.message
+        });
+      }
+    } catch (error) {
+      console.error('Error accepting request:', error);
+      toast.error('Failed to accept request');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Decline a money request
+  const handleDeclineRequest = async (requestId: number) => {
+    try {
+      const response = await moneyRequestService.declineRequest(requestId);
+      
+      if (response.success) {
+        toast.success('Money request declined');
+        
+        // Update the list
+        setAllRequests(prev => 
+          prev.map(req => 
+            req.request_id === requestId 
+              ? { ...req, status: 'declined' } 
+              : req
+          )
+        );
+      } else {
+        toast.error('Failed to decline request', {
+          description: response.message
+        });
+      }
+    } catch (error) {
+      console.error('Error declining request:', error);
+      toast.error('Failed to decline request');
     }
   };
 
@@ -249,32 +407,37 @@ export default function MoneyRequestsPage() {
                                     <p className="text-sm italic">"{request.message}"</p>
                                   </div>
                                 )}
-                                
-                                <Separator className="my-3" />
-                                
-                                <div className="flex justify-between items-center text-xs">
-                                  <div className="flex items-center gap-1.5 text-muted-foreground">
-                                    <Calendar className="h-3.5 w-3.5" />
-                                    <span>Created: {new Date(request.created_at).toLocaleString()}</span>
-                                  </div>
-                                  {request.status !== 'pending' && (
-                                    <div className="flex items-center gap-1.5 text-muted-foreground">
-                                      <Clock className="h-3.5 w-3.5" />
-                                      <span>
-                                        {request.status === 'accepted' 
-                                          ? `Accepted: ${new Date(request.updated_at).toLocaleString()}`
-                                          : `Declined: ${new Date(request.updated_at).toLocaleString()}`
-                                        }
-                                      </span>
-                                    </div>
-                                  )}
+
+                                <div className="flex items-center text-xs text-muted-foreground mb-4">
+                                  <Calendar className="h-3.5 w-3.5 mr-1.5" />
+                                  <span>Requested {new Date(request.created_at).toLocaleString()}</span>
                                 </div>
                                 
-                                {request.transaction_id && (
-                                  <div className="mt-2 bg-primary/5 rounded-md p-2 text-xs">
-                                    <span className="text-muted-foreground">Transaction ID: </span>
-                                    <span className="font-mono">{request.transaction_id}</span>
-                                  </div>
+                                {/* Action buttons for pending requests that are not sent by the current user */}
+                                {request.status === 'pending' && !isRequestSentByUser(request) && (
+                                  <>
+                                    <Separator className="my-3" />
+                                    <div className="flex justify-end space-x-3 mt-3">
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handleDeclineRequest(request.request_id)}
+                                        className="text-xs h-8"
+                                      >
+                                        <X className="h-3.5 w-3.5 mr-1.5" />
+                                        Decline
+                                      </Button>
+                                      <Button
+                                        variant="default"
+                                        size="sm"
+                                        onClick={() => handleAcceptRequest(request.request_id)}
+                                        className="text-xs h-8"
+                                      >
+                                        <Check className="h-3.5 w-3.5 mr-1.5" />
+                                        Pay Now
+                                      </Button>
+                                    </div>
+                                  </>
                                 )}
                               </div>
                             </div>
@@ -289,6 +452,108 @@ export default function MoneyRequestsPage() {
           </div>
         </div>
       </div>
+
+      {/* PIN Verification Dialog */}
+      <Dialog open={isPinDialogOpen} onOpenChange={setIsPinDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirm Payment</DialogTitle>
+            <DialogDescription>
+              Please enter your PIN to accept this money request
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedRequest && (
+            <div className="space-y-4 py-4">
+              <div className="bg-muted/30 p-4 rounded-md space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">Amount:</span>
+                  <span className="text-lg font-semibold text-primary">{formatCurrency(selectedRequest.amount)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">From:</span>
+                  <span className="text-sm">{selectedRequest.requester_name}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">IPA Address:</span>
+                  <span className="text-sm text-muted-foreground">{selectedRequest.requester_ipa_address}</span>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="select-ipa">Select your IPA to pay from:</Label>
+                  <select 
+                    id="select-ipa"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    value={selectedIpa}
+                    onChange={(e) => setSelectedIpa(e.target.value)}
+                    disabled={isLoadingIpas || isProcessing}
+                  >
+                    {isLoadingIpas ? (
+                      <option>Loading IPA addresses...</option>
+                    ) : currentUserIpas.length === 0 ? (
+                      <option value="">No IPA addresses found</option>
+                    ) : (
+                      currentUserIpas.map((ipa) => (
+                        <option key={ipa.ipa_id} value={ipa.ipa_address}>
+                          {ipa.ipa_address} {ipa.bank_name ? `(${ipa.bank_name})` : ''}
+                        </option>
+                      ))
+                    )}
+                  </select>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <Label htmlFor="pin" className="text-sm">Enter your PIN:</Label>
+                  </div>
+                  <div className="relative">
+                    <Lock className="h-4 w-4 absolute left-3 top-3 text-muted-foreground" />
+                    <Input
+                      id="pin"
+                      ref={pinInputRef}
+                      type="password"
+                      placeholder="Enter your PIN"
+                      className="pl-10"
+                      value={pin}
+                      onChange={(e) => setPin(e.target.value)}
+                      disabled={isProcessing}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && pin) {
+                          processRequest();
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter className="flex space-x-2 justify-end">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setIsPinDialogOpen(false);
+                setPin('');
+                setSelectedRequest(null);
+              }}
+              disabled={isProcessing}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={processRequest} 
+              disabled={!pin || isProcessing || !selectedIpa || currentUserIpas.length === 0}
+              className="min-w-24"
+            >
+              {isProcessing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Confirm Payment
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </MainLayout>
   );
 } 

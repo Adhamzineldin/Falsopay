@@ -1,5 +1,10 @@
 import ApiService from '@/services/api';
 
+interface AcceptRequestOptions {
+  pin: string;
+  sender_ipa_address: string;
+}
+
 class MoneyRequestService {
   /**
    * Create a new money request
@@ -63,12 +68,17 @@ class MoneyRequestService {
    * Accept a money request
    * 
    * @param requestId - The ID of the request to accept
+   * @param options - Optional settings including PIN and sender IPA address
    */
-  async acceptRequest(requestId: number) {
+  async acceptRequest(requestId: number, options?: AcceptRequestOptions) {
     try {
-      const response = await ApiService.post(`/api/money-requests/${requestId}/process`, {
-        action: 'accept'
-      });
+      const payload = {
+        action: 'accept',
+        pin: options?.pin,
+        sender_ipa_address: options?.sender_ipa_address
+      };
+      
+      const response = await ApiService.post(`/api/money-requests/${requestId}/process`, payload);
       return response.data;
     } catch (error) {
       throw error;

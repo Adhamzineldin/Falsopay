@@ -193,18 +193,24 @@ class MoneyRequestController {
             $requestId = null;
             $action = null;
             $userId = null;
+            $pin = null;
+            $senderIpaAddress = null;
             
             if (is_array($request)) {
                 // Handle array request
                 $requestId = $request['id'] ?? null;
                 $action = $request['action'] ?? null;
                 $userId = $_SERVER['AUTHENTICATED_USER_ID'] ?? null;
+                $pin = $request['pin'] ?? null;
+                $senderIpaAddress = $request['sender_ipa_address'] ?? null;
             } else {
                 // Handle object request
                 $requestBody = $request->getBody();
                 $requestId = $request->params['id'] ?? null;
                 $action = $requestBody['action'] ?? null;
                 $userId = $request->user['user_id'] ?? $_SERVER['AUTHENTICATED_USER_ID'] ?? null;
+                $pin = $requestBody['pin'] ?? null;
+                $senderIpaAddress = $requestBody['sender_ipa_address'] ?? null;
             }
 
             if (!$requestId || !$action || !$userId) {
@@ -228,6 +234,23 @@ class MoneyRequestController {
             }
 
             if ($action === 'accept') {
+                // If accepting the request, we need to verify the PIN and sender IPA address
+                if (!$pin || !$senderIpaAddress) {
+                    return ['success' => false, 'message' => 'PIN and sender IPA address are required to accept a request'];
+                }
+                
+                // Verify the PIN for the sender's IPA address
+                $ipaVerified = $this->ipaModel->verifyPin($senderIpaAddress, $pin);
+                if (!$ipaVerified) {
+                    return ['success' => false, 'message' => 'Invalid PIN'];
+                }
+                
+                // Verify that the sender IPA belongs to the user
+                $senderIpa = $this->ipaModel->getByIpaAddress($senderIpaAddress);
+                if (!$senderIpa || $senderIpa['user_id'] != $userId) {
+                    return ['success' => false, 'message' => 'The IPA address does not belong to you'];
+                }
+                
                 // Create a transaction if the user accepts the request
                 $transactionData = [
                     'sender_user_id' => $userId,
@@ -235,9 +258,10 @@ class MoneyRequestController {
                     'sender_name' => $request['requested_name'],
                     'receiver_name' => $request['requester_name'],
                     'amount' => $request['amount'],
-                    'sender_ipa_address' => $request['requested_ipa_address'],
+                    'sender_ipa_address' => $senderIpaAddress,
                     'receiver_ipa_address' => $request['requester_ipa_address'],
-                    'transfer_method' => 'ipa'
+                    'transfer_method' => 'ipa',
+                    'pin' => $pin // Pass the PIN for verification in the transaction
                 ];
                 
                 // Process the transaction through the TransactionController

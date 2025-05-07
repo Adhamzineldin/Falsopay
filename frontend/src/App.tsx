@@ -22,6 +22,7 @@ const LinkAccount = React.lazy(() => import("@/pages/LinkAccount"));
 const NotFound = React.lazy(() => import("@/pages/NotFound"));
 const Accounts = React.lazy(() => import("@/pages/Accounts"));
 const Support = React.lazy(() => import("@/pages/Support"));
+const PublicSupport = React.lazy(() => import("@/pages/PublicSupport"));
 const AdminDashboard = React.lazy(() => import("@/pages/admin/AdminDashboard"));
 const ManageFavorites = React.lazy(() => import("@/pages/ManageFavorites"));
 
@@ -54,6 +55,7 @@ const AppContent = () => {
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<AuthFlow />} />
           <Route path="/register" element={<AuthFlow />} />
+          <Route path="/public-support" element={<PublicSupport />} />
 
           {/* Protected Routes */}
           <Route
@@ -171,6 +173,7 @@ const App = () => {
             import("@/pages/Accounts");
             import("@/pages/Landing");
             import("@/pages/Support");
+            import("@/pages/PublicSupport");
             import("@/pages/admin/AdminDashboard");
             import("@/pages/ManageFavorites");
           });

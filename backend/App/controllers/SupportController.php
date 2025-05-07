@@ -333,4 +333,74 @@ class SupportController
             ];
         }
     }
+
+    /**
+     * Create a new support ticket from a non-authenticated user
+     * 
+     * @param array $data The request data
+     * @return array Response data
+     */
+    public function createPublicTicket(array $data): array
+    {
+        try {
+            // Validate required fields
+            $requiredFields = ['first_name', 'last_name', 'email', 'subject', 'message'];
+            foreach ($requiredFields as $field) {
+                if (!isset($data[$field]) || empty($data[$field])) {
+                    return [
+                        'status' => 'error',
+                        'message' => "Missing required field: $field",
+                        'code' => 400
+                    ];
+                }
+            }
+
+            // Validate email format
+            if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+                return [
+                    'status' => 'error',
+                    'message' => "Invalid email format",
+                    'code' => 400
+                ];
+            }
+
+            // Check if there's a user with this email
+            $existingUser = $this->userModel->findByEmail($data['email']);
+            $userId = null;
+
+            if ($existingUser) {
+                // Use the existing user's ID
+                $userId = $existingUser['user_id'];
+            }
+
+            // Create the ticket
+            $ticketData = [
+                'subject' => $data['subject'],
+                'message' => $data['message'],
+                'contact_email' => $data['email'],
+                'contact_phone' => $data['phone_number'] ?? null,
+                'contact_name' => $data['first_name'] . ' ' . $data['last_name'],
+                'is_public' => true
+            ];
+
+            if ($userId) {
+                $ticketData['user_id'] = $userId;
+            }
+
+            $ticket = $this->supportTicketModel->createPublicTicket($ticketData);
+
+            return [
+                'status' => 'success',
+                'message' => 'Support ticket created successfully',
+                'code' => 201
+            ];
+
+        } catch (Exception $e) {
+            return [
+                'status' => 'error',
+                'message' => 'Failed to create ticket: ' . $e->getMessage(),
+                'code' => 500
+            ];
+        }
+    }
 } 

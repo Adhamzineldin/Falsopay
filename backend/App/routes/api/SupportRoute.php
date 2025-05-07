@@ -18,6 +18,11 @@ class SupportRoute extends Route
         // In a production app, we'd implement proper middleware chaining
         $adminMiddlewares = $middlewares;
 
+        // Public route (no authentication required)
+        $router->add('POST', '/api/public/support', function($body) use ($controller) {
+            return $controller->createPublicTicket($body);
+        }, []);
+
         // Routes for users
         $router->add('POST', '/api/support/tickets', function($body) use ($controller) {
             return $controller->createTicket($body);

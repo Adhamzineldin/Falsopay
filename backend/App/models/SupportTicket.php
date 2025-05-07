@@ -176,4 +176,69 @@ class SupportTicket
         $stmt->execute(['ticket_id' => $ticketId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    /**
+     * Create a new public support ticket (from non-authenticated users)
+     * 
+     * @param array $data Ticket data including subject, message, contact information
+     * @return array The created ticket
+     * @throws Exception
+     */
+    public function createPublicTicket(array $data): array
+    {
+        // Begin a transaction for data consistency
+        $this->pdo->beginTransaction();
+        
+        try {
+            $sql = "INSERT INTO support_tickets 
+                    (subject, message, status, contact_name, contact_email, contact_phone)
+                    VALUES (:subject, :message, 'open', :contact_name, :contact_email, :contact_phone)";
+            
+            $params = [
+                'subject' => $data['subject'],
+                'message' => $data['message'],
+                'contact_name' => $data['contact_name'],
+                'contact_email' => $data['contact_email'],
+                'contact_phone' => $data['contact_phone'] 
+            ];
+            
+            // If there's an associated user ID, include it
+            if (isset($data['user_id'])) {
+                $sql = "INSERT INTO support_tickets 
+                        (user_id, subject, message, status, contact_name, contact_email, contact_phone)
+                        VALUES (:user_id, :subject, :message, 'open', :contact_name, :contact_email, :contact_phone)";
+                $params['user_id'] = $data['user_id'];
+            }
+            
+            $stmt = $this->pdo->prepare($sql);
+            $status = $stmt->execute($params);
+            
+            if (!$status) {
+                $this->pdo->rollBack();
+                throw new Exception("Failed to create public support ticket.");
+            }
+            
+            $ticketId = $this->pdo->lastInsertId();
+            
+            // Commit the transaction
+            $this->pdo->commit();
+            
+            // Retrieve and return the inserted ticket
+            return [
+                'ticket_id' => $ticketId,
+                'subject' => $data['subject'],
+                'message' => $data['message'],
+                'status' => 'open',
+                'contact_name' => $data['contact_name'],
+                'contact_email' => $data['contact_email'],
+                'contact_phone' => $data['contact_phone'] ?? null,
+                'created_at' => date('Y-m-d H:i:s'),
+                'user_id' => $data['user_id'] ?? null
+            ];
+        } catch (Exception $e) {
+            // Roll back the transaction on error
+            $this->pdo->rollBack();
+            throw $e;
+        }
+    }
 } 

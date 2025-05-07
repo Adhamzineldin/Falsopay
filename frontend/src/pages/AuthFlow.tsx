@@ -619,7 +619,7 @@ const AuthFlow = () => {
                                         please contact our support team for assistance.
                                     </p>
                                     <div className="flex flex-col space-y-3 w-full">
-                                        <Link to="/support">
+                                        <Link to="/public-support">
                                             <Button variant="outline" className="w-full">
                                                 Contact Support
                                             </Button>
@@ -848,7 +848,7 @@ const AuthFlow = () => {
                     <CardFooter className="flex flex-col space-y-4">
                         <div className="text-center text-sm">
                             {currentStep === 'phone-entry' && (
-                                <p>Need assistance? <Link to="/support" className="text-falsopay-primary hover:underline">Contact Support</Link></p>
+                                <p>Need assistance? <Link to="/public-support" className="text-falsopay-primary hover:underline">Contact Support</Link></p>
                             )}
                         </div>
                     </CardFooter>

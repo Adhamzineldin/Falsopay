@@ -167,10 +167,13 @@ try {
     -- Support Tickets Table
     CREATE TABLE IF NOT EXISTS support_tickets (
         ticket_id INT AUTO_INCREMENT PRIMARY KEY,
-        user_id INT NOT NULL,
+        user_id INT NULL,
         subject VARCHAR(255) NOT NULL,
         message TEXT NOT NULL,
         status ENUM('open', 'in_progress', 'closed') NOT NULL DEFAULT 'open',
+        contact_name VARCHAR(255) NULL,
+        contact_email VARCHAR(255) NULL,
+        contact_phone VARCHAR(15) NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE ON UPDATE CASCADE

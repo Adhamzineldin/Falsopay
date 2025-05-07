@@ -37,26 +37,24 @@ class SupportRoute extends Route
         }, $middlewares);
         
         $router->add('POST', '/api/support/replies', function($body) use ($controller) {
-            // Ensure we have a valid user ID from either the $_REQUEST or body
-            $userId = $_REQUEST['user_id'] ?? $body['user_id'] ?? 0;
+            // Use the authenticated user's ID from the server
+            $userId = $_SERVER['AUTHENTICATED_USER_ID'] ?? 0;
             
-            // For additional safety, if user_id is missing or zero
-            if (!$userId && isset($body['ticket_id'])) {
-                // Get the ticket owner's ID as a fallback
-                try {
-                    $ticketId = (int)$body['ticket_id'];
-                    $ticketModel = new \App\models\SupportTicket();
-                    $ticket = $ticketModel->getTicketById($ticketId);
-                    if ($ticket) {
-                        // Use the ticket owner's ID
-                        $userId = (int)$ticket['user_id'];
-                    }
-                } catch (\Exception $e) {
-                    error_log('Error getting ticket owner: ' . $e->getMessage());
-                }
+            // Also check body and request as fallbacks
+            if (!$userId) {
+                $userId = $_REQUEST['user_id'] ?? $body['user_id'] ?? 0;
             }
             
-            return $controller->addReply($body, $userId);
+            // Validate we have a user ID
+            if (!$userId) {
+                return [
+                    'status' => 'error',
+                    'message' => 'User ID is required',
+                    'code' => 400
+                ];
+            }
+            
+            return $controller->addReply($body, (int)$userId);
         }, $middlewares);
         
         // Admin-only routes
@@ -78,14 +76,19 @@ class SupportRoute extends Route
         
         // Admin reply to ticket
         $router->add('POST', '/api/admin/support/replies', function($body) use ($controller) {
-            // Use ticket creator's user_id as the replying user ID
-            // This ensures we have a valid user_id that exists in the users table
-            $ticketId = (int)$body['ticket_id'];
-            $ticket = (new \App\models\SupportTicket())->getTicketById($ticketId);
-            $userId = $ticket ? (int)$ticket['user_id'] : 0;
+            // Use the authenticated admin's user ID
+            $adminUserId = $_SERVER['AUTHENTICATED_USER_ID'] ?? 0;
             
-            // Pass the ticket creator's user_id and set isAdmin flag to true
-            return $controller->addReply($body, $userId, true);
+            if (!$adminUserId) {
+                return [
+                    'status' => 'error',
+                    'message' => 'Admin user ID not found',
+                    'code' => 400
+                ];
+            }
+            
+            // Pass the admin's user_id and set isAdmin flag to true
+            return $controller->addReply($body, (int)$adminUserId, true);
         }, $adminMiddlewares);
 
         // Add a special debug route for user replies that temporarily bypasses the ownership check
@@ -113,13 +116,21 @@ class SupportRoute extends Route
                     ];
                 }
                 
-                // Use the ticket's owner user_id (this is the key change to make it work)
-                $ownerUserId = (int)$ticket['user_id'];
+                // Use the authenticated user's ID - IMPORTANT CHANGE
+                $userId = $_SERVER['AUTHENTICATED_USER_ID'] ?? 0;
                 
-                // Add reply using ticket owner's user_id
+                if (!$userId) {
+                    return [
+                        'status' => 'error',
+                        'message' => 'User not authenticated',
+                        'code' => 401
+                    ];
+                }
+                
+                // Add reply using the authenticated user's ID
                 $reply = $ticketModel->addReply(
                     $ticketId,
-                    $ownerUserId, // Use the ticket owner's ID so we don't have foreign key issues
+                    (int)$userId, // Use the authenticated user ID
                     $body['message'],
                     false // Not admin
                 );
@@ -144,6 +155,13 @@ class SupportRoute extends Route
 
         // Admin reply to public ticket (without user_id)
         $router->add('POST', '/api/admin/support/public-replies', function($body) use ($controller) {
+            // Get the authenticated admin user ID and add it to the data
+            $adminUserId = $_SERVER['AUTHENTICATED_USER_ID'] ?? 0;
+            
+            if ($adminUserId) {
+                $body['admin_user_id'] = $adminUserId;
+            }
+            
             return $controller->addPublicReply($body);
         }, $adminMiddlewares);
     }

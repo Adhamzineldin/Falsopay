@@ -384,7 +384,9 @@ const Support = () => {
                         >
                           <div className="flex justify-between items-center mb-2">
                             <div className="font-semibold flex items-center gap-2">
-                              {reply.first_name} {reply.last_name}
+                              {reply.user_id === user?.user_id ? 
+                                'You' : 
+                                `${reply.first_name || ''} ${reply.last_name || ''}`}
                               {reply.is_admin && (
                                 <Badge variant="secondary" className="text-xs">Support Team</Badge>
                               )}

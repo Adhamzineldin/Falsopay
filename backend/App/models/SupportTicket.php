@@ -189,19 +189,26 @@ class SupportTicket
      */
     public function getRepliesByTicketId(int $ticketId): array
     {
-        $sql = "SELECT r.*, u.first_name, u.last_name, u.email 
+        // This SQL query ensures we get the correct user information for each reply
+        $sql = "SELECT 
+                r.*,
+                u.first_name, 
+                u.last_name, 
+                u.email,
+                u.role
                 FROM support_replies r
                 JOIN users u ON r.user_id = u.user_id
                 WHERE r.ticket_id = :ticket_id
                 ORDER BY r.created_at ASC";
+                
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute(['ticket_id' => $ticketId]);
         $replies = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
-        // Clean up all names
+        // Clean up all names to ensure no extra characters
         foreach ($replies as &$reply) {
-            $reply['first_name'] = trim($reply['first_name']);
-            $reply['last_name'] = trim($reply['last_name']);
+            $reply['first_name'] = trim($reply['first_name'] ?? '');
+            $reply['last_name'] = trim($reply['last_name'] ?? '');
         }
         
         return $replies;

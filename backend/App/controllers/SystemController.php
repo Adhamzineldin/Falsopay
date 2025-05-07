@@ -46,10 +46,10 @@ class SystemController
      * Update system settings
      * 
      * @param array $data New settings data
-     * @param int $userId Admin user ID
+     * @param int|null $userId Admin user ID (can be null if not available)
      * @return array Response with status
      */
-    public function updateSettings(array $data, int $userId): array
+    public function updateSettings(array $data, ?int $userId = null): array
     {
         try {
             // Validate data

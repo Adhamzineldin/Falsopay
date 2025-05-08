@@ -1,0 +1,66 @@
+@startuml UC21-ViewIPAAddresses
+
+actor "Registered User" as User
+participant "FalsoPay App" as App
+participant "API Gateway" as Gateway
+participant "Account Service" as AccountService
+participant "Database" as DB
+
+title UC-21: View Your IPA Addresses
+
+User -> App: Access IPA settings
+activate App
+
+App -> Gateway: GET /api/accounts/ipa
+activate Gateway
+
+Gateway -> AccountService: Get IPA addresses
+activate AccountService
+
+AccountService -> DB: Retrieve IPA addresses
+activate DB
+
+alt No IPAs found
+    DB --> AccountService: Empty result
+    AccountService --> Gateway: Empty IPA list
+    Gateway --> App: 200 OK with empty list
+    App --> User: Suggest creating an IPA
+else IPAs exist
+    DB --> AccountService: IPA records
+    deactivate DB
+    
+    AccountService -> AccountService: Add status indicators
+    AccountService --> Gateway: IPA addresses with status
+    deactivate AccountService
+    
+    Gateway --> App: 200 OK with IPA list
+    deactivate Gateway
+    
+    App --> User: Display IPA addresses with status
+end
+
+User -> App: Select "Create new IPA" (optional)
+activate App
+
+App -> Gateway: POST /api/accounts/ipa
+activate Gateway
+
+Gateway -> AccountService: Create new IPA
+activate AccountService
+
+AccountService -> AccountService: Generate IPA
+AccountService -> DB: Store new IPA
+activate DB
+DB --> AccountService: Success
+deactivate DB
+
+AccountService --> Gateway: New IPA created
+deactivate AccountService
+
+Gateway --> App: 201 Created with new IPA
+deactivate Gateway
+
+App --> User: Display updated IPA list
+deactivate App
+
+@enduml 

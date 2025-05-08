@@ -1,0 +1,74 @@
+@startuml UC27-ScanQRCode
+
+skinparam sequenceMessageAlign center
+skinparam backgroundColor white
+skinparam handwritten false
+
+title "UC-27: Scan QR Code"
+
+actor "User" as user
+participant "FalsoPay App" as app
+participant "Device Camera" as camera
+participant "QR Processing\nModule" as qrModule
+
+== Main Success Scenario ==
+
+user -> app: Initiate QR scan functionality
+app -> app: Check camera permissions
+
+app -> camera: Request camera access
+camera --> app: Access granted
+app -> camera: Activate camera
+camera --> app: Camera active
+
+app -> user: Display scan interface
+note over app: Display viewfinder with scan area
+
+user -> camera: Position QR code in scan area
+camera -> app: Capture QR image
+app -> qrModule: Process QR image
+
+qrModule -> qrModule: Decode QR data
+qrModule -> qrModule: Validate QR format
+qrModule -> qrModule: Extract payment information
+qrModule --> app: Return decoded data
+
+app -> camera: Deactivate camera
+camera --> app: Camera deactivated
+app -> app: Process extracted information
+
+note over app: Continue with transaction flow\nusing extracted information
+
+== Alternative Scenario: Camera Permission Denied ==
+
+user -> app: Initiate QR scan functionality
+app -> app: Check camera permissions
+
+app -> camera: Request camera access
+camera --> app: Access denied
+app -> user: Display permission error
+app -> user: Provide instructions to enable camera
+
+== Alternative Scenario: Unreadable QR Code ==
+
+user -> app: Initiate QR scan functionality
+app -> app: Check camera permissions
+
+app -> camera: Request camera access
+camera --> app: Access granted
+app -> camera: Activate camera
+camera --> app: Camera active
+
+app -> user: Display scan interface
+user -> camera: Position QR code in scan area
+camera -> app: Capture QR image
+app -> qrModule: Process QR image
+
+qrModule -> qrModule: Attempt to decode QR data
+qrModule -> qrModule: QR code unreadable
+qrModule --> app: Return error
+
+app -> user: Show "Could not read QR code"
+app -> user: Suggest trying again with better lighting/positioning
+
+@enduml

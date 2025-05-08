@@ -1,0 +1,73 @@
+@startuml UC33-ViewUserReports
+
+skinparam sequenceMessageAlign center
+skinparam backgroundColor white
+skinparam handwritten false
+
+title "UC-33: View User Reports"
+
+actor "Admin" as admin
+participant "Admin Portal" as portal
+participant "API Gateway" as gateway
+participant "Reporting\nService" as reportService
+participant "Analytics\nService" as analyticsService
+database "Database" as db
+
+== Main Success Scenario ==
+
+admin -> portal: Access reporting section
+portal -> admin: Display report options
+
+admin -> portal: Select report type and parameters
+portal -> gateway: Request report generation
+gateway -> reportService: Forward report request
+
+reportService -> reportService: Validate report parameters
+reportService -> analyticsService: Request data aggregation
+analyticsService -> db: Query user activity data
+db --> analyticsService: Return dataset
+
+analyticsService -> analyticsService: Process and aggregate data
+analyticsService -> reportService: Return processed data
+
+reportService -> reportService: Format report
+reportService -> reportService: Generate visualizations
+reportService -> gateway: Return completed report
+gateway -> portal: Forward report data
+
+portal -> portal: Render report interface
+portal -> admin: Display report data and visualizations
+
+admin -> portal: Request drill-down on specific data point
+portal -> gateway: Request detailed data
+gateway -> reportService: Request data drill-down
+reportService -> db: Query specific data point details
+db --> reportService: Return detailed data
+reportService -> gateway: Return detailed information
+gateway -> portal: Forward detailed data
+portal -> admin: Display detailed data view
+
+== Alternative Scenario: No Data for Selected Parameters ==
+
+admin -> portal: Access reporting section
+portal -> admin: Display report options
+
+admin -> portal: Select report type with narrow parameters
+portal -> gateway: Request report generation
+gateway -> reportService: Forward report request
+
+reportService -> reportService: Validate report parameters
+reportService -> analyticsService: Request data aggregation
+analyticsService -> db: Query user activity data
+db --> analyticsService: Return empty dataset
+
+analyticsService -> reportService: Return empty result
+reportService -> reportService: Generate empty report
+reportService -> reportService: Add parameter suggestions
+reportService -> gateway: Return empty report with suggestions
+gateway -> portal: Forward empty report
+
+portal -> admin: Display "No data found" message
+portal -> admin: Show alternative parameter suggestions
+
+@enduml 

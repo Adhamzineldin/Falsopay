@@ -1,0 +1,67 @@
+@startuml UC29-BlockAppTransactions
+
+skinparam sequenceMessageAlign center
+skinparam backgroundColor white
+skinparam handwritten false
+
+title "UC-29: Block App Transactions"
+
+actor "User" as user
+participant "FalsoPay App" as app
+participant "API Gateway" as gateway
+participant "Security\nService" as securityService
+participant "Transaction\nService" as txnService
+database "Database" as db
+
+== Main Success Scenario ==
+
+user -> app: Access security settings
+app -> user: Display security options
+
+user -> app: Select transaction block option
+app -> gateway: Request transaction block
+gateway -> securityService: Forward block request
+
+securityService -> txnService: Check pending transactions
+txnService -> db: Query pending transactions
+db --> txnService: No pending transactions
+txnService --> securityService: No pending transactions
+
+securityService -> db: Set account transaction status to blocked
+db --> securityService: Status updated
+
+securityService -> gateway: Block successful
+gateway -> app: Block confirmed
+app -> user: Display block confirmation
+
+== Alternative Scenario: Pending Transactions Exist ==
+
+user -> app: Access security settings
+app -> user: Display security options
+
+user -> app: Select transaction block option
+app -> gateway: Request transaction block
+gateway -> securityService: Forward block request
+
+securityService -> txnService: Check pending transactions
+txnService -> db: Query pending transactions
+db --> txnService: Pending transactions exist
+txnService --> securityService: Pending transactions found
+
+securityService -> gateway: Warning needed
+gateway -> app: Pending transactions warning
+app -> user: Display warning about pending transactions
+app -> user: Ask for confirmation to block anyway
+
+user -> app: Confirm block despite pending transactions
+app -> gateway: Confirm block request
+gateway -> securityService: Process confirmed block
+
+securityService -> db: Set account transaction status to blocked
+db --> securityService: Status updated
+
+securityService -> gateway: Block successful
+gateway -> app: Block confirmed
+app -> user: Display block confirmation
+
+@enduml 

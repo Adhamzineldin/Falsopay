@@ -1,0 +1,72 @@
+@startuml UC11-ViewTransactionHistory
+
+actor "Registered User" as User
+participant "FalsoPay App" as App
+participant "API Gateway" as Gateway
+participant "Transaction History Service" as HistoryService
+participant "Database" as DB
+
+title UC-11: View Transaction History
+
+User -> App: Request transaction history
+activate App
+
+App -> Gateway: GET /api/transactions/history
+activate Gateway
+
+Gateway -> HistoryService: Get transaction history
+activate HistoryService
+
+HistoryService -> DB: Query transaction records
+activate DB
+
+alt Retrieval error
+    DB --> HistoryService: Error retrieving data
+    HistoryService --> Gateway: 500 Internal Server Error
+    Gateway --> App: 500 Internal Server Error
+    App --> User: Display error and retry option
+else No transactions
+    DB --> HistoryService: Empty result
+    HistoryService --> Gateway: Empty transaction list
+    Gateway --> App: 200 OK with empty list
+    App --> User: Display empty history message
+else Transactions exist
+    DB --> HistoryService: Transaction records
+    deactivate DB
+    
+    HistoryService -> HistoryService: Sort chronologically
+    HistoryService --> Gateway: Transaction history
+    deactivate HistoryService
+    
+    Gateway --> App: 200 OK with transaction list
+    deactivate Gateway
+    
+    App --> User: Display transactions chronologically
+    
+    User -> App: Select filter option
+    activate App
+    
+    App -> App: Include Filter Transaction use case
+    
+    App -> Gateway: GET /api/transactions/history/filter?params
+    activate Gateway
+    
+    Gateway -> HistoryService: Get filtered transactions
+    activate HistoryService
+    
+    HistoryService -> DB: Query with filters
+    activate DB
+    DB --> HistoryService: Filtered records
+    deactivate DB
+    
+    HistoryService --> Gateway: Filtered transactions
+    deactivate HistoryService
+    
+    Gateway --> App: 200 OK with filtered results
+    deactivate Gateway
+    
+    App --> User: Display filtered transactions
+    deactivate App
+end
+
+@enduml 

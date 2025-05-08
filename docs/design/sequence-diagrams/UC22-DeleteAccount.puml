@@ -1,0 +1,94 @@
+@startuml UC22-DeleteAccount
+
+actor "Registered User" as User
+participant "FalsoPay App" as App
+participant "API Gateway" as Gateway
+participant "User Service" as UserService
+participant "Transaction Service" as TransService
+participant "Account Service" as AccountService
+participant "Notification Service" as NotifService
+participant "Database" as DB
+
+title UC-22: Delete Account
+
+User -> App: Select account deletion option
+activate App
+
+App -> App: Display warning about account deletion
+User -> App: Request account deletion
+App -> App: Request confirmation
+
+User -> App: Confirm deletion
+App -> Gateway: DELETE /api/users/account
+activate Gateway
+
+Gateway -> UserService: Delete account
+activate UserService
+
+UserService -> TransService: Check pending transactions
+activate TransService
+
+TransService -> DB: Query pending transactions
+activate DB
+DB --> TransService: Pending transactions
+deactivate DB
+
+alt Pending transactions exist
+    TransService --> UserService: Pending transactions exist
+    UserService --> Gateway: 409 Conflict
+    Gateway --> App: 409 Conflict
+    App --> User: Notify to resolve pending transactions first
+else Account has balance
+    TransService --> UserService: No pending transactions
+    deactivate TransService
+    
+    UserService -> AccountService: Check balance
+    activate AccountService
+    
+    AccountService -> DB: Query account balance
+    activate DB
+    DB --> AccountService: Balance
+    deactivate DB
+    
+    AccountService --> UserService: Account has balance
+    deactivate AccountService
+    
+    UserService --> Gateway: 409 Conflict
+    Gateway --> App: 409 Conflict
+    App --> User: Prompt to withdraw funds first
+else Account can be deleted
+    TransService --> UserService: No pending transactions
+    deactivate TransService
+    
+    UserService -> AccountService: Check balance
+    activate AccountService
+    
+    AccountService -> DB: Query account balance
+    activate DB
+    DB --> AccountService: Zero balance
+    deactivate DB
+    
+    AccountService --> UserService: No balance
+    deactivate AccountService
+    
+    UserService -> DB: Mark account for deletion
+    activate DB
+    DB --> UserService: Success
+    deactivate DB
+    
+    UserService -> NotifService: Send deletion confirmation
+    activate NotifService
+    NotifService --> UserService: Notification queued
+    deactivate NotifService
+    
+    UserService --> Gateway: 200 OK
+    deactivate UserService
+    
+    Gateway --> App: 200 OK
+    deactivate Gateway
+    
+    App --> User: Display deletion confirmation
+    deactivate App
+end
+
+@enduml 

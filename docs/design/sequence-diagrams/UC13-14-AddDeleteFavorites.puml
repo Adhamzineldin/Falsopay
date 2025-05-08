@@ -1,0 +1,122 @@
+@startuml UC13-14-AddDeleteFavorites
+
+actor "Registered User" as User
+participant "FalsoPay App" as App
+participant "API Gateway" as Gateway
+participant "Contact Service" as ContactService
+participant "Database" as DB
+
+title UC-13/14: Add Recipients to Favorites and Delete Favorite
+
+' Add to Favorites
+User -> App: Select option to add recipient to favorites
+activate App
+
+App -> Gateway: GET /api/contacts
+activate Gateway
+
+Gateway -> ContactService: Get contacts/history
+activate ContactService
+
+ContactService -> DB: Query recent contacts
+activate DB
+DB --> ContactService: Contact list
+deactivate DB
+
+ContactService --> Gateway: Contact list
+deactivate ContactService
+
+Gateway --> App: 200 OK with contacts
+deactivate Gateway
+
+App --> User: Display contacts list
+
+User -> App: Select recipient
+User -> App: Optionally enter nickname
+App -> Gateway: POST /api/contacts/favorites
+activate Gateway
+
+Gateway -> ContactService: Add to favorites
+activate ContactService
+
+ContactService -> DB: Check if already in favorites
+activate DB
+DB --> ContactService: Exists/Not exists
+deactivate DB
+
+alt Already in favorites
+    ContactService --> Gateway: 409 Conflict
+    Gateway --> App: 409 Conflict
+    App --> User: Display "Already in favorites" message
+else Success
+    ContactService -> DB: Save to favorites
+    activate DB
+    DB --> ContactService: Success
+    deactivate DB
+    
+    ContactService --> Gateway: 201 Created
+    deactivate ContactService
+    
+    Gateway --> App: 201 Created
+    deactivate Gateway
+    
+    App --> User: Display confirmation
+end
+
+' Delete Favorite (extended)
+User -> App: Access favorites list
+activate App
+
+App -> Gateway: GET /api/contacts/favorites
+activate Gateway
+
+Gateway -> ContactService: Get favorites
+activate ContactService
+
+ContactService -> DB: Query favorites
+activate DB
+DB --> ContactService: Favorites list
+deactivate DB
+
+ContactService --> Gateway: Favorites list
+deactivate ContactService
+
+Gateway --> App: 200 OK with favorites
+deactivate Gateway
+
+App --> User: Display favorites
+
+User -> App: Select recipient to remove
+User -> App: Confirm deletion
+App -> Gateway: DELETE /api/contacts/favorites/{id}
+activate Gateway
+
+Gateway -> ContactService: Remove from favorites
+activate ContactService
+
+alt Deletion error
+    ContactService -> DB: Remove favorite
+    activate DB
+    DB --> ContactService: Error
+    deactivate DB
+    
+    ContactService --> Gateway: 500 Internal Server Error
+    Gateway --> App: 500 Internal Server Error
+    App --> User: Display error and retry option
+else Success
+    ContactService -> DB: Remove favorite
+    activate DB
+    DB --> ContactService: Success
+    deactivate DB
+    
+    ContactService --> Gateway: 200 OK
+    deactivate ContactService
+    
+    Gateway --> App: 200 OK
+    deactivate Gateway
+    
+    App --> User: Display confirmation
+    deactivate App
+end
+
+@enduml 

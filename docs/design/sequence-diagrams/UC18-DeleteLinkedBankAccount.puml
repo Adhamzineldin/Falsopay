@@ -1,0 +1,93 @@
+@startuml UC18-DeleteLinkedBankAccount
+
+actor "Registered User" as User
+participant "FalsoPay App" as App
+participant "API Gateway" as Gateway
+participant "Banking Service" as BankService
+participant "Account Service" as AccountService
+participant "Database" as DB
+
+title UC-18: Delete Linked Bank Account
+
+User -> App: Select bank account management
+activate App
+
+App -> Gateway: GET /api/banking/accounts
+activate Gateway
+
+Gateway -> BankService: Get linked accounts
+activate BankService
+
+BankService -> DB: Retrieve bank accounts
+activate DB
+DB --> BankService: Bank accounts
+deactivate DB
+
+BankService --> Gateway: Linked bank accounts
+deactivate BankService
+
+Gateway --> App: 200 OK with accounts
+deactivate Gateway
+
+App --> User: Display linked accounts
+
+User -> App: Select account to unlink
+User -> App: Confirm deletion
+activate App
+
+App -> Gateway: DELETE /api/banking/accounts/{id}
+activate Gateway
+
+Gateway -> BankService: Delete bank account link
+activate BankService
+
+BankService -> AccountService: Check payment methods
+activate AccountService
+
+AccountService -> DB: Count payment methods
+activate DB
+DB --> AccountService: Payment methods count
+deactivate DB
+
+alt Would leave no payment method
+    AccountService --> BankService: Only payment method
+    BankService --> Gateway: 409 Conflict
+    Gateway --> App: 409 Conflict
+    App --> User: Warn and ask for confirmation
+    
+    User -> App: Confirm anyway
+    App -> Gateway: DELETE /api/banking/accounts/{id}?force=true
+    Gateway -> BankService: Force delete bank account
+    
+    BankService -> DB: Remove bank account link
+    activate DB
+    DB --> BankService: Success
+    deactivate DB
+    
+    BankService --> Gateway: 200 OK
+    deactivate BankService
+    
+    Gateway --> App: 200 OK
+    deactivate Gateway
+    
+    App --> User: Display confirmation
+else Multiple payment methods
+    AccountService --> BankService: Multiple payment methods
+    deactivate AccountService
+    
+    BankService -> DB: Remove bank account link
+    activate DB
+    DB --> BankService: Success
+    deactivate DB
+    
+    BankService --> Gateway: 200 OK
+    deactivate BankService
+    
+    Gateway --> App: 200 OK
+    deactivate Gateway
+    
+    App --> User: Display confirmation
+    deactivate App
+end
+
+@enduml 

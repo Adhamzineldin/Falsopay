@@ -1,0 +1,85 @@
+@startuml UC31-UpdateBalance
+
+skinparam sequenceMessageAlign center
+skinparam backgroundColor white
+skinparam handwritten false
+
+title "UC-31: Update Balance"
+
+participant "Transaction\nService" as txnService
+participant "Account\nService" as accountService
+participant "Notification\nService" as notifService
+participant "API Gateway" as gateway
+participant "FalsoPay App" as app
+actor "User" as user
+database "Database" as db
+
+== Main Success Scenario ==
+
+note over txnService: Transaction affecting balance completed
+
+txnService -> accountService: Request balance update
+accountService -> db: Retrieve current balance
+db --> accountService: Current balance
+
+accountService -> accountService: Calculate new balance
+accountService -> db: Update balance in database
+db --> accountService: Balance updated
+
+accountService -> notifService: Request balance notification
+notifService -> gateway: Send balance update notification
+
+alt User Active in App
+    gateway -> app: Push balance update
+    app -> app: Update UI with new balance
+    app -> user: Display updated balance
+else User Not Active
+    gateway -> gateway: Store notification for later
+end
+
+== Alternative Scenario: Update Conflict ==
+
+note over txnService: Multiple transactions affecting balance completed simultaneously
+
+txnService -> accountService: Request balance update (Transaction 1)
+txnService -> accountService: Request balance update (Transaction 2)
+
+accountService -> db: Retrieve current balance (Transaction 1)
+db --> accountService: Current balance (Transaction 1)
+
+accountService -> accountService: Calculate new balance (Transaction 1)
+accountService -> db: Update balance in database (Transaction 1)
+db --> accountService: Balance updated (Transaction 1)
+
+accountService -> db: Retrieve current balance (Transaction 2)
+db --> accountService: Current balance (After Transaction 1)
+
+accountService -> accountService: Calculate new balance (Transaction 2)
+accountService -> db: Update balance in database (Transaction 2)
+db --> accountService: Balance updated (Transaction 2)
+
+accountService -> txnService: Request transaction log verification
+txnService -> db: Retrieve transaction logs
+db --> txnService: Transaction logs
+
+txnService -> txnService: Verify balance consistency with logs
+txnService -> accountService: Verification result
+
+alt Balance Consistent
+    accountService -> notifService: Request balance notification
+    notifService -> gateway: Send balance update notification
+    gateway -> app: Push balance update
+    app -> app: Update UI with new balance
+    app -> user: Display updated balance
+else Balance Inconsistent
+    accountService -> accountService: Calculate correct balance from logs
+    accountService -> db: Force balance correction
+    db --> accountService: Balance corrected
+    accountService -> notifService: Request balance notification
+    notifService -> gateway: Send balance update notification
+    gateway -> app: Push balance update
+    app -> app: Update UI with new balance
+    app -> user: Display updated balance
+end
+
+@enduml 

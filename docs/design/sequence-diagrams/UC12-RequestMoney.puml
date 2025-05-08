@@ -1,0 +1,71 @@
+@startuml UC12-RequestMoney
+
+actor "Registered User" as User
+participant "FalsoPay App" as App
+participant "API Gateway" as Gateway
+participant "Transaction Service" as TransService
+participant "User Service" as UserService
+participant "Notification Service" as NotifService
+participant "Database" as DB
+
+title UC-12: Request Money
+
+User -> App: Select request money option
+activate App
+
+App -> App: Display request form
+User -> App: Enter recipient, amount, and reason
+App -> App: Validate input format
+
+App -> Gateway: POST /api/money-requests
+activate Gateway
+
+Gateway -> TransService: Create money request
+activate TransService
+
+TransService -> UserService: Verify recipient exists
+activate UserService
+
+UserService -> DB: Check recipient
+activate DB
+DB --> UserService: Recipient data
+deactivate DB
+
+alt Recipient not found
+    UserService --> TransService: Recipient not found
+    TransService --> Gateway: 404 Not Found
+    Gateway --> App: 404 Not Found
+    App --> User: Recipient not found error
+else Invalid amount
+    UserService --> TransService: Recipient exists
+    deactivate UserService
+    
+    TransService -> TransService: Validate amount
+    TransService --> Gateway: 400 Bad Request
+    Gateway --> App: 400 Bad Request
+    App --> User: Invalid amount error
+else Success
+    UserService --> TransService: Recipient exists
+    deactivate UserService
+    
+    TransService -> DB: Create money request record
+    activate DB
+    DB --> TransService: Success
+    deactivate DB
+    
+    TransService -> NotifService: Send request notification to recipient
+    activate NotifService
+    NotifService --> TransService: Notification queued
+    deactivate NotifService
+    
+    TransService --> Gateway: Request created
+    deactivate TransService
+    
+    Gateway --> App: 201 Created
+    deactivate Gateway
+    
+    App --> User: Display confirmation
+    deactivate App
+end
+
+@enduml 

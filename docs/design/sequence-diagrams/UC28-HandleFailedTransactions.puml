@@ -1,0 +1,91 @@
+@startuml UC28-HandleFailedTransactions
+
+skinparam sequenceMessageAlign center
+skinparam backgroundColor white
+skinparam handwritten false
+
+title "UC-28: Handle Failed Transactions"
+
+participant "Transaction\nService" as txnService
+participant "API Gateway" as gateway
+participant "Payment\nService" as paymentService
+participant "Notification\nService" as notifService
+participant "FalsoPay App" as app
+actor "User" as user
+actor "Admin" as admin
+database "Database" as db
+
+== Main Success Scenario ==
+
+note over txnService: Transaction failure detected
+
+txnService -> txnService: Identify failure reason
+txnService -> db: Log failure details
+db --> txnService: Log confirmed
+
+txnService -> paymentService: Initiate transaction reversal
+paymentService -> paymentService: Calculate reversal amount
+paymentService -> db: Update account balances
+db --> paymentService: Balances updated
+paymentService --> txnService: Reversal completed
+
+txnService -> gateway: Report transaction failure
+gateway -> notifService: Generate failure notification
+notifService -> gateway: Notification ready
+gateway -> app: Send failure notification
+
+app -> user: Display transaction failure notification
+app -> user: Show reversal confirmation
+
+txnService -> db: Create recovery record
+db --> txnService: Recovery record created
+
+== Alternative Scenario: Critical Failure ==
+
+note over txnService: Critical transaction failure detected
+
+txnService -> txnService: Identify critical failure
+txnService -> db: Log critical failure
+db --> txnService: Log confirmed
+
+txnService -> gateway: Alert administration
+gateway -> admin: Send critical failure alert
+
+txnService -> paymentService: Attempt transaction reversal
+paymentService -> paymentService: Calculate reversal amount
+paymentService -> db: Update account balances
+db --> paymentService: Balances updated
+paymentService --> txnService: Reversal completed
+
+txnService -> gateway: Report transaction failure
+gateway -> notifService: Generate failure notification
+notifService -> gateway: Notification ready
+gateway -> app: Send failure notification
+
+app -> user: Display transaction failure notification
+
+== Alternative Scenario: Recovery Not Possible ==
+
+note over txnService: Transaction failure detected
+
+txnService -> txnService: Identify failure reason
+txnService -> db: Log failure details
+db --> txnService: Log confirmed
+
+txnService -> paymentService: Attempt transaction reversal
+paymentService -> paymentService: Reversal not possible
+paymentService --> txnService: Reversal failed
+
+txnService -> gateway: Create support ticket
+gateway -> db: Store support ticket
+db --> gateway: Ticket stored
+
+txnService -> gateway: Report transaction failure
+gateway -> notifService: Generate failure notification with ticket number
+notifService -> gateway: Notification ready
+gateway -> app: Send failure notification
+
+app -> user: Display transaction failure notification
+app -> user: Show support ticket reference number
+
+@enduml 

@@ -1,0 +1,90 @@
+@startuml UC26-SendMoneyViaQRCode
+
+skinparam sequenceMessageAlign center
+skinparam backgroundColor white
+skinparam handwritten false
+
+title "UC-26: Send Money via QR Code"
+
+actor "User" as user
+participant "FalsoPay App" as app
+participant "API Gateway" as gateway
+participant "Payment\nService" as paymentService
+participant "QR Code\nService" as qrService
+participant "Transaction\nService" as txnService
+database "Database" as db
+
+== Main Success Scenario ==
+
+user -> app: Select send via QR option
+app -> app: Activate device camera
+
+user -> app: Scan QR code
+app -> app: Capture QR image
+app -> gateway: Send QR code for processing
+gateway -> qrService: Process QR code
+
+qrService -> qrService: Decode QR data
+qrService -> qrService: Validate QR format
+qrService -> qrService: Extract payment information
+qrService -> gateway: Return recipient information
+gateway -> app: Return recipient details
+
+app -> user: Show recipient and amount details
+user -> app: Confirm transaction
+app -> app: Request PIN
+
+user -> app: Enter PIN
+app -> gateway: Validate PIN
+gateway -> paymentService: Verify PIN
+paymentService -> db: Check PIN
+db --> paymentService: PIN valid
+paymentService --> gateway: PIN valid
+gateway --> app: PIN valid
+
+app -> gateway: Initiate money transfer
+gateway -> paymentService: Process payment
+paymentService -> paymentService: Verify sender balance
+paymentService -> txnService: Record transaction
+txnService -> db: Store transaction
+db --> txnService: Transaction stored
+txnService --> paymentService: Transaction recorded
+paymentService --> gateway: Transfer successful
+gateway --> app: Transfer successful
+
+app -> user: Display success confirmation
+
+== Alternative Scenario: Invalid QR Code ==
+
+user -> app: Select send via QR option
+app -> app: Activate device camera
+
+user -> app: Scan QR code
+app -> app: Capture QR image
+app -> gateway: Send QR code for processing
+gateway -> qrService: Process QR code
+
+qrService -> qrService: Decode QR data
+qrService -> qrService: QR code invalid/unreadable
+qrService -> gateway: Return error
+gateway -> app: Return error
+app -> user: Display error message
+
+== Alternative Scenario: QR Code Expired ==
+
+user -> app: Select send via QR option
+app -> app: Activate device camera
+
+user -> app: Scan QR code
+app -> app: Capture QR image
+app -> gateway: Send QR code for processing
+gateway -> qrService: Process QR code
+
+qrService -> qrService: Decode QR data
+qrService -> qrService: Validate QR format
+qrService -> qrService: Check expiration
+qrService -> gateway: QR code expired
+gateway -> app: QR code expired
+app -> user: Notify QR code expired
+
+@enduml 

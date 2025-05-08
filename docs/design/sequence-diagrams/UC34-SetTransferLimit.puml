@@ -1,0 +1,93 @@
+@startuml UC34-SetTransferLimit
+
+skinparam sequenceMessageAlign center
+skinparam backgroundColor white
+skinparam handwritten false
+
+title "UC-34: Set Transfer Limit"
+
+actor "User" as user
+participant "FalsoPay App" as app
+participant "API Gateway" as gateway
+participant "Security\nService" as securityService
+participant "Authentication\nService" as authService
+database "Database" as db
+
+== Main Success Scenario ==
+
+user -> app: Access security settings
+app -> user: Display security options
+
+user -> app: Select transfer limit option
+app -> app: Retrieve system maximum limit
+app -> user: Display current limit and input form
+
+user -> app: Enter new limit
+app -> app: Validate input format
+app -> gateway: Request limit update
+gateway -> securityService: Forward limit update
+
+securityService -> authService: Request verification
+authService -> app: Request PIN verification
+app -> user: Prompt for PIN
+
+user -> app: Enter PIN
+app -> gateway: Send PIN
+gateway -> authService: Verify PIN
+authService -> db: Check PIN
+db --> authService: PIN valid
+authService --> securityService: Verification successful
+
+securityService -> securityService: Validate limit against policy
+securityService -> db: Update transfer limit
+db --> securityService: Limit updated
+
+securityService -> gateway: Update successful
+gateway -> app: Confirm limit update
+app -> user: Display confirmation
+
+== Alternative Scenario: Limit Exceeds System Maximum ==
+
+user -> app: Access security settings
+app -> user: Display security options
+
+user -> app: Select transfer limit option
+app -> app: Retrieve system maximum limit
+app -> user: Display current limit and input form
+
+user -> app: Enter limit exceeding maximum
+app -> app: Validate input against maximum
+app -> user: Show error message
+app -> user: Suggest maximum allowed value
+
+== Alternative Scenario: Verification Fails ==
+
+user -> app: Access security settings
+app -> user: Display security options
+
+user -> app: Select transfer limit option
+app -> app: Retrieve system maximum limit
+app -> user: Display current limit and input form
+
+user -> app: Enter new limit
+app -> app: Validate input format
+app -> gateway: Request limit update
+gateway -> securityService: Forward limit update
+
+securityService -> authService: Request verification
+authService -> app: Request PIN verification
+app -> user: Prompt for PIN
+
+user -> app: Enter incorrect PIN
+app -> gateway: Send PIN
+gateway -> authService: Verify PIN
+authService -> db: Check PIN
+db --> authService: PIN invalid
+authService --> securityService: Verification failed
+
+securityService -> gateway: Verification required
+gateway -> app: Verification failed
+app -> user: Display error message
+app -> user: Prompt to retry
+
+@enduml 

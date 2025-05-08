@@ -1,0 +1,92 @@
+@startuml UC39-SendNotification
+
+skinparam sequenceMessageAlign center
+skinparam backgroundColor white
+skinparam handwritten false
+
+title "UC-39: Send Notification"
+
+actor "Admin" as admin
+participant "Admin Portal" as portal
+participant "API Gateway" as gateway
+participant "Notification\nService" as notifService
+participant "User\nService" as userService
+participant "FalsoPay App" as app
+actor "User" as user
+database "Database" as db
+
+== Main Success Scenario ==
+
+admin -> portal: Access notification management
+portal -> admin: Display notification interface
+
+admin -> portal: Create notification content
+admin -> portal: Select target audience
+admin -> portal: Set notification priority
+portal -> gateway: Submit notification
+gateway -> notifService: Process notification request
+
+notifService -> notifService: Validate notification content
+notifService -> userService: Request target user list
+userService -> db: Query users by criteria
+db --> userService: Return matching users
+userService --> notifService: Return target user list
+
+notifService -> db: Store notification
+db --> notifService: Notification stored
+
+notifService -> notifService: Process notification batch
+notifService -> gateway: Send notification to users
+gateway -> app: Deliver notification
+app -> user: Display notification
+
+notifService -> db: Update delivery status
+db --> notifService: Status updated
+
+notifService -> gateway: Return delivery report
+gateway -> portal: Forward delivery report
+portal -> admin: Display delivery confirmation
+
+== Alternative Scenario: Some Users Unreachable ==
+
+admin -> portal: Access notification management
+portal -> admin: Display notification interface
+
+admin -> portal: Create notification content
+admin -> portal: Select target audience
+admin -> portal: Set notification priority
+portal -> gateway: Submit notification
+gateway -> notifService: Process notification request
+
+notifService -> notifService: Validate notification content
+notifService -> userService: Request target user list
+userService -> db: Query users by criteria
+db --> userService: Return matching users
+userService --> notifService: Return target user list
+
+notifService -> db: Store notification
+db --> notifService: Notification stored
+
+notifService -> notifService: Process notification batch
+notifService -> gateway: Send notification to users
+gateway -> app: Attempt to deliver notification
+app -> app: Some users offline or unreachable
+
+notifService -> db: Update delivery status with partial success
+db --> notifService: Status updated
+
+notifService -> gateway: Return detailed delivery report
+gateway -> portal: Forward delivery report
+portal -> admin: Display partial delivery report
+portal -> admin: Show unreachable users count
+portal -> admin: Offer retry option for failed deliveries
+
+admin -> portal: Select retry for failed deliveries
+portal -> gateway: Request retry
+gateway -> notifService: Process retry request
+notifService -> notifService: Queue notifications for retry
+notifService -> gateway: Retry queued
+gateway -> portal: Confirm retry queued
+portal -> admin: Display retry confirmation
+
+@enduml 

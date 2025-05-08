@@ -1,0 +1,43 @@
+@startuml UC6-ReceiveConfirmation
+
+skinparam sequenceMessageAlign center
+skinparam backgroundColor white
+skinparam handwritten false
+
+title "UC-6: Receive Confirmation"
+
+actor "User" as user
+participant "FalsoPay App" as app
+participant "API Gateway" as gateway
+participant "Notification\nService" as notifService
+participant "Transaction\nService" as txnService
+database "Database" as db
+
+== Main Success Scenario ==
+
+note over app, txnService: An action requiring confirmation has completed
+
+txnService -> txnService: Generate confirmation message
+txnService -> db: Store confirmation record
+db --> txnService: Record stored
+
+txnService -> gateway: Send confirmation details
+gateway -> notifService: Request notification delivery
+notifService -> app: Push confirmation notification
+
+app -> user: Display confirmation
+app -> app: Store confirmation locally
+
+== Alternative Scenario: Delivery Failure ==
+
+txnService -> gateway: Send confirmation details
+gateway -> notifService: Request notification delivery
+notifService -> notifService: Delivery attempt fails
+notifService -> gateway: Report delivery failure
+gateway -> txnService: Notification failed
+txnService -> db: Mark for retry
+db --> txnService: Record updated
+
+note over txnService, gateway: System will retry delivery \nlater or during next user login
+
+@enduml 

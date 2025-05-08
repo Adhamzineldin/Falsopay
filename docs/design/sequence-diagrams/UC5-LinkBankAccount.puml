@@ -1,0 +1,110 @@
+@startuml UC5-LinkBankAccount
+
+actor "Registered User" as User
+participant "FalsoPay App" as App
+participant "API Gateway" as Gateway
+participant "Banking Service" as BankService
+participant "External Banking API" as ExtBank
+participant "Notification Service" as NotifService
+participant "Database" as DB
+
+title UC-5: Link Bank Account
+
+User -> App: Select "Link Bank Account"
+activate App
+
+App -> App: Display bank account form
+User -> App: Enter bank account details
+App -> App: Validate input format
+
+App -> Gateway: POST /api/banking/link
+activate Gateway
+
+Gateway -> BankService: Link bank account
+activate BankService
+
+BankService -> BankService: Validate bank details format
+BankService -> ExtBank: Verify account existence
+activate ExtBank
+
+alt Invalid bank details
+    ExtBank --> BankService: Invalid account details
+    BankService --> Gateway: 400 Bad Request
+    Gateway --> App: 400 Bad Request
+    App --> User: Display error message
+else Account exists
+    ExtBank --> BankService: Account exists
+    deactivate ExtBank
+    
+    BankService -> ExtBank: Request account verification
+    activate ExtBank
+    ExtBank -> ExtBank: Initiate micro-deposits
+    ExtBank --> BankService: Verification initiated
+    deactivate ExtBank
+    
+    BankService -> DB: Store pending bank account
+    activate DB
+    DB --> BankService: Success
+    deactivate DB
+    
+    BankService -> NotifService: Send verification instructions
+    activate NotifService
+    NotifService --> BankService: Notification queued
+    deactivate NotifService
+    
+    BankService --> Gateway: 202 Accepted
+    deactivate BankService
+    
+    Gateway --> App: 202 Accepted with verification details
+    deactivate Gateway
+    
+    App --> User: Display verification instructions
+    
+    note right
+        User receives micro-deposits in their bank account
+        (typically takes 1-3 business days)
+    end note
+    
+    User -> App: Enter verification amounts
+    activate App
+    
+    App -> Gateway: POST /api/banking/verify
+    activate Gateway
+    
+    Gateway -> BankService: Verify amounts
+    activate BankService
+    
+    BankService -> ExtBank: Validate verification amounts
+    activate ExtBank
+    
+    alt Verification fails
+        ExtBank --> BankService: Verification failed
+        BankService --> Gateway: 400 Bad Request
+        Gateway --> App: 400 Bad Request
+        App --> User: Display verification error
+    else Verification succeeds
+        ExtBank --> BankService: Verification successful
+        deactivate ExtBank
+        
+        BankService -> DB: Update bank account status to verified
+        activate DB
+        DB --> BankService: Success
+        deactivate DB
+        
+        BankService -> NotifService: Send confirmation
+        activate NotifService
+        NotifService --> BankService: Notification queued
+        deactivate NotifService
+        
+        BankService --> Gateway: 200 OK
+        deactivate BankService
+        
+        Gateway --> App: 200 OK
+        deactivate Gateway
+        
+        App --> User: Display confirmation
+        deactivate App
+    end
+end
+
+@enduml 

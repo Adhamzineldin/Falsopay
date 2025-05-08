@@ -1,0 +1,98 @@
+@startuml UC24-ContactCustomerSupport
+
+actor "Registered User" as User
+participant "FalsoPay App" as App
+participant "API Gateway" as Gateway
+participant "Support Service" as SupportService
+participant "User Service" as UserService
+participant "Notification Service" as NotifService
+participant "Database" as DB
+
+title UC-24: Contact Customer Support
+
+User -> App: Select contact support option
+activate App
+
+App -> Gateway: GET /api/support/categories
+activate Gateway
+
+Gateway -> SupportService: Get issue categories
+activate SupportService
+
+SupportService -> DB: Retrieve categories
+activate DB
+DB --> SupportService: Categories list
+deactivate DB
+
+SupportService --> Gateway: Issue categories
+deactivate SupportService
+
+Gateway --> App: 200 OK with categories
+deactivate Gateway
+
+App --> User: Display issue categories
+
+User -> App: Select issue category
+User -> App: Enter issue description
+User -> App: Submit support request
+activate App
+
+App -> Gateway: POST /api/support/tickets
+activate Gateway
+
+Gateway -> SupportService: Create support ticket
+activate SupportService
+
+SupportService -> UserService: Get user details
+activate UserService
+
+UserService -> DB: Retrieve user info
+activate DB
+DB --> UserService: User data
+deactivate DB
+
+UserService --> SupportService: User details
+deactivate UserService
+
+alt System offers FAQ solutions
+    SupportService -> DB: Search FAQ for similar issues
+    activate DB
+    DB --> SupportService: Matching FAQs
+    deactivate DB
+    
+    SupportService --> Gateway: 200 OK with FAQ suggestions
+    Gateway --> App: 200 OK with FAQ suggestions
+    App --> User: Display FAQ solutions first
+    
+    User -> App: Choose to continue with ticket
+    App -> Gateway: POST /api/support/tickets/confirm
+    activate Gateway
+    Gateway -> SupportService: Confirm ticket creation
+else Direct ticket creation
+    SupportService -> SupportService: Determine ticket priority
+end
+
+SupportService -> DB: Create support ticket
+activate DB
+DB --> SupportService: Ticket created with reference number
+deactivate DB
+
+alt Critical issue
+    SupportService -> SupportService: Flag for priority handling
+end
+
+SupportService -> NotifService: Send ticket confirmation
+activate NotifService
+NotifService --> SupportService: Notification queued
+deactivate NotifService
+
+SupportService --> Gateway: 201 Created with ticket reference
+deactivate SupportService
+
+Gateway --> App: 201 Created with ticket reference
+deactivate Gateway
+
+App --> User: Display confirmation with reference number
+deactivate App
+
+@enduml 

@@ -1,0 +1,117 @@
+@startuml UC38-SetTicketStatus
+
+skinparam sequenceMessageAlign center
+skinparam backgroundColor white
+skinparam handwritten false
+
+title "UC-38: Set Ticket Status"
+
+actor "Admin" as admin
+participant "Admin Portal" as portal
+participant "API Gateway" as gateway
+participant "Support\nService" as supportService
+participant "Notification\nService" as notifService
+participant "FalsoPay App" as app
+actor "User" as user
+database "Database" as db
+
+== Main Success Scenario ==
+
+admin -> portal: Access support tickets
+portal -> gateway: Request ticket list
+gateway -> supportService: Get tickets
+supportService -> db: Query tickets
+db --> supportService: Return tickets
+supportService -> gateway: Return ticket list
+gateway -> portal: Forward ticket list
+
+portal -> admin: Display ticket list
+
+admin -> portal: Select ticket to update
+portal -> gateway: Request ticket details
+gateway -> supportService: Get ticket details
+supportService -> db: Query ticket data
+db --> supportService: Return ticket data
+supportService -> gateway: Return ticket details
+gateway -> portal: Forward ticket details
+
+portal -> admin: Display ticket details
+
+admin -> portal: Select new status
+admin -> portal: Add status note
+portal -> gateway: Submit status update
+gateway -> supportService: Process status update
+
+supportService -> db: Update ticket status
+db --> supportService: Status updated
+supportService -> db: Add status note
+db --> supportService: Note added
+
+supportService -> notifService: Request user notification
+notifService -> gateway: Generate notification
+gateway -> app: Send status update notification
+app -> user: Display ticket status update
+
+supportService -> gateway: Update successful
+gateway -> portal: Forward success response
+portal -> admin: Display success confirmation
+
+== Alternative Scenario: Status Change Requires Approval ==
+
+admin -> portal: Access support tickets
+portal -> gateway: Request ticket list
+gateway -> supportService: Get tickets
+supportService -> db: Query tickets
+db --> supportService: Return tickets
+supportService -> gateway: Return ticket list
+gateway -> portal: Forward ticket list
+
+portal -> admin: Display ticket list
+
+admin -> portal: Select ticket to update
+portal -> gateway: Request ticket details
+gateway -> supportService: Get ticket details
+supportService -> db: Query ticket data
+db --> supportService: Return ticket data
+supportService -> gateway: Return ticket details
+gateway -> portal: Forward ticket details
+
+portal -> admin: Display ticket details
+
+admin -> portal: Select sensitive status change
+admin -> portal: Add status note
+portal -> gateway: Submit status update
+gateway -> supportService: Process status update
+
+supportService -> supportService: Detect sensitive status change
+supportService -> db: Flag ticket for supervisor review
+db --> supportService: Ticket flagged
+
+supportService -> gateway: Request supervisor approval
+gateway -> portal: Forward approval request
+portal -> admin: Display "Requires supervisor approval" message
+
+actor "Supervisor" as supervisor
+note over portal, supervisor: Later - Supervisor reviews
+
+supervisor -> portal: Review flagged ticket
+portal -> gateway: Request flagged ticket
+gateway -> supportService: Get flagged ticket
+supportService -> db: Query ticket data
+db --> supportService: Return ticket data
+supportService -> gateway: Return ticket details
+gateway -> portal: Forward ticket details
+
+portal -> supervisor: Display ticket details with pending status change
+supervisor -> portal: Approve status change
+portal -> gateway: Submit approval
+gateway -> supportService: Process approval
+
+supportService -> db: Update ticket status
+db --> supportService: Status updated
+supportService -> notifService: Request user notification
+notifService -> gateway: Generate notification
+gateway -> app: Send status update notification
+app -> user: Display ticket status update
+
+@enduml 

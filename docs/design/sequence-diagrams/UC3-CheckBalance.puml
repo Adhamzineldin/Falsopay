@@ -1,0 +1,40 @@
+@startuml UC3-CheckBalance
+
+actor "Registered User" as User
+participant "FalsoPay App" as App
+participant "API Gateway" as Gateway
+participant "Account Service" as AccountService
+participant "Database" as DB
+
+title UC-3: Check Balance
+
+User -> App: Request to view balance
+activate App
+
+App -> Gateway: GET /api/accounts/balance
+activate Gateway
+
+Gateway -> AccountService: Retrieve balance
+activate AccountService
+
+AccountService -> DB: Query account balance
+activate DB
+DB --> AccountService: Balance data
+deactivate DB
+
+alt Connection error
+    AccountService --> Gateway: 500 Internal Server Error
+    Gateway --> App: 500 Internal Server Error
+    App --> User: Display error message and retry option
+else Success
+    AccountService --> Gateway: Balance information
+    deactivate AccountService
+    
+    Gateway --> App: 200 OK with balance data
+    deactivate Gateway
+    
+    App --> User: Display current balance
+    deactivate App
+end
+
+@enduml 

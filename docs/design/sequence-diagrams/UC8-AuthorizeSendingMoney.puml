@@ -1,0 +1,75 @@
+@startuml UC8-AuthorizeSendingMoney
+
+actor "Registered User" as User
+participant "FalsoPay App" as App
+participant "API Gateway" as Gateway
+participant "Transaction Service" as TransService
+participant "Account Service" as AccountService
+participant "Security Service" as SecService
+participant "Database" as DB
+
+title UC-8: Authorize Sending Money
+
+User -> App: Input recipient and amount
+activate App
+
+App -> App: Validate input format
+App -> Gateway: POST /api/transactions/authorize
+activate Gateway
+
+Gateway -> TransService: Authorize transaction
+activate TransService
+
+TransService -> AccountService: Check balance
+activate AccountService
+
+AccountService -> DB: Query account balance
+activate DB
+DB --> AccountService: Balance data
+deactivate DB
+
+alt Insufficient funds
+    AccountService --> TransService: Insufficient balance
+    TransService --> Gateway: 400 Bad Request
+    Gateway --> App: 400 Bad Request
+    App --> User: Display insufficient funds error
+else Balance sufficient
+    AccountService --> TransService: Balance sufficient
+    deactivate AccountService
+    
+    TransService -> TransService: Create transaction draft
+    
+    App -> User: Request authorization (PIN/biometric)
+    User -> App: Provide authorization
+    
+    App -> Gateway: POST /api/security/authorize
+    Gateway -> SecService: Validate authorization
+    activate SecService
+    
+    alt Authorization fails
+        SecService --> Gateway: 401 Unauthorized
+        Gateway --> App: 401 Unauthorized
+        App --> User: Display authorization error
+    else Authorization succeeds
+        SecService --> Gateway: 200 OK
+        deactivate SecService
+        
+        TransService -> DB: Mark transaction as authorized
+        activate DB
+        DB --> TransService: Success
+        deactivate DB
+        
+        TransService -> TransService: Include Send Money use case
+        
+        TransService --> Gateway: Transaction authorized
+        deactivate TransService
+        
+        Gateway --> App: 200 OK with transaction details
+        deactivate Gateway
+        
+        App --> User: Display confirmation and proceed to sending
+        deactivate App
+    end
+end
+
+@enduml 

@@ -1,0 +1,64 @@
+@startuml UC15-ChangeDisplayName
+
+actor "Registered User" as User
+participant "FalsoPay App" as App
+participant "API Gateway" as Gateway
+participant "User Service" as UserService
+participant "Database" as DB
+
+title UC-15: Change Display Name
+
+User -> App: Access profile settings
+activate App
+
+App -> Gateway: GET /api/users/profile
+activate Gateway
+
+Gateway -> UserService: Get user profile
+activate UserService
+
+UserService -> DB: Retrieve user data
+activate DB
+DB --> UserService: User profile data
+deactivate DB
+
+UserService --> Gateway: User profile
+deactivate UserService
+
+Gateway --> App: 200 OK with profile data
+deactivate Gateway
+
+App --> User: Display profile settings
+
+User -> App: Enter new display name
+User -> App: Submit changes
+activate App
+
+App -> App: Validate display name format
+
+alt Invalid name
+    App --> User: Show requirements and error message
+else Valid name
+    App -> Gateway: PATCH /api/users/display-name
+    activate Gateway
+    
+    Gateway -> UserService: Update display name
+    activate UserService
+    
+    UserService -> UserService: Validate name
+    UserService -> DB: Update display name
+    activate DB
+    DB --> UserService: Success
+    deactivate DB
+    
+    UserService --> Gateway: 200 OK
+    deactivate UserService
+    
+    Gateway --> App: 200 OK
+    deactivate Gateway
+    
+    App --> User: Display confirmation
+    deactivate App
+end
+
+@enduml 

@@ -1,0 +1,67 @@
+@startuml UC20-FilterTransaction
+
+actor "Registered User" as User
+participant "FalsoPay App" as App
+participant "API Gateway" as Gateway
+participant "Transaction History Service" as HistoryService
+participant "Database" as DB
+
+title UC-20: Filter Transaction
+
+User -> App: View transaction history
+activate App
+
+App -> Gateway: GET /api/transactions/history
+activate Gateway
+
+Gateway -> HistoryService: Get transaction history
+activate HistoryService
+
+HistoryService -> DB: Query transactions
+activate DB
+DB --> HistoryService: Transaction records
+deactivate DB
+
+HistoryService --> Gateway: Transaction history
+deactivate HistoryService
+
+Gateway --> App: 200 OK with transactions
+deactivate Gateway
+
+App --> User: Display transaction history
+
+User -> App: Select filter option
+activate App
+
+App -> App: Display filter criteria options
+App -> User: Show filter form (date, amount, type, etc.)
+User -> App: Set filter criteria
+User -> App: Apply filters
+
+App -> Gateway: GET /api/transactions/history?filters
+activate Gateway
+
+Gateway -> HistoryService: Get filtered transactions
+activate HistoryService
+
+HistoryService -> DB: Query with filters
+activate DB
+DB --> HistoryService: Filtered records
+deactivate DB
+
+alt No matching transactions
+    HistoryService --> Gateway: Empty result
+    Gateway --> App: 200 OK with empty list
+    App --> User: Display empty result message
+else Matching transactions
+    HistoryService --> Gateway: Filtered transactions
+    deactivate HistoryService
+    
+    Gateway --> App: 200 OK with filtered results
+    deactivate Gateway
+    
+    App --> User: Display filtered transactions
+    deactivate App
+end
+
+@enduml 

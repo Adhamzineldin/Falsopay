@@ -1,0 +1,77 @@
+@startuml UC17-ChangeDefaultIPA
+
+actor "Registered User" as User
+participant "FalsoPay App" as App
+participant "API Gateway" as Gateway
+participant "Account Service" as AccountService
+participant "Database" as DB
+
+title UC-17: Change Default IPA Address
+
+User -> App: Access IPA settings
+activate App
+
+App -> Gateway: GET /api/accounts/ipa
+activate Gateway
+
+Gateway -> AccountService: Get IPA addresses
+activate AccountService
+
+AccountService -> DB: Retrieve IPA addresses
+activate DB
+DB --> AccountService: IPA addresses
+deactivate DB
+
+AccountService --> Gateway: IPA addresses list
+deactivate AccountService
+
+Gateway --> App: 200 OK with IPA list
+deactivate Gateway
+
+App --> User: Display IPA addresses
+
+alt No alternative IPAs available
+    App --> User: Display option to create new IPA
+    User -> App: Select create new IPA
+    App -> Gateway: POST /api/accounts/ipa
+    activate Gateway
+    
+    Gateway -> AccountService: Create new IPA
+    activate AccountService
+    
+    AccountService -> DB: Create IPA record
+    activate DB
+    DB --> AccountService: Success
+    deactivate DB
+    
+    AccountService --> Gateway: 201 Created
+    deactivate AccountService
+    
+    Gateway --> App: 201 Created with new IPA
+    deactivate Gateway
+    
+    App --> User: Display new IPA
+else Multiple IPAs exist
+    User -> App: Select new default IPA
+    App -> Gateway: PATCH /api/accounts/ipa/default/{id}
+    activate Gateway
+    
+    Gateway -> AccountService: Set default IPA
+    activate AccountService
+    
+    AccountService -> DB: Update default IPA
+    activate DB
+    DB --> AccountService: Success
+    deactivate DB
+    
+    AccountService --> Gateway: 200 OK
+    deactivate AccountService
+    
+    Gateway --> App: 200 OK
+    deactivate Gateway
+    
+    App --> User: Display confirmation
+    deactivate App
+end
+
+@enduml 

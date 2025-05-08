@@ -1,0 +1,69 @@
+@startuml UC23-PINForTransaction
+
+actor "Registered User" as User
+participant "FalsoPay App" as App
+participant "API Gateway" as Gateway
+participant "Security Service" as SecService
+participant "Database" as DB
+
+title UC-23: PIN For Transaction
+
+User -> App: Initiate transaction requiring PIN
+activate App
+
+App -> App: Request PIN entry
+User -> App: Enter PIN
+
+App -> Gateway: POST /api/security/verify-pin
+activate Gateway
+
+Gateway -> SecService: Verify PIN
+activate SecService
+
+SecService -> DB: Get stored PIN hash
+activate DB
+DB --> SecService: PIN hash
+deactivate DB
+
+SecService -> SecService: Validate PIN
+
+alt Incorrect PIN
+    SecService -> DB: Log failed attempt
+    activate DB
+    DB --> SecService: Success
+    deactivate DB
+    
+    SecService -> SecService: Check failed attempts count
+    
+    alt Too many failed attempts
+        SecService -> DB: Temporarily lock transactions
+        activate DB
+        DB --> SecService: Success
+        deactivate DB
+        
+        SecService --> Gateway: 429 Too Many Requests
+        Gateway --> App: 429 Too Many Requests
+        App --> User: Display temporary lock message
+    else Under attempt limit
+        SecService --> Gateway: 401 Unauthorized
+        Gateway --> App: 401 Unauthorized
+        App --> User: Display PIN error and retry option
+    end
+else PIN valid
+    SecService -> DB: Reset failed attempts counter
+    activate DB
+    DB --> SecService: Success
+    deactivate DB
+    
+    SecService --> Gateway: 200 OK
+    deactivate SecService
+    
+    Gateway --> App: 200 OK
+    deactivate Gateway
+    
+    App -> App: Authorize transaction to proceed
+    App --> User: Continue with transaction
+    deactivate App
+end
+
+@enduml 

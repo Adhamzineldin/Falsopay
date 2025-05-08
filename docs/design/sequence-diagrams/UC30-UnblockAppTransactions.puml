@@ -1,0 +1,90 @@
+@startuml UC30-UnblockAppTransactions
+
+skinparam sequenceMessageAlign center
+skinparam backgroundColor white
+skinparam handwritten false
+
+title "UC-30: Unblock App Transactions"
+
+actor "User" as user
+participant "FalsoPay App" as app
+participant "API Gateway" as gateway
+participant "Security\nService" as securityService
+participant "Authentication\nService" as authService
+database "Database" as db
+
+== Main Success Scenario ==
+
+user -> app: Access security settings
+app -> user: Display security options
+
+user -> app: Select unblock transactions option
+app -> gateway: Request transaction unblock
+gateway -> securityService: Forward unblock request
+
+securityService -> securityService: Request additional verification
+securityService -> authService: Request identity verification
+authService -> app: Request verification method
+
+app -> user: Display verification options
+user -> app: Select verification method
+app -> gateway: Send verification method
+gateway -> authService: Forward verification method
+
+alt PIN Verification
+    authService -> app: Request PIN
+    app -> user: Prompt for PIN
+    user -> app: Enter PIN
+    app -> gateway: Send PIN
+    gateway -> authService: Verify PIN
+    authService -> db: Check PIN
+    db --> authService: PIN valid
+else 2FA Verification
+    authService -> app: Send 2FA code to registered device/email
+    app -> user: Prompt for 2FA code
+    user -> app: Enter 2FA code
+    app -> gateway: Send 2FA code
+    gateway -> authService: Verify 2FA code
+    authService -> authService: Validate 2FA code
+end
+
+authService -> securityService: Identity verified
+securityService -> db: Set account transaction status to active
+db --> securityService: Status updated
+
+securityService -> gateway: Unblock successful
+gateway -> app: Unblock confirmed
+app -> user: Display unblock confirmation
+
+== Alternative Scenario: Identity Verification Fails ==
+
+user -> app: Access security settings
+app -> user: Display security options
+
+user -> app: Select unblock transactions option
+app -> gateway: Request transaction unblock
+gateway -> securityService: Forward unblock request
+
+securityService -> securityService: Request additional verification
+securityService -> authService: Request identity verification
+authService -> app: Request verification method
+
+app -> user: Display verification options
+user -> app: Select verification method
+app -> gateway: Send verification method
+gateway -> authService: Forward verification method
+
+authService -> app: Request verification input
+app -> user: Prompt for verification
+user -> app: Enter incorrect verification
+app -> gateway: Send verification
+gateway -> authService: Verify input
+authService -> authService: Verification fails
+
+authService -> securityService: Identity verification failed
+securityService -> gateway: Unblock denied
+gateway -> app: Verification failed
+app -> user: Display verification failure
+app -> user: Suggest contacting support
+
+@enduml 

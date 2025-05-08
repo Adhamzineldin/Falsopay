@@ -1,0 +1,99 @@
+@startuml UC37-ManageRoles
+
+skinparam sequenceMessageAlign center
+skinparam backgroundColor white
+skinparam handwritten false
+
+title "UC-37: Manage Roles"
+
+actor "Admin" as admin
+participant "Admin Portal" as portal
+participant "API Gateway" as gateway
+participant "User Management\nService" as userMgmtService
+participant "Authorization\nService" as authzService
+participant "Audit\nService" as auditService
+database "Database" as db
+
+== Main Success Scenario ==
+
+admin -> portal: Access role management
+portal -> gateway: Request user list
+gateway -> userMgmtService: Forward user list request
+userMgmtService -> db: Query user accounts
+db --> userMgmtService: Return user list
+userMgmtService -> gateway: Return user list
+gateway -> portal: Forward user list
+
+portal -> admin: Display user list
+
+admin -> portal: Select user
+portal -> gateway: Request user details
+gateway -> userMgmtService: Forward user details request
+userMgmtService -> db: Query user roles
+db --> userMgmtService: Return user roles
+userMgmtService -> gateway: Return user roles
+gateway -> portal: Forward user roles
+
+portal -> portal: Display current role assignments
+portal -> admin: Show role modification interface
+
+admin -> portal: Modify role assignments
+portal -> gateway: Submit role changes
+gateway -> userMgmtService: Forward role change request
+
+userMgmtService -> authzService: Validate role changes
+authzService -> db: Check role compatibility
+db --> authzService: Role definitions
+authzService -> authzService: Verify combinations valid
+authzService --> userMgmtService: Role changes valid
+
+userMgmtService -> db: Update user roles
+db --> userMgmtService: Roles updated
+
+userMgmtService -> auditService: Log role changes
+auditService -> db: Store audit entry
+db --> auditService: Audit recorded
+
+userMgmtService -> gateway: Role update successful
+gateway -> portal: Forward success response
+portal -> admin: Display success confirmation
+
+== Alternative Scenario: Invalid Role Combination ==
+
+admin -> portal: Access role management
+portal -> gateway: Request user list
+gateway -> userMgmtService: Forward user list request
+userMgmtService -> db: Query user accounts
+db --> userMgmtService: Return user list
+userMgmtService -> gateway: Return user list
+gateway -> portal: Forward user list
+
+portal -> admin: Display user list
+
+admin -> portal: Select user
+portal -> gateway: Request user details
+gateway -> userMgmtService: Forward user details request
+userMgmtService -> db: Query user roles
+db --> userMgmtService: Return user roles
+userMgmtService -> gateway: Return user roles
+gateway -> portal: Forward user roles
+
+portal -> portal: Display current role assignments
+portal -> admin: Show role modification interface
+
+admin -> portal: Modify roles with incompatible combination
+portal -> gateway: Submit role changes
+gateway -> userMgmtService: Forward role change request
+
+userMgmtService -> authzService: Validate role changes
+authzService -> db: Check role compatibility
+db --> authzService: Role definitions
+authzService -> authzService: Detect incompatible roles
+authzService --> userMgmtService: Role changes invalid
+
+userMgmtService -> gateway: Role update invalid
+gateway -> portal: Forward error response
+portal -> admin: Display error message
+portal -> admin: Highlight incompatible roles
+
+@enduml 

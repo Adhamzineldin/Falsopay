@@ -1,0 +1,62 @@
+@startuml UC7-VerifyBankAccountDetails
+
+skinparam sequenceMessageAlign center
+skinparam backgroundColor white
+skinparam handwritten false
+
+title "UC-7: Verify Bank Account Details"
+
+actor "User" as user
+participant "FalsoPay App" as app
+participant "API Gateway" as gateway
+participant "Account\nService" as accountService
+participant "Banking\nPartner API" as bankingAPI
+database "Database" as db
+
+== Main Success Scenario ==
+
+note over app, accountService: User has provided bank account information
+
+app -> gateway: Verify bank account request
+gateway -> accountService: Forward verification request
+accountService -> accountService: Validate input data
+accountService -> bankingAPI: Send verification request
+
+bankingAPI -> bankingAPI: Validate account details
+bankingAPI -> bankingAPI: Verify account ownership
+bankingAPI --> accountService: Verification successful
+
+accountService -> db: Mark account as verified
+db --> accountService: Update successful
+accountService -> gateway: Verification result
+gateway -> app: Verification successful
+app -> user: Display success message
+
+== Alternative Scenario: Verification Fails ==
+
+app -> gateway: Verify bank account request
+gateway -> accountService: Forward verification request
+accountService -> accountService: Validate input data
+accountService -> bankingAPI: Send verification request
+
+bankingAPI -> bankingAPI: Validate account details
+bankingAPI -> bankingAPI: Verification fails
+bankingAPI --> accountService: Verification failed (reason)
+
+accountService -> gateway: Verification failed
+gateway -> app: Verification failed with reason
+app -> user: Display failure message\nSuggest alternative method
+
+== Alternative Scenario: Timeout ==
+
+app -> gateway: Verify bank account request
+gateway -> accountService: Forward verification request
+accountService -> bankingAPI: Send verification request
+
+note over accountService, bankingAPI: Response timeout occurs
+
+accountService -> gateway: Verification timeout
+gateway -> app: Verification timeout
+app -> user: Display timeout message\nOffer retry option
+
+@enduml 

@@ -1,0 +1,109 @@
+@startuml UC36-DeactivateUserAccount
+
+actor "Admin" as Admin
+participant "Admin Dashboard" as Dashboard
+participant "API Gateway" as Gateway
+participant "User Management Service" as UserService
+participant "Transaction Service" as TransService
+participant "Notification Service" as NotifService
+participant "Database" as DB
+
+title UC-36: Deactivate User Account
+
+Admin -> Dashboard: Search for user account
+activate Dashboard
+
+Dashboard -> Gateway: GET /api/admin/users/search?q={query}
+activate Gateway
+
+Gateway -> UserService: Search users
+activate UserService
+
+UserService -> DB: Query user records
+activate DB
+DB --> UserService: User records
+deactivate DB
+
+UserService --> Gateway: User search results
+deactivate UserService
+
+Gateway --> Dashboard: 200 OK with search results
+deactivate Gateway
+
+Dashboard --> Admin: Display search results
+
+Admin -> Dashboard: Select user account
+Dashboard -> Gateway: GET /api/admin/users/{userId}
+activate Gateway
+
+Gateway -> UserService: Get user details
+activate UserService
+
+UserService -> DB: Retrieve user data
+activate DB
+DB --> UserService: User data
+deactivate DB
+
+UserService --> Gateway: User details
+deactivate UserService
+
+Gateway --> Dashboard: 200 OK with user details
+deactivate Gateway
+
+Dashboard --> Admin: Display user details
+
+Admin -> Dashboard: Select deactivate option
+Admin -> Dashboard: Enter deactivation reason
+Dashboard -> Gateway: POST /api/admin/users/{userId}/deactivate
+activate Gateway
+
+Gateway -> UserService: Deactivate user
+activate UserService
+
+UserService -> TransService: Check pending transactions
+activate TransService
+
+TransService -> DB: Query pending transactions
+activate DB
+DB --> TransService: Pending transactions
+deactivate DB
+
+alt Pending transactions exist
+    TransService --> UserService: Warning: Pending transactions
+    UserService --> Gateway: 409 Conflict
+    Gateway --> Dashboard: 409 Conflict
+    Dashboard --> Admin: Display warning about pending transactions
+    
+    Admin -> Dashboard: Confirm deactivation anyway
+    Dashboard -> Gateway: POST /api/admin/users/{userId}/deactivate?force=true
+    Gateway -> UserService: Force deactivate user
+else No pending transactions
+    TransService --> UserService: No pending transactions
+    deactivate TransService
+end
+
+UserService -> DB: Update user status to deactivated
+activate DB
+DB --> UserService: Success
+deactivate DB
+
+UserService -> DB: Log deactivation with reason
+activate DB
+DB --> UserService: Success
+deactivate DB
+
+UserService -> NotifService: Send notification to user
+activate NotifService
+NotifService --> UserService: Notification queued
+deactivate NotifService
+
+UserService --> Gateway: User deactivated
+deactivate UserService
+
+Gateway --> Dashboard: 200 OK
+deactivate Gateway
+
+Dashboard --> Admin: Display confirmation
+deactivate Dashboard
+
+@enduml 

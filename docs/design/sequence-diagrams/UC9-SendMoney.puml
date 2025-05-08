@@ -1,0 +1,115 @@
+@startuml UC9-SendMoney
+
+actor "Registered User" as User
+participant "FalsoPay App" as App
+participant "API Gateway" as Gateway
+participant "Transaction Service" as TransService
+participant "Security Service" as SecService
+participant "Account Service" as AccountService
+participant "Notification Service" as NotifService
+participant "Database" as DB
+
+title UC-9: Send Money
+
+User -> App: Initiate money transfer
+activate App
+
+App -> Gateway: POST /api/transactions/prepare
+activate Gateway
+
+Gateway -> TransService: Prepare transaction
+activate TransService
+
+TransService -> AccountService: Check sender balance
+activate AccountService
+
+AccountService -> DB: Get account balance
+activate DB
+DB --> AccountService: Balance data
+deactivate DB
+
+alt Insufficient funds
+    AccountService --> TransService: Insufficient balance
+    TransService --> Gateway: 400 Bad Request
+    Gateway --> App: 400 Bad Request
+    App --> User: Display insufficient funds error
+else Success
+    AccountService --> TransService: Balance sufficient
+    deactivate AccountService
+    
+    TransService -> TransService: Create transaction draft
+    TransService --> Gateway: Transaction prepared
+    Gateway --> App: 200 OK with transaction details
+    
+    App -> App: Display transfer method options
+    User -> App: Select transfer method
+    
+    App -> Gateway: POST /api/transactions/method
+    Gateway -> TransService: Set transfer method
+    TransService -> DB: Update transaction record
+    DB --> TransService: Success
+    TransService --> Gateway: 200 OK
+    Gateway --> App: 200 OK
+    
+    App -> App: Request PIN
+    User -> App: Enter PIN
+    
+    App -> Gateway: POST /api/security/verify-pin
+    Gateway -> SecService: Verify PIN
+    activate SecService
+    
+    SecService -> DB: Get stored PIN hash
+    activate DB
+    DB --> SecService: PIN hash
+    deactivate DB
+    
+    SecService -> SecService: Validate PIN
+    
+    alt Invalid PIN
+        SecService --> Gateway: 401 Unauthorized
+        Gateway --> App: 401 Unauthorized
+        App --> User: Display PIN error
+    else PIN valid
+        SecService --> Gateway: 200 OK
+        deactivate SecService
+        
+        App -> Gateway: POST /api/transactions/execute
+        Gateway -> TransService: Execute transaction
+        
+        TransService -> DB: Begin transaction
+        activate DB
+        
+        TransService -> DB: Debit sender account
+        TransService -> DB: Credit recipient account
+        TransService -> DB: Create transaction record
+        
+        DB --> TransService: Transaction complete
+        deactivate DB
+        
+        TransService -> NotifService: Send confirmation to sender
+        activate NotifService
+        NotifService --> TransService: Notification queued
+        deactivate NotifService
+        
+        TransService -> NotifService: Send notification to recipient
+        activate NotifService
+        NotifService --> TransService: Notification queued
+        deactivate NotifService
+        
+        TransService -> AccountService: Update balances
+        activate AccountService
+        AccountService --> TransService: Balances updated
+        deactivate AccountService
+        
+        TransService --> Gateway: Transaction successful
+        deactivate TransService
+        
+        Gateway --> App: 200 OK with transaction details
+        deactivate Gateway
+        
+        App --> User: Display transaction confirmation
+        deactivate App
+    end
+end
+
+@enduml 

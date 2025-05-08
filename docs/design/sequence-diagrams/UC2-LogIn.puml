@@ -1,0 +1,75 @@
+@startuml UC2-LogIn
+
+actor "Registered User" as User
+participant "FalsoPay App" as App
+participant "API Gateway" as Gateway
+participant "Authentication Service" as AuthService
+participant "User Service" as UserService
+participant "Account Service" as AccountService
+participant "Database" as DB
+
+title UC-2: Log In
+
+User -> App: Enter email/phone and password
+activate App
+
+App -> App: Validate input format
+App -> Gateway: POST /api/login
+activate Gateway
+
+Gateway -> AuthService: Authenticate user
+activate AuthService
+
+AuthService -> UserService: Validate credentials
+activate UserService
+
+UserService -> DB: Retrieve user record
+activate DB
+DB --> UserService: User data
+deactivate DB
+
+UserService -> UserService: Verify password
+
+alt Invalid credentials
+    UserService --> AuthService: Authentication failed
+    AuthService --> Gateway: 401 Unauthorized
+    Gateway --> App: 401 Unauthorized
+    App --> User: Display error message
+else Forgotten password
+    User -> App: Select "Forgot Password"
+    App -> Gateway: POST /api/password-reset
+    Gateway -> UserService: Initiate password reset
+    UserService -> DB: Create reset token
+    UserService -> NotifService: Send reset instructions
+    NotifService --> UserService: Notification sent
+    UserService --> Gateway: 200 OK
+    Gateway --> App: 200 OK
+    App --> User: Display reset instructions
+else Success
+    UserService --> AuthService: Credentials valid
+    deactivate UserService
+    
+    AuthService -> AuthService: Generate access token
+    AuthService --> Gateway: Authentication successful with token
+    deactivate AuthService
+    
+    Gateway -> AccountService: GET /balance
+    activate AccountService
+    
+    AccountService -> DB: Retrieve account balance
+    activate DB
+    DB --> AccountService: Balance data
+    deactivate DB
+    
+    AccountService --> Gateway: Balance information
+    deactivate AccountService
+    
+    Gateway --> App: 200 OK with token and balance
+    deactivate Gateway
+    
+    App -> App: Store token
+    App --> User: Display dashboard with balance
+    deactivate App
+end
+
+@enduml 

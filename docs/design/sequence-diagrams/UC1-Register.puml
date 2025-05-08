@@ -1,0 +1,79 @@
+@startuml UC1-Register
+
+actor "Potential User" as User
+participant "FalsoPay App" as App
+participant "API Gateway" as Gateway
+participant "User Service" as UserService
+participant "Database" as DB
+participant "Notification Service" as NotifService
+
+title UC-1: Register
+
+User -> App: Enter registration information
+activate App
+
+App -> App: Validate input format
+App -> Gateway: POST /api/register
+activate Gateway
+
+Gateway -> UserService: Create user account
+activate UserService
+
+UserService -> UserService: Validate user data
+UserService -> DB: Check if email/phone exists
+activate DB
+DB --> UserService: Response (exists/not exists)
+deactivate DB
+
+alt Email/Phone already registered
+    UserService --> Gateway: Error: Account exists
+    Gateway --> App: 409 Conflict
+    App --> User: Display error message
+else Validation fails
+    UserService --> Gateway: Error: Invalid data
+    Gateway --> App: 400 Bad Request
+    App --> User: Display validation errors
+else Success
+    UserService -> DB: Create user record
+    activate DB
+    DB --> UserService: Success
+    deactivate DB
+    
+    UserService -> NotifService: Send verification email/SMS
+    activate NotifService
+    NotifService --> UserService: Notification queued
+    deactivate NotifService
+    
+    UserService --> Gateway: User created successfully
+    deactivate UserService
+    
+    Gateway --> App: 201 Created with user data
+    deactivate Gateway
+    
+    App --> User: Display success & verification instructions
+    
+    User -> App: Submit verification code
+    activate App
+    
+    App -> Gateway: POST /api/verify
+    activate Gateway
+    
+    Gateway -> UserService: Verify user
+    activate UserService
+    
+    UserService -> DB: Update verification status
+    activate DB
+    DB --> UserService: Success
+    deactivate DB
+    
+    UserService --> Gateway: Verification successful
+    deactivate UserService
+    
+    Gateway --> App: 200 OK
+    deactivate Gateway
+    
+    App --> User: Display registration confirmation
+    deactivate App
+end
+
+@enduml 

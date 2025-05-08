@@ -1,0 +1,68 @@
+@startuml UC35-CheckSystemStatus
+
+skinparam sequenceMessageAlign center
+skinparam backgroundColor white
+skinparam handwritten false
+
+title "UC-35: Check System Status"
+
+actor "Admin" as admin
+participant "Admin Portal" as portal
+participant "API Gateway" as gateway
+participant "Monitoring\nService" as monitorService
+participant "System\nComponents" as components
+database "Metrics\nDatabase" as metricsDB
+
+== Main Success Scenario ==
+
+admin -> portal: Access system dashboard
+portal -> gateway: Request system status
+gateway -> monitorService: Forward status request
+
+monitorService -> components: Poll status of all components
+components --> monitorService: Status responses
+
+monitorService -> metricsDB: Query recent performance metrics
+metricsDB --> monitorService: Return performance data
+
+monitorService -> monitorService: Aggregate status information
+monitorService -> monitorService: Calculate health indicators
+monitorService -> gateway: Return system status overview
+gateway -> portal: Forward status information
+
+portal -> portal: Render status dashboard
+portal -> admin: Display status overview
+
+admin -> portal: Select component for detailed view
+portal -> gateway: Request component details
+gateway -> monitorService: Forward component detail request
+monitorService -> metricsDB: Query detailed component metrics
+metricsDB --> monitorService: Return detailed metrics
+monitorService -> gateway: Return component details
+gateway -> portal: Forward component details
+
+portal -> portal: Render detailed component view
+portal -> admin: Display component details
+
+== Alternative Scenario: System Components Unreachable ==
+
+admin -> portal: Access system dashboard
+portal -> gateway: Request system status
+gateway -> monitorService: Forward status request
+
+monitorService -> components: Poll status of all components
+note over monitorService, components: Some components unreachable
+
+monitorService -> metricsDB: Query last known status
+metricsDB --> monitorService: Return last known data with timestamps
+
+monitorService -> monitorService: Aggregate available status information
+monitorService -> monitorService: Mark unreachable components
+monitorService -> gateway: Return partial system status
+gateway -> portal: Forward status information
+
+portal -> portal: Render status dashboard with warnings
+portal -> admin: Display status overview with alerts for unreachable components
+portal -> admin: Show last known status with timestamps for unreachable components
+
+@enduml 

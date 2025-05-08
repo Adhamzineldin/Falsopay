@@ -1,0 +1,73 @@
+@startuml UC16-ChangePin
+
+actor "Registered User" as User
+participant "FalsoPay App" as App
+participant "API Gateway" as Gateway
+participant "Security Service" as SecService
+participant "Database" as DB
+
+title UC-16: Change PIN
+
+User -> App: Select change PIN option
+activate App
+
+App -> User: Request current PIN
+User -> App: Enter current PIN
+App -> Gateway: POST /api/security/verify-pin
+activate Gateway
+
+Gateway -> SecService: Verify current PIN
+activate SecService
+
+SecService -> DB: Retrieve stored PIN hash
+activate DB
+DB --> SecService: PIN hash
+deactivate DB
+
+SecService -> SecService: Validate PIN
+
+alt Current PIN incorrect
+    SecService --> Gateway: 401 Unauthorized
+    Gateway --> App: 401 Unauthorized
+    App --> User: Show error and allow retry
+else Current PIN correct
+    SecService --> Gateway: 200 OK
+    deactivate SecService
+    
+    Gateway --> App: 200 OK
+    deactivate Gateway
+    
+    App -> User: Request new PIN
+    User -> App: Enter new PIN
+    App -> User: Request PIN confirmation
+    User -> App: Confirm new PIN
+    
+    App -> App: Validate PIN requirements
+    
+    alt New PIN doesn't meet requirements
+        App --> User: Show PIN requirements
+    else New PIN passes validation
+        App -> Gateway: PUT /api/security/pin
+        activate Gateway
+        
+        Gateway -> SecService: Update PIN
+        activate SecService
+        
+        SecService -> SecService: Hash new PIN
+        SecService -> DB: Store new PIN hash
+        activate DB
+        DB --> SecService: Success
+        deactivate DB
+        
+        SecService --> Gateway: 200 OK
+        deactivate SecService
+        
+        Gateway --> App: 200 OK
+        deactivate Gateway
+        
+        App --> User: Display PIN update confirmation
+        deactivate App
+    end
+end
+
+@enduml 

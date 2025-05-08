@@ -1,0 +1,62 @@
+@startuml UC25-Search
+
+skinparam sequenceMessageAlign center
+skinparam backgroundColor white
+skinparam handwritten false
+
+title "UC-25: Search"
+
+actor "User" as user
+participant "FalsoPay App" as app
+participant "API Gateway" as gateway
+participant "Search\nService" as searchService
+participant "Transaction\nService" as txnService
+participant "User\nService" as userService
+database "Database" as db
+
+== Main Success Scenario ==
+
+user -> app: Enter search term
+app -> app: Validate search input
+app -> gateway: Send search request
+gateway -> searchService: Forward search request
+
+searchService -> txnService: Query transactions
+txnService -> db: Retrieve matching transactions
+db --> txnService: Transaction results
+txnService --> searchService: Transaction results
+
+searchService -> userService: Query contacts
+userService -> db: Retrieve matching contacts
+db --> userService: Contact results
+userService --> searchService: Contact results
+
+searchService -> searchService: Aggregate and rank results
+searchService -> gateway: Return search results
+gateway -> app: Forward search results
+app -> app: Format results by category
+app -> user: Display categorized results
+
+== Alternative Scenario: No Results Found ==
+
+user -> app: Enter search term
+app -> app: Validate search input
+app -> gateway: Send search request
+gateway -> searchService: Forward search request
+
+searchService -> txnService: Query transactions
+txnService -> db: Retrieve matching transactions
+db --> txnService: No results
+txnService --> searchService: No results
+
+searchService -> userService: Query contacts
+userService -> db: Retrieve matching contacts
+db --> userService: No results
+userService --> searchService: No results
+
+searchService -> searchService: Generate suggestions
+searchService -> gateway: Return no results with suggestions
+gateway -> app: Forward response
+app -> user: Display "No results found"\nSuggest alternative search terms
+
+@enduml 

@@ -1,0 +1,64 @@
+@startuml UC19-EnableDisableNotifications
+
+actor "Registered User" as User
+participant "FalsoPay App" as App
+participant "API Gateway" as Gateway
+participant "Notification Service" as NotifService
+participant "Database" as DB
+
+title UC-19: Enable/Disable Notifications
+
+User -> App: Access notification settings
+activate App
+
+App -> Gateway: GET /api/notifications/settings
+activate Gateway
+
+Gateway -> NotifService: Get notification preferences
+activate NotifService
+
+NotifService -> DB: Retrieve preferences
+activate DB
+DB --> NotifService: Notification preferences
+deactivate DB
+
+NotifService --> Gateway: Notification settings
+deactivate NotifService
+
+Gateway --> App: 200 OK with settings
+deactivate Gateway
+
+App --> User: Display notification settings
+
+User -> App: Toggle desired notification types
+User -> App: Save preferences
+activate App
+
+App -> Gateway: PUT /api/notifications/settings
+activate Gateway
+
+Gateway -> NotifService: Update notification settings
+activate NotifService
+
+alt Mandatory notifications disabled
+    NotifService -> NotifService: Check for mandatory notifications
+    NotifService --> Gateway: 400 Bad Request
+    Gateway --> App: 400 Bad Request
+    App --> User: Indicate mandatory notifications
+else All valid changes
+    NotifService -> DB: Update preferences
+    activate DB
+    DB --> NotifService: Success
+    deactivate DB
+    
+    NotifService --> Gateway: 200 OK
+    deactivate NotifService
+    
+    Gateway --> App: 200 OK
+    deactivate Gateway
+    
+    App --> User: Display confirmation
+    deactivate App
+end
+
+@enduml 

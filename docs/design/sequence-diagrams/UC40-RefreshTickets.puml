@@ -1,0 +1,77 @@
+@startuml UC40-RefreshTickets
+
+skinparam sequenceMessageAlign center
+skinparam backgroundColor white
+skinparam handwritten false
+
+title "UC-40: Refresh Tickets"
+
+actor "Admin" as admin
+participant "Admin Portal" as portal
+participant "API Gateway" as gateway
+participant "Support\nService" as supportService
+database "Database" as db
+
+== Main Success Scenario ==
+
+admin -> portal: View ticket dashboard
+portal -> gateway: Request initial ticket data
+gateway -> supportService: Get ticket data
+supportService -> db: Query tickets
+db --> supportService: Return tickets
+supportService -> gateway: Return ticket data
+gateway -> portal: Forward ticket data
+
+portal -> portal: Render ticket dashboard
+portal -> admin: Display ticket dashboard
+
+admin -> portal: Request ticket refresh
+portal -> gateway: Send refresh request
+gateway -> supportService: Request latest tickets
+
+supportService -> db: Query latest ticket data
+db --> supportService: Return updated tickets
+supportService -> gateway: Return latest data
+gateway -> portal: Forward updated data
+
+portal -> portal: Update ticket display
+portal -> portal: Update timestamp
+portal -> admin: Display refreshed tickets
+portal -> admin: Show refresh timestamp
+
+== Alternative Scenario: Connection Error ==
+
+admin -> portal: View ticket dashboard
+portal -> gateway: Request initial ticket data
+gateway -> supportService: Get ticket data
+supportService -> db: Query tickets
+db --> supportService: Return tickets
+supportService -> gateway: Return ticket data
+gateway -> portal: Forward ticket data
+
+portal -> portal: Render ticket dashboard
+portal -> admin: Display ticket dashboard
+
+admin -> portal: Request ticket refresh
+portal -> gateway: Send refresh request
+
+note over gateway, supportService: Connection error occurs
+
+gateway -> portal: Return connection error
+portal -> admin: Display error message
+portal -> admin: Show retry button
+
+admin -> portal: Click retry
+portal -> gateway: Retry refresh request
+gateway -> supportService: Request latest tickets
+supportService -> db: Query latest ticket data
+db --> supportService: Return updated tickets
+supportService -> gateway: Return latest data
+gateway -> portal: Forward updated data
+
+portal -> portal: Update ticket display
+portal -> portal: Update timestamp
+portal -> admin: Display refreshed tickets
+portal -> admin: Show refresh timestamp
+
+@enduml 

@@ -1,0 +1,88 @@
+@startuml UC32-AuthorizeRealTimeTransactions
+
+skinparam sequenceMessageAlign center
+skinparam backgroundColor white
+skinparam handwritten false
+
+title "UC-32: Authorize Real-Time Transactions"
+
+participant "API Gateway" as gateway
+participant "Transaction\nService" as txnService
+participant "Account\nService" as accountService
+participant "Security\nService" as securityService
+participant "Fraud Detection\nService" as fraudService
+database "Database" as db
+
+== Main Success Scenario ==
+
+note over gateway: Transaction request received
+
+gateway -> txnService: Forward transaction request
+txnService -> txnService: Validate transaction details
+
+txnService -> accountService: Check sufficient funds
+accountService -> db: Query account balance
+db --> accountService: Return balance
+accountService --> txnService: Sufficient funds confirmed
+
+txnService -> securityService: Verify transaction limits
+securityService -> db: Retrieve user transaction limits
+db --> securityService: Transaction limits
+securityService -> securityService: Check if within limits
+securityService --> txnService: Within limits
+
+txnService -> fraudService: Request risk assessment
+fraudService -> fraudService: Analyze transaction patterns
+fraudService -> db: Check transaction history
+db --> fraudService: Transaction history
+fraudService -> fraudService: Evaluate risk score
+fraudService --> txnService: Low risk assessment
+
+txnService -> db: Record authorization
+db --> txnService: Authorization recorded
+txnService -> gateway: Transaction authorized
+
+== Alternative Scenario: Suspicious Activity Detected ==
+
+note over gateway: Transaction request received
+
+gateway -> txnService: Forward transaction request
+txnService -> txnService: Validate transaction details
+
+txnService -> accountService: Check sufficient funds
+accountService -> db: Query account balance
+db --> accountService: Return balance
+accountService --> txnService: Sufficient funds confirmed
+
+txnService -> securityService: Verify transaction limits
+securityService -> db: Retrieve user transaction limits
+db --> securityService: Transaction limits
+securityService -> securityService: Check if within limits
+securityService --> txnService: Within limits
+
+txnService -> fraudService: Request risk assessment
+fraudService -> fraudService: Analyze transaction patterns
+fraudService -> db: Check transaction history
+db --> fraudService: Transaction history
+fraudService -> fraudService: Evaluate risk score
+fraudService -> fraudService: Detect suspicious pattern
+fraudService --> txnService: High risk assessment
+
+txnService -> db: Flag transaction for review
+db --> txnService: Transaction flagged
+txnService -> gateway: Transaction requires additional verification
+
+== Alternative Scenario: System Temporarily Unavailable ==
+
+note over gateway: Transaction request received
+
+gateway -> txnService: Forward transaction request
+txnService -> txnService: System overload detected
+
+txnService -> db: Queue transaction for later processing
+db --> txnService: Transaction queued
+
+txnService -> gateway: Transaction queued for processing
+gateway -> gateway: Return temporary transaction ID
+
+@enduml 

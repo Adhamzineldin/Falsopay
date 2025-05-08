@@ -1,0 +1,65 @@
+@startuml UC10-ChooseTransferMethod
+
+actor "Registered User" as User
+participant "FalsoPay App" as App
+participant "API Gateway" as Gateway
+participant "Transaction Service" as TransService
+participant "Database" as DB
+
+title UC-10: Choose Transfer Method
+
+User -> App: In process of sending money
+activate App
+
+App -> Gateway: GET /api/transactions/methods
+activate Gateway
+
+Gateway -> TransService: Get available transfer methods
+activate TransService
+
+TransService -> TransService: Determine available methods
+TransService -> DB: Get user preferences
+activate DB
+DB --> TransService: User preferences
+deactivate DB
+
+TransService --> Gateway: Available transfer methods
+deactivate TransService
+
+Gateway --> App: 200 OK with transfer methods
+deactivate Gateway
+
+App --> User: Display transfer method options
+
+User -> App: Select desired method
+activate App
+
+App -> Gateway: POST /api/transactions/{id}/method
+activate Gateway
+
+Gateway -> TransService: Set transfer method
+activate TransService
+
+alt Selected method unavailable
+    TransService --> Gateway: 400 Bad Request
+    Gateway --> App: 400 Bad Request
+    App --> User: Display error with alternatives
+else Success
+    TransService -> DB: Update transaction with method
+    activate DB
+    DB --> TransService: Success
+    deactivate DB
+    
+    TransService -> TransService: Configure transfer settings
+    
+    TransService --> Gateway: 200 OK
+    deactivate TransService
+    
+    Gateway --> App: 200 OK
+    deactivate Gateway
+    
+    App --> User: Display confirmation and continue transaction flow
+    deactivate App
+end
+
+@enduml 

@@ -551,7 +551,7 @@ export default function MoneyRequestsPage() {
                 )}
                 {currentUserIpas.map(ipa => (
                   <option key={ipa.ipa_id} value={ipa.ipa_address}>
-                    {ipa.ipa_address} ({ipa.bank_name || 'Unknown Bank'})
+                    {ipa.ipa_address}
                   </option>
                 ))}
               </select>

@@ -1,0 +1,86 @@
+@startuml Dispute-Transaction-SSD
+
+skinparam sequenceMessageAlign center
+skinparam sequenceParticipantBorderColor Black
+skinparam sequenceParticipantBackgroundColor LightBlue
+
+title "FalsoPay: Dispute Transaction - System Sequence Diagram"
+
+actor "User" as user
+boundary "FalsoPay System" as system
+actor "Support Agent" as agent
+actor "Other Party" as otherParty
+
+user -> system: Navigate to transaction history
+system --> user: Display transaction list
+
+user -> system: Select disputed transaction
+user -> system: Choose "Report a Problem"
+system --> user: Display problem categories
+
+user -> system: Select issue category
+user -> system: Provide issue details
+user -> system: Upload supporting evidence (optional)
+user -> system: Submit dispute
+
+system --> user: Validate submission
+
+alt Incomplete submission
+    system --> user: Highlight missing information
+    system --> user: Display submission error
+    user -> system: Complete missing items and resubmit
+else Complete submission
+    system --> user: Create dispute case
+    system --> user: Assign case number
+    system --> user: Determine dispute priority
+    system --> user: Send confirmation with reference number
+    system --> user: Display estimated resolution timeline
+    
+    system -> otherParty: Notify about dispute
+    
+    alt Other party accepts dispute
+        otherParty -> system: Accept dispute claim
+        system --> user: Process automatic refund
+        system --> user: Update transaction status
+        system --> user: Send resolution notification
+        system --> otherParty: Send resolution notification
+    else Other party contests dispute
+        otherParty -> system: Contest dispute claim
+        system -> agent: Assign to dispute resolution team
+        
+        opt Additional information needed
+            agent -> system: Request more information
+            system --> user: Request for additional information
+            user -> system: Provide additional details
+            system -> agent: Forward additional information
+        end
+        
+        agent -> system: Review case and make decision
+        
+        alt Decision favors user
+            system --> user: Process refund
+            system --> user: Update transaction status
+            system --> user: Send favorable resolution notification
+            system --> otherParty: Send explanation notification
+        else Decision against user
+            system --> user: Maintain original transaction
+            system --> user: Send explanation notification
+            
+            opt Appeal available
+                system --> user: Inform of appeal process
+                
+                alt User appeals
+                    user -> system: Submit appeal
+                    system --> user: Create appeal case
+                    system --> user: Escalate to higher review level
+                else User accepts decision
+                    system --> user: Close dispute case
+                end
+            else No appeal available
+                system --> user: Close dispute case
+            end
+        end
+    end
+end
+
+@enduml 

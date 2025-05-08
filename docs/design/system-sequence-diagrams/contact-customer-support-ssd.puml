@@ -1,0 +1,91 @@
+@startuml Contact-Customer-Support-SSD
+
+skinparam sequenceMessageAlign center
+skinparam sequenceParticipantBorderColor Black
+skinparam sequenceParticipantBackgroundColor LightCyan
+
+title "FalsoPay: Contact Customer Support - System Sequence Diagram"
+
+actor "User" as user
+boundary "FalsoPay System" as system
+actor "Support Agent" as agent
+
+user -> system: Navigate to "Help & Support"
+system --> user: Display support options
+
+alt Self-service first approach
+    system --> user: Show FAQ and self-help resources
+    user -> system: Browse FAQs
+    
+    alt Issue resolved by FAQ
+        user -> system: Exit support section
+    else Issue not resolved
+        user -> system: Select "Contact Support Directly"
+    end
+end
+
+system --> user: Display support contact form
+
+user -> system: Select issue category
+user -> system: Select issue priority
+user -> system: Provide issue description
+user -> system: Attach screenshots/evidence (optional)
+user -> system: Submit support request
+
+system --> user: Validate submission
+
+alt Incomplete submission
+    system --> user: Highlight missing information
+    system --> user: Display submission error
+    user -> system: Complete missing items and resubmit
+else Complete submission
+    system --> user: Create support ticket
+    system --> user: Assign ticket number
+    system --> user: Determine priority
+    system --> user: Send confirmation with ticket number
+    system --> user: Display estimated response time
+    
+    system -> agent: Route ticket to appropriate queue
+    agent -> system: Receive and open ticket
+    agent -> system: Review issue details
+    
+    alt Need more information
+        agent -> system: Request additional information
+        system --> user: Send notification requesting more info
+        user -> system: Receive notification
+        user -> system: Provide additional information
+        system -> agent: Forward additional information
+    end
+    
+    agent -> system: Research issue
+    agent -> system: Prepare response
+    
+    alt Immediate resolution possible
+        agent -> system: Resolve issue
+        agent -> system: Document solution
+    else Requires escalation
+        agent -> system: Escalate to specialist team
+        system --> agent: Assign to specialist
+        agent -> system: Specialist resolves issue
+    else Partial solution
+        agent -> system: Provide workaround
+        agent -> system: Schedule follow-up
+    end
+    
+    agent -> system: Update ticket status
+    system --> user: Send resolution notification
+    
+    user -> system: Review resolution
+    
+    alt User satisfied
+        user -> system: Mark issue as resolved (optional)
+        system --> user: Close ticket
+        system --> user: Send satisfaction survey
+    else User not satisfied
+        user -> system: Respond with additional concerns
+        system -> agent: Reopen or update ticket
+        agent -> system: Address additional concerns
+    end
+end
+
+@enduml 

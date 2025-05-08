@@ -1,0 +1,105 @@
+@startuml Send-Money
+
+skinparam ActivityBackgroundColor LightGreen
+skinparam ActivityBorderColor DarkGreen
+skinparam ArrowColor DarkGreen
+
+title "FalsoPay: Send Money Process"
+
+start
+
+:User logs into FalsoPay app;
+:User navigates to "Send Money" feature;
+
+:System displays send money form;
+
+:User selects/enters recipient;
+note right: Can be from favorites, 
+contacts, previous transactions, 
+or by entering IPA address
+
+:User enters transfer amount;
+
+:User adds optional message;
+
+:User selects transfer method;
+note right: Bank transfer, 
+wallet balance, etc.
+
+:User clicks "Continue";
+
+:System validates request;
+
+if (Recipient valid?) then (yes)
+  if (Amount within limits?) then (yes)
+    if (Sufficient funds?) then (yes)
+      :Display transaction summary;
+      :User reviews transaction details;
+      :User confirms transaction;
+      
+      :System requests PIN/biometric authorization;
+      :User provides PIN/biometric;
+      
+      if (Authentication successful?) then (yes)
+        :Process transaction;
+        
+        fork
+          :Update sender's balance;
+        fork again
+          :Update recipient's balance;
+        fork again
+          :Record transaction in history;
+        end fork
+        
+        :Send confirmation to both parties;
+        :Display success message with details;
+        :Offer to save recipient as favorite;
+        
+        if (User wants to save as favorite?) then (yes)
+          :Add recipient to favorites;
+        else (no)
+          :Skip favorite addition;
+        endif
+        
+        stop
+      else (no)
+        :Display authentication error;
+        :Allow retry or cancel;
+        
+        if (User retries?) then (yes)
+          backward:Prompt for PIN/biometric again;
+        else (no)
+          :Cancel transaction;
+          :Display cancellation message;
+          stop
+        endif
+      endif
+    else (no)
+      :Display insufficient funds error;
+      :Suggest adding funds or changing amount;
+      
+      if (User adds funds?) then (yes)
+        :Redirect to add funds flow;
+        stop
+      else (no)
+        if (User changes amount?) then (yes)
+          backward:User enters new amount;
+        else (no)
+          :Cancel transaction;
+          stop
+        endif
+      endif
+    endif
+  else (no)
+    :Display limit exceeded error;
+    :Show current limits;
+    backward:User adjusts amount;
+  endif
+else (no)
+  :Display invalid recipient error;
+  backward:User corrects recipient information;
+endif
+
+stop
+
+@enduml 

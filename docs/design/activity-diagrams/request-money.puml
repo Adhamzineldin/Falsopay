@@ -1,0 +1,121 @@
+@startuml Request-Money
+
+skinparam ActivityBackgroundColor LightYellow
+skinparam ActivityBorderColor DarkOrange
+skinparam ArrowColor DarkOrange
+
+title "FalsoPay: Request Money Process"
+
+start
+
+:User logs into FalsoPay app;
+:User navigates to "Request Money" feature;
+
+:System displays request money form;
+
+:User selects/enters recipient;
+note right: Can be from favorites, 
+contacts, or by entering 
+IPA address/phone number
+
+:User enters requested amount;
+
+:User adds reason for request (optional);
+:User sets expiration date (optional);
+note right: Default is usually 
+30 days from creation
+
+:User clicks "Review";
+
+:System validates request;
+
+if (Recipient valid?) then (yes)
+  if (Amount within system limits?) then (yes)
+    :Display request summary;
+    :User confirms request details;
+    :User sends request;
+    
+    :System processes money request;
+    :System notifies recipient;
+    :System creates request record;
+    
+    :Display confirmation to requestor;
+    
+    partition "Recipient Actions" {
+      :Recipient receives notification;
+      :Recipient views request details;
+      
+      :Recipient decides action;
+      
+      if (Accept request?) then (yes)
+        :Recipient confirms payment;
+        :System initiates payment process;
+        
+        if (Recipient has sufficient funds?) then (yes)
+          :Process payment;
+          
+          fork
+            :Update recipient's balance;
+          fork again
+            :Update requestor's balance;
+          fork again
+            :Update request status to "Paid";
+          end fork
+          
+          :Send confirmation to both parties;
+          stop
+        else (no)
+          :Display insufficient funds to recipient;
+          :Offer options to add funds;
+          
+          if (Add funds?) then (yes)
+            :Redirect to add funds flow;
+            backward:Return to payment process;
+          else (no)
+            :Request remains pending;
+            stop
+          endif
+        endif
+      else (no)
+        if (Decline request?) then (yes)
+          :Recipient declines request;
+          :System updates request status to "Declined";
+          :Recipient provides reason (optional);
+          :System notifies requestor about decline;
+          stop
+        elseif (Ignore request?) then (yes)
+          :Request remains pending;
+          :System sends reminder after period;
+          stop
+        else (counter offer)
+          :Recipient suggests different amount;
+          :System creates counter-offer;
+          :System notifies original requestor;
+          
+          :Original requestor reviews counter-offer;
+          
+          if (Accept counter-offer?) then (yes)
+            :Update request with new amount;
+            backward:Return to recipient payment process;
+          else (no)
+            :Decline counter-offer;
+            :Request marked as "Declined";
+            stop
+          endif
+        endif
+      endif
+    }
+    
+  else (no)
+    :Display limit exceeded error;
+    :Show current limits;
+    backward:User adjusts amount;
+  endif
+else (no)
+  :Display invalid recipient error;
+  backward:User corrects recipient information;
+endif
+
+stop
+
+@enduml 

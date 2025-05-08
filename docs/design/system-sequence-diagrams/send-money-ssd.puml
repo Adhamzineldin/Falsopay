@@ -1,0 +1,81 @@
+@startuml Send-Money-SSD
+
+skinparam sequenceMessageAlign center
+skinparam sequenceParticipantBorderColor Black
+skinparam sequenceParticipantBackgroundColor LightGreen
+
+title "FalsoPay: Send Money - System Sequence Diagram"
+
+actor "User" as user
+boundary "FalsoPay System" as system
+
+user -> system: Navigate to "Send Money" feature
+system --> user: Display send money form
+
+user -> system: Select/enter recipient
+user -> system: Enter transfer amount
+user -> system: Add optional message
+user -> system: Select transfer method
+user -> system: Submit transfer request
+
+system --> user: Validate recipient and amount
+
+alt Invalid recipient
+    system --> user: Display invalid recipient error
+    user -> system: Correct recipient information
+else Valid recipient
+    alt Amount exceeds limits
+        system --> user: Display limit exceeded error
+        system --> user: Show current limits
+        user -> system: Adjust amount
+    else Amount within limits
+        alt Insufficient funds
+            system --> user: Display insufficient funds error
+            system --> user: Suggest adding funds or changing amount
+            
+            opt User adds funds
+                user -> system: Navigate to add funds
+                system --> user: Process funds addition
+                system --> user: Return to send money process
+            end
+            
+            opt User changes amount
+                user -> system: Enter new amount
+                system --> user: Revalidate amount
+            end
+        else Sufficient funds
+            system --> user: Display transaction summary
+            user -> system: Confirm transaction
+            
+            system --> user: Request PIN/biometric authorization
+            user -> system: Provide PIN/biometric
+            
+            alt Authentication successful
+                system --> user: Process transaction
+                system --> user: Update balances
+                system --> user: Record transaction in history
+                system --> user: Send confirmation to both parties
+                system --> user: Display success message
+                
+                opt Save recipient as favorite
+                    system --> user: Offer to save recipient as favorite
+                    user -> system: Confirm save as favorite
+                    system --> user: Add recipient to favorites
+                end
+            else Authentication failed
+                system --> user: Display authentication error
+                system --> user: Allow retry or cancel
+                
+                alt User retries
+                    user -> system: Re-enter PIN/biometric
+                    system --> user: Revalidate authentication
+                else User cancels
+                    system --> user: Cancel transaction
+                    system --> user: Display cancellation message
+                end
+            end
+        end
+    end
+end
+
+@enduml 

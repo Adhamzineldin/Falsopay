@@ -1,0 +1,55 @@
+@startuml User-Registration-SSD
+
+skinparam sequenceMessageAlign center
+skinparam sequenceParticipantBorderColor Black
+skinparam sequenceParticipantBackgroundColor LightSkyBlue
+
+title "FalsoPay: User Registration - System Sequence Diagram"
+
+actor "User" as user
+boundary "FalsoPay System" as system
+
+user -> system: Open registration page
+system --> user: Display registration form
+
+user -> system: Enter personal information (name, email, phone)
+user -> system: Create password
+user -> system: Accept terms and conditions
+user -> system: Submit registration
+
+system --> user: Request validation
+
+alt Invalid information
+    system --> user: Display validation errors
+    user -> system: Correct information and resubmit
+end
+
+alt Email/phone already registered
+    system --> user: Notify account already exists
+    system --> user: Suggest login option
+else Account creation successful
+    system --> user: Create account
+    system --> user: Generate verification code
+    system --> user: Send verification email/SMS
+    system --> user: Display verification instructions
+    
+    user -> system: Enter verification code
+    
+    alt Valid verification code
+        system --> user: Activate account
+        system --> user: Display welcome message
+        system --> user: Redirect to dashboard
+    else Invalid verification code
+        system --> user: Display "Invalid code" message
+        system --> user: Allow to request new code
+        
+        opt User requests new code
+            user -> system: Request new verification code
+            system --> user: Generate new verification code
+            system --> user: Send new verification email/SMS
+            system --> user: Display verification instructions
+        end
+    end
+end
+
+@enduml 

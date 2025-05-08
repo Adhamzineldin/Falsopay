@@ -1,0 +1,103 @@
+@startuml Request-Money-SSD
+
+skinparam sequenceMessageAlign center
+skinparam sequenceParticipantBorderColor Black
+skinparam sequenceParticipantBackgroundColor LightYellow
+
+title "FalsoPay: Request Money - System Sequence Diagram"
+
+actor "User (Requestor)" as requestor
+boundary "FalsoPay System" as system
+actor "Recipient" as recipient
+
+requestor -> system: Navigate to "Request Money" feature
+system --> requestor: Display request money form
+
+requestor -> system: Select/enter recipient
+requestor -> system: Enter requested amount
+requestor -> system: Add reason for request (optional)
+requestor -> system: Set expiration date (optional)
+requestor -> system: Submit request
+
+system --> requestor: Validate request
+
+alt Invalid recipient
+    system --> requestor: Display invalid recipient error
+    requestor -> system: Correct recipient information
+else Valid recipient
+    alt Amount exceeds system limits
+        system --> requestor: Display limit exceeded error
+        system --> requestor: Show current limits
+        requestor -> system: Adjust amount
+    else Amount within system limits
+        system --> requestor: Display request summary
+        requestor -> system: Confirm request details
+        requestor -> system: Send request
+        
+        system --> requestor: Process money request
+        system --> requestor: Create request record
+        system --> requestor: Display confirmation
+        
+        system -> recipient: Send notification about money request
+        recipient -> system: View request details
+        
+        alt Recipient accepts request
+            recipient -> system: Confirm payment
+            
+            system --> recipient: Check funds availability
+            
+            alt Recipient has sufficient funds
+                recipient -> system: Authorize payment
+                system --> recipient: Process payment
+                system --> recipient: Update balance
+                system --> requestor: Update balance
+                system --> recipient: Send confirmation
+                system --> requestor: Send confirmation
+                system --> system: Update request status to "Paid"
+            else Recipient lacks sufficient funds
+                system --> recipient: Display insufficient funds error
+                system --> recipient: Offer to add funds
+                
+                alt Recipient adds funds
+                    recipient -> system: Navigate to add funds
+                    system --> recipient: Process funds addition
+                    recipient -> system: Return to payment process
+                    recipient -> system: Complete payment
+                else Recipient doesn't add funds
+                    system --> recipient: Request remains pending
+                    system --> requestor: Request status unchanged
+                end
+            end
+        else Recipient declines request
+            recipient -> system: Decline request
+            recipient -> system: Provide reason (optional)
+            
+            system --> recipient: Update request status to "Declined"
+            system --> requestor: Send notification about decline
+            system --> requestor: Display decline reason if provided
+        else Recipient ignores request
+            system --> system: Request remains pending
+            system --> system: Send reminder after period
+        else Recipient makes counter-offer
+            recipient -> system: Suggest different amount
+            
+            system --> recipient: Create counter-offer
+            system --> requestor: Send notification about counter-offer
+            
+            requestor -> system: Review counter-offer
+            
+            alt Requestor accepts
+                requestor -> system: Accept counter-offer
+                system --> requestor: Update request with new amount
+                system --> recipient: Notify of acceptance
+                recipient -> system: Continue with payment process
+            else Requestor declines
+                requestor -> system: Decline counter-offer
+                system --> requestor: Mark request as "Declined"
+                system --> recipient: Notify of decline
+            end
+        end
+    end
+end
+
+@enduml 

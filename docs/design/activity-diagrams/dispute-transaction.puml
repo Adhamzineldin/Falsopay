@@ -1,0 +1,113 @@
+@startuml Dispute-Transaction
+
+skinparam ActivityBackgroundColor LightBlue
+skinparam ActivityBorderColor DarkBlue
+skinparam ArrowColor DarkBlue
+
+title "FalsoPay: Dispute Transaction Process"
+
+start
+
+:User logs into FalsoPay app;
+:User navigates to transaction history;
+:User locates disputed transaction;
+:User selects "Report a Problem";
+
+:System displays problem categories;
+
+:User selects issue category;
+note right: Options like "Unauthorized transaction", 
+"Wrong amount", "Item not received", etc.
+
+:User provides details about the issue;
+:User uploads supporting evidence (optional);
+note right: Screenshots, receipts, 
+communication with merchant, etc.
+
+:User submits dispute;
+
+:System validates submission;
+
+if (Submission complete?) then (yes)
+  :System creates dispute case;
+  :System assigns case number;
+  :System determines dispute priority;
+  
+  if (High-priority case?) then (yes)
+    :Flag for expedited review;
+  else (no)
+    :Add to standard queue;
+  endif
+  
+  :Send confirmation to user;
+  :Display estimated resolution timeline;
+  
+  partition "Investigation Process" {
+    :System notifies other party;
+    :Other party reviews dispute;
+    
+    if (Other party accepts dispute?) then (yes)
+      :Process automatic refund;
+      :Update transaction status;
+      :Send resolution notification to both parties;
+      :Close dispute case with resolution;
+      stop
+    else (no)
+      :Assign to dispute resolution team;
+      :Specialist reviews case details;
+      :Specialist requests additional information if needed;
+      
+      if (Additional info needed?) then (yes)
+        :Request more information from user;
+        :User receives notification;
+        :User provides additional information;
+        
+        if (Info provided on time?) then (yes)
+          :Add information to case;
+        else (no)
+          :Mark case as awaiting response;
+          :Set response reminder timer;
+        endif
+      endif
+      
+      :Specialist makes decision;
+      
+      if (Decision favors user?) then (yes)
+        :Process refund;
+        :Update transaction status;
+        :Send favorable resolution to user;
+        :Send explanation to other party;
+      else (no)
+        :Maintain original transaction;
+        :Send explanation to user;
+        :Close dispute case;
+        
+        if (User can appeal?) then (yes)
+          :Inform user of appeal process;
+          :User decides about appeal;
+          
+          if (User appeals?) then (yes)
+            :Create appeal case;
+            :Escalate to higher review level;
+            stop
+          else (no)
+            :Case remains closed;
+            stop
+          endif
+        else (no)
+          :Case remains closed;
+          stop
+        endif
+      endif
+    endif
+  }
+  
+else (no)
+  :Highlight missing information;
+  :Display submission error;
+  backward:User completes missing items;
+endif
+
+stop
+
+@enduml 

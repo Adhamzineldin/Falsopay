@@ -1,0 +1,90 @@
+@startuml Link-Bank-Account
+
+skinparam ActivityBackgroundColor LightSalmon
+skinparam ActivityBorderColor DarkRed
+skinparam ArrowColor DarkRed
+
+title "FalsoPay: Link Bank Account Process"
+
+start
+
+:User logs into FalsoPay app;
+:User navigates to "Payment Methods";
+:User selects "Add Bank Account";
+
+:System displays bank account linking form;
+
+:User enters bank account details;
+note right: Account number, 
+routing number, 
+bank name, etc.
+
+:User submits information;
+
+:System validates format of account details;
+
+if (Format valid?) then (yes)
+  :System initiates secure connection to banking partner;
+  
+  if (Connection successful?) then (yes)
+    :Send verification request to banking partner;
+    
+    if (Banking partner available?) then (yes)
+      :Banking partner validates account details;
+      
+      if (Account exists?) then (yes)
+        :Banking partner initiates micro-deposits;
+        :System informs user about micro-deposits;
+        
+        :System requests user to verify deposit amounts;
+        
+        partition "Verification Process" {
+          :User receives micro-deposits (1-3 business days);
+          :User returns to FalsoPay app;
+          :User enters micro-deposit amounts;
+          
+          if (Amounts correct?) then (yes)
+            :System verifies with banking partner;
+            :Banking partner confirms verification;
+            :Mark account as verified;
+            :Link bank account to user profile;
+            
+            :System displays success message;
+            :Show bank account in payment methods;
+            stop
+          else (no)
+            :Display incorrect verification message;
+            :Allow retry with limited attempts;
+            
+            if (Retry attempts remaining?) then (yes)
+              backward:Prompt for deposit amounts again;
+            else (no)
+              :Verification failed;
+              :Suggest contacting support;
+              stop
+            endif
+          endif
+        }
+      else (no)
+        :Display account not found error;
+        backward:User corrects account information;
+      endif
+    else (no)
+      :Display banking partner unavailable message;
+      :Suggest trying again later;
+      stop
+    endif
+  else (no)
+    :Display connection error;
+    :Suggest checking internet or trying later;
+    stop
+  endif
+else (no)
+  :Highlight invalid fields;
+  :Display format validation errors;
+  backward:User corrects account information;
+endif
+
+stop
+
+@enduml 

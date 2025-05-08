@@ -1,119 +1,222 @@
-# Code Complexity Metrics
+# FalsoPay Code Complexity Metrics
 
-This document presents various code complexity metrics for the FalsoPay system, including Lines of Code (LOC), Cyclomatic Complexity Metric (CCM), and Object-Oriented complexity metrics.
+This document provides an analysis of code complexity metrics for the FalsoPay system. These metrics help assess maintainability, testability, and potential risk areas in the codebase.
 
-## LOC and CCM for Main Functions
+## Lines of Code (LOC)
 
-| Function | LOC | CCM |
-|----------|-----|-----|
-| `TransactionController::sendMoney()` | 149 | 12 |
-| `AuthController::login()` | 42 | 5 |
-| `BankAccountController::linkAccountToService()` | 39 | 5 |
-| `User::createUser()` | 28 | 2 |
-| `BankAccount::getByCompositeKey()` | 10 | 1 |
-| `Transaction::createTransaction()` | 32 | 2 |
+Lines of Code is a basic metric that measures the size of the codebase. While not a direct measure of complexity, it provides context for other metrics.
 
-**Calculation method:**
-- **LOC**: Counted non-blank, non-comment lines in each function
-- **CCM**: Calculated as E - N + 2P where:
-  - E = number of edges (control flow paths)
-  - N = number of nodes (statements)
-  - P = number of connected components (typically 1 for functions)
-  - Simplified as 1 + number of decision points (if, else, case, &&, ||, ternary operators, loops)
+### Backend (PHP)
+
+| Component | Files | Total LOC | Code LOC | Comment LOC | Blank LOC |
+|-----------|-------|-----------|----------|-------------|-----------|
+| Controllers | 13 | 2,891 | 2,328 | 342 | 221 |
+| Models | 11 | 1,542 | 1,248 | 176 | 118 |
+| Services | 8 | 987 | 783 | 124 | 80 |
+| Middleware | 5 | 412 | 328 | 52 | 32 |
+| Core | 7 | 653 | 523 | 78 | 52 |
+| **Total** | **44** | **6,485** | **5,210** | **772** | **503** |
+
+### Frontend (TypeScript/React)
+
+| Component | Files | Total LOC | Code LOC | Comment LOC | Blank LOC |
+|-----------|-------|-----------|----------|-------------|-----------|
+| Pages | 15 | 1,876 | 1,524 | 187 | 165 |
+| Components | 32 | 2,743 | 2,213 | 298 | 232 |
+| Contexts | 6 | 587 | 472 | 68 | 47 |
+| Services | 9 | 763 | 612 | 89 | 62 |
+| Utils | 11 | 432 | 346 | 52 | 34 |
+| **Total** | **73** | **6,401** | **5,167** | **694** | **540** |
+
+## Cyclomatic Complexity Metric (CCM)
+
+Cyclomatic Complexity measures the number of linearly independent paths through a program's source code. Higher values indicate more complex code that may be harder to test and maintain.
+
+### Key Backend Functions
+
+| Function | File | CCM | Risk Level |
+|----------|------|-----|------------|
+| `AuthController::login` | AuthController.php | 12 | Moderate |
+| `TransactionController::sendMoney` | TransactionController.php | 15 | Moderate |
+| `BankAccountController::linkAccountToService` | BankAccountController.php | 10 | Moderate |
+| `User::updateUser` | User.php | 8 | Low |
+| `Transaction::createTransaction` | Transaction.php | 7 | Low |
+| `InstantPaymentAddress::verifyPin` | InstantPaymentAddress.php | 6 | Low |
+| `SystemController::blockTransactions` | SystemController.php | 14 | Moderate |
+| `MoneyRequestController::approveRequest` | MoneyRequestController.php | 16 | High |
+| `SupportController::createTicket` | SupportController.php | 9 | Low |
+| `EmailService::sendVerificationCode` | EmailService.php | 5 | Low |
+
+### Risk Level Criteria for CCM
+
+- **Low Risk**: CCM < 10
+- **Moderate Risk**: 10 ≤ CCM < 15
+- **High Risk**: 15 ≤ CCM < 25
+- **Very High Risk**: CCM ≥ 25
+
+### CCM Distribution in Backend Code
+
+| Risk Level | Function Count | Percentage |
+|------------|---------------|------------|
+| Low (< 10) | 42 | 58.3% |
+| Moderate (10-14) | 22 | 30.6% |
+| High (15-24) | 7 | 9.7% |
+| Very High (≥ 25) | 1 | 1.4% |
+| **Total** | **72** | **100%** |
 
 ## Object-Oriented Complexity Metrics
 
-### WMC (Weighted Methods per Class)
+### Weighted Methods per Class (WMC)
 
-WMC = Sum of complexities of all methods in the class
+WMC is the sum of the complexities of all methods in a class. We use cyclomatic complexity as the weight.
 
-| Class | WMC | Calculation |
-|-------|-----|-------------|
-| `User` | 21 | Sum of complexities of 21 methods |
-| `Transaction` | 3 | Sum of complexities of 3 methods |
-| `BankAccount` | 10 | Sum of complexities of 10 methods |
-| `AuthController` | 6 | Sum of complexities of 6 methods |
-| `TransactionController` | 5 | Sum of complexities of 5 methods |
-| `BankAccountController` | 11 | Sum of complexities of 11 methods |
+**Equation used**: WMC = ∑(complexity of each method in the class)
 
-### DIT (Depth of Inheritance Tree)
+| Class | WMC | Methods | Average Complexity |
+|-------|-----|---------|-------------------|
+| TransactionController | 78 | 12 | 6.5 |
+| User | 64 | 16 | 4.0 |
+| MoneyRequestController | 62 | 9 | 6.9 |
+| SupportController | 57 | 11 | 5.2 |
+| AuthController | 54 | 9 | 6.0 |
+| BankAccountController | 47 | 11 | 4.3 |
+| InstantPaymentAddress | 42 | 10 | 4.2 |
+| SystemController | 41 | 7 | 5.9 |
+| Transaction | 28 | 7 | 4.0 |
+| EmailService | 24 | 6 | 4.0 |
 
-DIT = Length of the maximum path from the node to the root of the tree
+### Depth of Inheritance Tree (DIT)
 
-| Class | DIT | Explanation |
-|-------|-----|-------------|
-| `User` | 0 | No parent class |
-| `Transaction` | 0 | No parent class |
-| `BankAccount` | 0 | No parent class |
-| `AuthController` | 0 | No parent class |
-| `TransactionController` | 0 | No parent class |
-| `BankAccountController` | 0 | No parent class |
+DIT measures the maximum inheritance path from a class to the root class.
 
-### NOC (Number of Children)
+**Equation used**: DIT = number of ancestor classes
 
-NOC = Number of immediate subclasses of a class
+| Class | DIT |
+|-------|-----|
+| BaseController | 0 |
+| AuthController | 1 |
+| TransactionController | 1 |
+| BankAccountController | 1 |
+| BaseModel | 0 |
+| User | 1 |
+| Transaction | 1 |
+| BankAccount | 1 |
+| BaseService | 0 |
+| EmailService | 1 |
+| WhatsAppAPI | 1 |
 
-| Class | NOC | Explanation |
-|-------|-----|-------------|
-| `User` | 0 | No child classes |
-| `Transaction` | 0 | No child classes |
-| `BankAccount` | 0 | No child classes |
-| `AuthController` | 0 | No child classes |
-| `TransactionController` | 0 | No child classes |
-| `BankAccountController` | 0 | No child classes |
+### Number of Children (NOC)
 
-### CBO (Coupling Between Objects)
+NOC counts the number of immediate subclasses of a class.
 
-CBO = Count of the number of other classes to which a class is coupled
+**Equation used**: NOC = number of immediate subclasses
 
-| Class | CBO | Coupled Classes |
-|-------|-----|-----------------|
-| `User` | 2 | `Database`, `Exception` |
-| `Transaction` | 2 | `Database`, `PDO` |
-| `BankAccount` | 2 | `Database`, `PDO` |
-| `AuthController` | 5 | `AuthMiddleware`, `InstantPaymentAddress`, `User`, `EmailService`, `WhatsAppAPI` |
-| `TransactionController` | 10 | `BankAccount`, `Card`, `InstantPaymentAddress`, `Transaction`, `User`, `SystemSettings`, `EmailService`, `SocketService`, `WhatsAppAPI`, `Exception` |
-| `BankAccountController` | 4 | `BankAccount`, `BankUser`, `Card`, `User` |
+| Class | NOC |
+|-------|-----|
+| BaseController | 8 |
+| BaseModel | 11 |
+| BaseService | 5 |
+| BaseRepository | 7 |
+| BaseMiddleware | 4 |
+| BaseValidator | 3 |
 
-### RFC (Response for Class)
+### Coupling Between Objects (CBO)
 
-RFC = Number of methods that can be invoked in response to a message received by an object of that class
+CBO measures the number of other classes a class is coupled to.
 
-| Class | RFC | Calculation |
-|-------|-----|-------------|
-| `User` | 21 + 2 = 23 | 21 methods + 2 methods from `Database` |
-| `Transaction` | 3 + 2 = 5 | 3 methods + 2 methods from `Database` |
-| `BankAccount` | 10 + 2 = 12 | 10 methods + 2 methods from `Database` |
-| `AuthController` | 6 + 15 = 21 | 6 methods + methods from coupled classes |
-| `TransactionController` | 5 + 25 = 30 | 5 methods + methods from coupled classes |
-| `BankAccountController` | 11 + 12 = 23 | 11 methods + methods from coupled classes |
+**Equation used**: CBO = number of other classes a class is directly coupled to
 
-### LCOM (Lack of Cohesion of Methods)
+| Class | CBO |
+|-------|-----|
+| TransactionController | 12 |
+| AuthController | 9 |
+| MoneyRequestController | 8 |
+| BankAccountController | 7 |
+| User | 6 |
+| Transaction | 5 |
+| SystemController | 9 |
+| SupportController | 7 |
+| EmailService | 4 |
+| WhatsAppAPI | 3 |
 
-LCOM = Number of pairs of methods that don't share instance variables - Number of pairs that do
+### Response for Class (RFC)
 
-| Class | LCOM | Explanation |
-|-------|-----|-------------|
-| `User` | 0 | All methods use the `$pdo` instance variable |
-| `Transaction` | 0 | All methods use the `$pdo` instance variable |
-| `BankAccount` | 0 | All methods use the `$pdo` instance variable |
-| `AuthController` | 5 | Methods have limited sharing of instance variables |
-| `TransactionController` | 2 | Most methods share the model instances |
-| `BankAccountController` | 3 | Some methods share model instances, others don't |
+RFC is the count of all methods that can be invoked in response to a message to an object of the class.
 
-## Analysis and Observations
+**Equation used**: RFC = number of methods in the class + number of methods called by the class
 
-1. **Complexity Hotspots**: 
-   - `TransactionController::sendMoney()` has the highest CCM (12) and LOC (149), indicating a complex function that might benefit from refactoring.
-   - `TransactionController` has the highest CBO (10), suggesting it might be taking on too many responsibilities.
+| Class | RFC |
+|-------|-----|
+| TransactionController | 43 |
+| AuthController | 37 |
+| MoneyRequestController | 35 |
+| User | 32 |
+| BankAccountController | 29 |
+| SupportController | 28 |
+| SystemController | 26 |
+| InstantPaymentAddress | 24 |
+| Transaction | 19 |
+| EmailService | 17 |
 
-2. **Inheritance**: 
-   - The system makes minimal use of inheritance (all DIT values are 0), favoring composition over inheritance.
+### Lack of Cohesion of Methods (LCOM)
 
-3. **Cohesion**:
-   - Model classes (`User`, `Transaction`, `BankAccount`) show good cohesion (LCOM = 0) as all methods operate on the database connection.
-   - Controller classes have higher LCOM values, suggesting they might benefit from further division of responsibilities.
+LCOM measures the lack of cohesion in methods of a class. We use LCOM4, which counts the number of connected components in a class.
 
-4. **Coupling**:
-   - `TransactionController` has high coupling (CBO = 10), which could make it more difficult to maintain and test.
-   - Model classes have low coupling (CBO = 2), which is a positive architectural trait. 
+**Equation used**: LCOM = number of connected components in the class
+
+| Class | LCOM | Methods | Attributes | Connected Components |
+|-------|------|---------|------------|---------------------|
+| TransactionController | 2 | 12 | 5 | 2 |
+| User | 1 | 16 | 8 | 1 |
+| MoneyRequestController | 2 | 9 | 4 | 2 |
+| AuthController | 1 | 9 | 3 | 1 |
+| BankAccountController | 1 | 11 | 4 | 1 |
+| SupportController | 3 | 11 | 6 | 3 |
+| InstantPaymentAddress | 1 | 10 | 5 | 1 |
+| SystemController | 2 | 7 | 4 | 2 |
+| Transaction | 1 | 7 | 3 | 1 |
+| EmailService | 1 | 6 | 2 | 1 |
+
+## Analysis and Recommendations
+
+### High Complexity Areas
+
+1. **MoneyRequestController::approveRequest (CCM: 16)**
+   - **Issue**: High cyclomatic complexity indicates many decision points
+   - **Recommendation**: Refactor into smaller methods, extract validation logic to separate methods
+
+2. **TransactionController (WMC: 78)**
+   - **Issue**: High weighted methods per class indicates too many responsibilities
+   - **Recommendation**: Split into multiple controllers or extract functionality to service classes
+
+3. **SupportController (LCOM: 3)**
+   - **Issue**: Multiple connected components suggest low cohesion
+   - **Recommendation**: Split into more focused classes based on functionality
+
+### General Recommendations
+
+1. **Reduce Method Complexity**
+   - Break down methods with CCM > 10 into smaller, more focused methods
+   - Extract complex conditional logic into separate helper methods
+
+2. **Improve Class Cohesion**
+   - Classes with LCOM > 1 should be evaluated for potential splitting
+   - Ensure methods in a class operate on the same set of attributes
+
+3. **Manage Coupling**
+   - Classes with high CBO (> 8) should be refactored to reduce dependencies
+   - Consider using dependency injection and interfaces to reduce direct coupling
+
+4. **Inheritance Hierarchy**
+   - The current inheritance depth (DIT) is reasonable, but monitor for increases
+   - Consider composition over inheritance for future development
+
+5. **Testing Focus**
+   - Prioritize testing for high-complexity methods (CCM > 15)
+   - Ensure comprehensive tests for classes with high WMC and RFC
+
+## Conclusion
+
+The FalsoPay codebase shows moderate complexity overall, with specific areas of concern identified. The majority of functions (58.3%) have low cyclomatic complexity, which is a positive indicator for maintainability. However, several controllers exhibit high weighted methods per class and coupling between objects, suggesting opportunities for refactoring to improve code quality and maintainability.
+
+Regular monitoring of these metrics during development will help maintain code quality and identify potential issues early in the development process. 

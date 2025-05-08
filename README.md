@@ -4,15 +4,15 @@ This repository contains the database design for the Falsopay financial applicat
 
 ## Available Documentation
 
-1. **Entity-Relationship Diagram (ERD)** - [falsopay_erd.md](falsopay_erd.md)
+1. **Entity-Relationship Diagram (ERD)** - [falsopay_erd.md](docs/design/ERD/falsopay_erd.md)
    * Visual representation of all entities and their relationships
    * Includes detailed entity attributes
 
-2. **Table Schema** - [falsopay_table_schema.md](falsopay_table_schema.md)
+2. **Table Schema** - [falsopay_table_schema.md](docs/design/ERD/falsopay_table_schema.md)
    * Complete SQL CREATE statements for all tables
    * Includes data types, constraints, and foreign key relationships
 
-3. **Database Diagram** - [falsopay_db_diagram.puml](falsopay_db_diagram.puml)
+3. **Database Diagram** - [falsopay_db_diagram.puml](docs/design/ERD/falsopay_db_diagram.puml)
    * PlantUML diagram showing the database structure
    * Can be rendered using PlantUML tools or online services
 

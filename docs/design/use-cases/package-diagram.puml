@@ -1,0 +1,88 @@
+@startuml FalsoPay Package Diagram
+
+skinparam packageStyle rectangle
+skinparam backgroundColor white
+skinparam shadowing false
+
+package "1. User Authentication Package" as Auth {
+  usecase "Register"
+  usecase "Log In"
+  usecase "Delete Account"
+  usecase "Change PIN"
+  usecase "PIN For Transaction"
+}
+
+package "2. Account Management Package" as Account {
+  usecase "Edit Personal Info"
+  usecase "Change Display Name"
+  usecase "Change Default IPA Address"
+  usecase "View Your IPA Addresses"
+  usecase "Enable/Disable Notifications"
+  usecase "Block App Transactions"
+  usecase "Unblock App Transactions"
+  usecase "Set Transfer Limit"
+}
+
+package "3. Banking Operations Package" as Banking {
+  usecase "Link Bank Account"
+  usecase "Verify Bank Account Details"
+  usecase "Delete Linked Bank Account"
+  usecase "Receive Confirmation"
+}
+
+package "4. Money Transfer Package" as Transfer {
+  usecase "Send Money"
+  usecase "Request Money"
+  usecase "Authorize Sending Money"
+  usecase "Choose Transfer Method"
+  usecase "Send Money via QR Code"
+  usecase "Scan QR Code"
+}
+
+package "5. Transaction Management Package" as Transaction {
+  usecase "Check Balance"
+  usecase "View Transaction History"
+  usecase "Filter Transaction"
+  usecase "Update Balance"
+  usecase "Handle Failed Transactions"
+  usecase "Authorize Real-Time Transactions"
+}
+
+package "6. Contacts Management Package" as Contacts {
+  usecase "Add Recipients to Favorites for Quick Transfer"
+  usecase "Delete Favorite"
+  usecase "Search"
+}
+
+package "7. Customer Support Package" as Support {
+  usecase "Contact Customer Support"
+}
+
+package "8. Administration Package" as Admin {
+  usecase "View User Reports"
+  usecase "Deactivate User Account"
+  usecase "Manage Roles"
+  usecase "Set Ticket Status"
+  usecase "Send Notification"
+  usecase "Refresh Tickets"
+  usecase "Check System Status"
+}
+
+' Package relationships
+Auth <-- Account
+Auth <-- Banking
+Auth <-- Transfer
+Auth <-- Transaction
+Auth <-- Contacts
+Auth <-- Support
+Auth <-- Admin
+
+Transfer --> Transaction
+Banking --> Transaction
+Admin --> Account
+Admin --> Banking
+Admin --> Transfer
+Admin --> Transaction
+Admin --> Support
+
+@enduml 

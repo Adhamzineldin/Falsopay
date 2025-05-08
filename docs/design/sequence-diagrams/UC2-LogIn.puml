@@ -1,88 +1,140 @@
 @startuml UC2-LogIn
 
-actor "Registered User" as User
+actor "User" as User
 participant "FalsoPay App" as App
 participant "API Gateway" as Gateway
 participant "Authentication Service" as AuthService
 participant "User Service" as UserService
 participant "IPA Service" as IPAService
+participant "Notification Service" as NotifService
 participant "Database" as DB
 
 title UC-2: Log In
 
-User -> App: Enter phone number and PIN
+User -> App: Enter phone number
 activate App
 
-App -> App: Validate input format
-App -> Gateway: POST /api/login
+App -> Gateway: POST /api/auth/verify-phone
 activate Gateway
 
-Gateway -> AuthService: Authenticate user
+Gateway -> AuthService: Verify phone number
 activate AuthService
 
-AuthService -> UserService: Get user by phone number
+AuthService -> UserService: Check if user exists
 activate UserService
 
-UserService -> DB: Retrieve user record
+UserService -> DB: Query user by phone
 activate DB
-DB --> UserService: User data
+DB --> UserService: User data (or null)
 deactivate DB
 
 alt User not found
     UserService --> AuthService: User not found
     AuthService --> Gateway: 404 Not Found
     Gateway --> App: 404 Not Found
-    App --> User: Display error message
-else User is blocked
-    UserService --> AuthService: User is blocked
-    AuthService --> Gateway: 403 Forbidden
-    Gateway --> App: 403 Forbidden
-    App --> User: Display account blocked message
+    App --> User: Redirect to registration
 else User found
     UserService --> AuthService: User found
-    deactivate UserService
     
-    AuthService -> IPAService: Get user's IPA accounts
-    activate IPAService
+    AuthService -> NotifService: Generate and send verification code
+    activate NotifService
+    NotifService -> NotifService: Generate verification code
+    NotifService -> DB: Store verification code
+    NotifService -> NotifService: Send SMS with code
+    NotifService --> AuthService: Code sent
+    deactivate NotifService
     
-    IPAService -> DB: Retrieve IPA accounts
+    AuthService --> Gateway: 200 OK (Code sent)
+    Gateway --> App: 200 OK
+    App --> User: Enter verification code
+    
+    User -> App: Enter verification code
+    App -> Gateway: POST /api/auth/verify-code
+    
+    Gateway -> AuthService: Verify code
+    
+    AuthService -> DB: Check verification code
     activate DB
-    DB --> IPAService: IPA account data
+    DB --> AuthService: Verification result
     deactivate DB
     
-    alt No IPA accounts found
-        IPAService --> AuthService: No IPA accounts
+    alt Invalid code
         AuthService --> Gateway: 401 Unauthorized
         Gateway --> App: 401 Unauthorized
         App --> User: Display error message
-    else IPA accounts found
-        IPAService --> AuthService: IPA accounts
+    else Valid code
+        AuthService --> Gateway: 200 OK
+        Gateway --> App: 200 OK
         
-        AuthService -> IPAService: Verify PIN
-        IPAService -> DB: Check PIN against stored hash
+        AuthService -> UserService: Get user details
+        UserService -> DB: Get user account status
         activate DB
-        DB --> IPAService: PIN verification result
+        DB --> UserService: User account details
+        deactivate DB
+        UserService --> AuthService: User details
+        deactivate UserService
+        
+        AuthService -> IPAService: Check for default account
+        activate IPAService
+        IPAService -> DB: Query default IPA account
+        activate DB
+        DB --> IPAService: Default account (or null)
         deactivate DB
         
-        alt Invalid PIN
-            IPAService --> AuthService: PIN verification failed
-            AuthService --> Gateway: 401 Unauthorized
-            Gateway --> App: 401 Unauthorized
-            App --> User: Display invalid PIN message
-        else Valid PIN
-            IPAService --> AuthService: PIN verified
-            deactivate IPAService
-            
+        alt No default account
+            IPAService --> AuthService: No default account
             AuthService -> AuthService: Generate access token
-            AuthService --> Gateway: Authentication successful with token
-            deactivate AuthService
-            
-            Gateway --> App: 200 OK with token and user data
-            deactivate Gateway
-            
+            AuthService --> Gateway: 200 OK with token
+            Gateway --> App: 200 OK with token
             App -> App: Store token
             App --> User: Display dashboard
-            deactivate App
+        else Has default account
+            IPAService --> AuthService: Default account exists
+            AuthService --> Gateway: 200 OK with prompt
+            Gateway --> App: 200 OK with prompt
+            App --> User: Enter IPA address for verification
+            
+            alt User requests account reset
+                User -> App: Select "Reset Account"
+                App -> Gateway: POST /api/auth/reset-account
+                Gateway -> AuthService: Reset account request
+                AuthService -> UserService: Mark account for reset
+                UserService -> DB: Update user status
+                UserService --> AuthService: Account marked for reset
+                AuthService --> Gateway: 200 OK
+                Gateway --> App: 200 OK
+                App --> User: Redirect to registration
+            else User enters IPA
+                User -> App: Enter IPA address
+                App -> Gateway: POST /api/auth/verify-ipa
+                Gateway -> AuthService: Verify IPA
+                
+                AuthService -> IPAService: Verify IPA belongs to user
+                IPAService -> DB: Check IPA ownership
+                activate DB
+                DB --> IPAService: Verification result
+                deactivate DB
+                
+                alt Invalid IPA
+                    IPAService --> AuthService: IPA verification failed
+                    AuthService --> Gateway: 401 Unauthorized
+                    Gateway --> App: 401 Unauthorized
+                    App --> User: Display error message
+                else Valid IPA
+                    IPAService --> AuthService: IPA verified
+                    deactivate IPAService
+                    
+                    AuthService -> AuthService: Generate access token
+                    AuthService --> Gateway: 200 OK with token
+                    deactivate AuthService
+                    Gateway --> App: 200 OK with token
+                    deactivate Gateway
+                    
+                    App -> App: Store token
+                    App --> User: Display dashboard
+                    deactivate App
+                end
+            end
         end
     end
 end

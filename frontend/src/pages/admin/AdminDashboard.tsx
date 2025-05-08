@@ -195,7 +195,7 @@ const AdminDashboard = () => {
       } else {
         // For regular tickets with user_id, use the admin reply endpoint
         await SupportService.addAdminReply({
-          admin_id: user.user_id,
+          user_id: user.user_id,
           ticket_id: activeTicket.ticket.ticket_id,
           message: reply.trim(),
         });

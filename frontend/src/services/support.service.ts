@@ -194,6 +194,7 @@ export class SupportService {
   }
 
   static async addAdminReply(data: {
+    user_id: number,
     ticket_id: number;
     message: string;
   }): Promise<TicketReply> {

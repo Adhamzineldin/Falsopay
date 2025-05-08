@@ -619,7 +619,7 @@ const AdminDashboard = () => {
                             >
                               <div className="flex justify-between items-center mb-2">
                                 <div className="font-semibold flex items-center gap-2">
-                                  {reply.first_name} {reply.last_name}
+                                  {[reply.first_name, reply.last_name].filter(Boolean).join(' ')}
                                   {reply.is_admin && (
                                     <Badge variant="secondary" className="text-xs">Support Team</Badge>
                                   )}

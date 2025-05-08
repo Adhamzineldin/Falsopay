@@ -68,8 +68,9 @@ class User {
 // Controller
 class AuthController {
     public function login(array $data) {
-        // Handle login request
-        // Use User model to validate credentials
+        // Handle login request using phone number and PIN
+        // Verify PIN against stored hash
+        // Generate authentication token
         // Return response
     }
 }

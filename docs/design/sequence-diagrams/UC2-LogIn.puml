@@ -5,12 +5,12 @@ participant "FalsoPay App" as App
 participant "API Gateway" as Gateway
 participant "Authentication Service" as AuthService
 participant "User Service" as UserService
-participant "Account Service" as AccountService
+participant "IPA Service" as IPAService
 participant "Database" as DB
 
 title UC-2: Log In
 
-User -> App: Enter email/phone and password
+User -> App: Enter phone number and PIN
 activate App
 
 App -> App: Validate input format
@@ -20,7 +20,7 @@ activate Gateway
 Gateway -> AuthService: Authenticate user
 activate AuthService
 
-AuthService -> UserService: Validate credentials
+AuthService -> UserService: Get user by phone number
 activate UserService
 
 UserService -> DB: Retrieve user record
@@ -28,48 +28,63 @@ activate DB
 DB --> UserService: User data
 deactivate DB
 
-UserService -> UserService: Verify password
-
-alt Invalid credentials
-    UserService --> AuthService: Authentication failed
-    AuthService --> Gateway: 401 Unauthorized
-    Gateway --> App: 401 Unauthorized
+alt User not found
+    UserService --> AuthService: User not found
+    AuthService --> Gateway: 404 Not Found
+    Gateway --> App: 404 Not Found
     App --> User: Display error message
-else Forgotten password
-    User -> App: Select "Forgot Password"
-    App -> Gateway: POST /api/password-reset
-    Gateway -> UserService: Initiate password reset
-    UserService -> DB: Create reset token
-    UserService -> NotifService: Send reset instructions
-    NotifService --> UserService: Notification sent
-    UserService --> Gateway: 200 OK
-    Gateway --> App: 200 OK
-    App --> User: Display reset instructions
-else Success
-    UserService --> AuthService: Credentials valid
+else User is blocked
+    UserService --> AuthService: User is blocked
+    AuthService --> Gateway: 403 Forbidden
+    Gateway --> App: 403 Forbidden
+    App --> User: Display account blocked message
+else User found
+    UserService --> AuthService: User found
     deactivate UserService
     
-    AuthService -> AuthService: Generate access token
-    AuthService --> Gateway: Authentication successful with token
-    deactivate AuthService
+    AuthService -> IPAService: Get user's IPA accounts
+    activate IPAService
     
-    Gateway -> AccountService: GET /balance
-    activate AccountService
-    
-    AccountService -> DB: Retrieve account balance
+    IPAService -> DB: Retrieve IPA accounts
     activate DB
-    DB --> AccountService: Balance data
+    DB --> IPAService: IPA account data
     deactivate DB
     
-    AccountService --> Gateway: Balance information
-    deactivate AccountService
-    
-    Gateway --> App: 200 OK with token and balance
-    deactivate Gateway
-    
-    App -> App: Store token
-    App --> User: Display dashboard with balance
-    deactivate App
+    alt No IPA accounts found
+        IPAService --> AuthService: No IPA accounts
+        AuthService --> Gateway: 401 Unauthorized
+        Gateway --> App: 401 Unauthorized
+        App --> User: Display error message
+    else IPA accounts found
+        IPAService --> AuthService: IPA accounts
+        
+        AuthService -> IPAService: Verify PIN
+        IPAService -> DB: Check PIN against stored hash
+        activate DB
+        DB --> IPAService: PIN verification result
+        deactivate DB
+        
+        alt Invalid PIN
+            IPAService --> AuthService: PIN verification failed
+            AuthService --> Gateway: 401 Unauthorized
+            Gateway --> App: 401 Unauthorized
+            App --> User: Display invalid PIN message
+        else Valid PIN
+            IPAService --> AuthService: PIN verified
+            deactivate IPAService
+            
+            AuthService -> AuthService: Generate access token
+            AuthService --> Gateway: Authentication successful with token
+            deactivate AuthService
+            
+            Gateway --> App: 200 OK with token and user data
+            deactivate Gateway
+            
+            App -> App: Store token
+            App --> User: Display dashboard
+            deactivate App
+        end
+    end
 end
 
 @enduml 

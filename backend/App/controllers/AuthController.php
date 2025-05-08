@@ -102,13 +102,19 @@ class AuthController
     }
 
 
+    /**
+     * Handle user login
+     * 
+     * @param array $data Request data containing phone_number and pin
+     * @return void
+     */
     #[NoReturn] public static function login(array $data): void
     {
         $userModel = new User();
         $authMiddleware = new AuthMiddleware();
         $ipaModel = new InstantPaymentAddress();
 
-        $fields = ['phone_number', 'ipa_address'];
+        $fields = ['phone_number', 'pin'];
 
         foreach ($fields as $field) {
             if (!isset($data[$field])) {
@@ -122,31 +128,28 @@ class AuthController
             self::json(['error' => 'User not found'], 404);
         }
         
-        // Check if user is blocked
         if ($user['status'] === 'blocked') {
             self::json(['error' => 'Your account has been blocked. Please contact support for assistance.'], 403);
         }
 
         $ipa_accounts = $ipaModel->getAllByUserId($user['user_id']);
-
+        
         if (empty($ipa_accounts)) {
-            $user_token = $authMiddleware->generateToken($user['user_id']);
-            self::json(['success' => true, 'user_token' => $user_token, 'user' => $user]);
+            self::json(['error' => 'No IPA accounts found for this user'], 401);
         } else {
-            $ipaExists = false;
+            $validPin = false;
             foreach ($ipa_accounts as $ipa_account) {
-                // Compare IPA addresses in lowercase
-                if (strtolower($ipa_account['ipa_address']) === strtolower($data['ipa_address'])) {
-                    $ipaExists = true;
+                if ($ipaModel->verifyPin($user['user_id'], $ipa_account['ipa_address'], $data['pin'])) {
+                    $validPin = true;
                     break;
                 }
             }
 
-            if ($ipaExists) {
+            if ($validPin) {
                 $user_token = $authMiddleware->generateToken($user['user_id']);
                 self::json(['success' => true, 'user_token' => $user_token, 'user' => $user]);
             } else {
-                self::json(['error' => 'Invalid IPA'], 401);
+                self::json(['error' => 'Invalid PIN'], 401);
             }
         }
     }

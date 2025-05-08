@@ -65,7 +65,7 @@ FalsoPay is a digital payment platform that enables users to send and receive mo
 
 #### 2.1.1 User Authentication and Management
 1. Users shall be able to register using their phone number, email, and personal information.
-2. Users shall be able to log in using their phone number and IPA address.
+2. Users shall be able to log in using their phone number and PIN.
 3. Users shall be able to manage their profile information.
 4. Users shall be able to delete their account.
 

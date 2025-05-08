@@ -518,9 +518,9 @@ const AdminDashboard = () => {
                             <div className="flex items-center gap-2 mb-1">
                               {getStatusIcon(ticket.status)}
                               <h3 className="font-semibold text-sm">{ticket.subject}</h3>
-                              {ticket.is_public && (
+                              {ticket.is_public ? (
                                 <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-300 text-xs">Public</Badge>
-                              )}
+                              ) : " "}
                             </div>
                             <div className="flex justify-between items-center">
                               <p className="text-xs text-gray-500">
@@ -552,9 +552,9 @@ const AdminDashboard = () => {
                         <div>
                           <div className="flex items-center gap-2">
                             <CardTitle>{activeTicket.ticket.subject}</CardTitle>
-                            {activeTicket.ticket.is_public && (
+                            {activeTicket.ticket.is_public ? (
                               <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-300">Public Ticket</Badge>
-                            )}
+                            ) : " "}
                           </div>
                           <CardDescription>
                             {activeTicket.ticket.is_public ? (
@@ -620,9 +620,9 @@ const AdminDashboard = () => {
                               <div className="flex justify-between items-center mb-2">
                                 <div className="font-semibold flex items-center gap-2">
                                   {[reply.first_name, reply.last_name].filter(Boolean).join(' ')}
-                                  {reply.is_admin && (
+                                  {reply.is_admin ? (
                                     <Badge variant="secondary" className="text-xs">Support Team</Badge>
-                                  )}
+                                  ) : " "}
                                 </div>
                                 <div className="text-sm text-gray-500">
                                   {formatDate(reply.created_at)}

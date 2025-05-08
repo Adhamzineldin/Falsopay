@@ -174,6 +174,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const login = async (phone: string, ipa: string | null): Promise<{success: boolean, code?: string, user?: User, token?: string, blocked?: boolean} | false> => {
     setIsLoading(true);
 
+    // Save the phone number to localStorage right at the beginning to ensure it's preserved
+    // This ensures phone number persists even if there's an IPA verification error
+    localStorage.setItem('auth_phone', phone);
+
     try {
       console.log('Attempting to login with phone', ipa ? 'and IPA' : 'without IPA');
       try {

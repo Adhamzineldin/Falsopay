@@ -107,11 +107,21 @@ const AuthFlow = () => {
         };
     }, []);
 
-    // Generate verification PIN (mock implementation)
-    const generatePin = () => {
-        const $code = Math.floor(1000 + Math.random() * 9000).toString();
-        AuthService.sendCode(phoneNumber, $code); // Assuming this is just a mock and doesn't need to be awaited
-        return $code;
+    // Generate verification PIN 
+    const generatePin = async () => {
+        const code = Math.floor(1000 + Math.random() * 9000).toString();
+        try {
+            await AuthService.sendCode(phoneNumber, code);
+            return code;
+        } catch (error) {
+            console.error('Error sending verification code:', error);
+            toast({
+                title: "Error",
+                description: "Failed to send verification code. Please try again.",
+                variant: "destructive",
+            });
+            throw error;
+        }
     }
 
     // Generate email verification code
@@ -140,6 +150,9 @@ const AuthFlow = () => {
             return;
         }
 
+        // Always save phone number to localStorage at this step
+        localStorage.setItem('auth_phone', phoneNumber);
+        
         setIsLoading(true);
         try {
             // Check if user exists with this phone number
@@ -169,21 +182,27 @@ const AuthFlow = () => {
                 }
             }
 
-            // Generate and send verification code locally
-            const newPin = generatePin();
-            setVerificationPin(newPin);
-
-            toast({
-                title: "Verification Code Sent",
-                description: "A verification code has been sent to your phone number",
-            });
-
-            setCurrentStep('phone-verification');
+            // Generate and send verification code
+            try {
+                const newPin = await generatePin();
+                setVerificationPin(newPin);
+                
+                toast({
+                    title: "Verification Code Sent",
+                    description: "A verification code has been sent to your phone number",
+                });
+                
+                setCurrentStep('phone-verification');
+            } catch (codeError) {
+                // Error handling is done inside generatePin function
+                // Just log it here for debugging
+                console.error('Failed to generate/send PIN:', codeError);
+            }
         } catch (error) {
             console.error('Phone submission error:', error);
             toast({
                 title: "Error",
-                description: "Failed to process your phone number. Please try again.",
+                description: "There was a problem verifying your phone number. Please try again.",
                 variant: "destructive",
             });
         } finally {
@@ -278,14 +297,17 @@ const AuthFlow = () => {
 
         setIsLoading(true);
         try {
+            // Store phone number in a local variable to ensure it's available later
+            const currentPhoneNumber = phoneNumber;
+            
             // Use login with phone number and IPA address
-            const result = await login(phoneNumber, ipaAddress);
+            const result = await login(currentPhoneNumber, ipaAddress);
 
             if (result && result.success) {
                 // If login succeeds, use the verification code from the result for the next step
                 if (result.code) {
                     // Pass the user and token directly to avoid race condition
-                    await verifyLoginCode(phoneNumber, result.code, {
+                    await verifyLoginCode(currentPhoneNumber, result.code, {
                         user: result.user,
                         token: result.token
                     });
@@ -349,14 +371,17 @@ const AuthFlow = () => {
 
         setIsLoading(true);
         try {
+            // Store phone number in a local variable to ensure it's available later
+            const currentPhoneNumber = phoneNumber;
+            
             // Try to login with the provided IPA address
-            const result = await login(phoneNumber, ipaAddress);
+            const result = await login(currentPhoneNumber, ipaAddress);
 
             if (result && result.success) {
                 // If login succeeds, complete the process with the verification code
                 if (result.code) {
                     // Pass the user and token directly to avoid race condition
-                    await verifyLoginCode(phoneNumber, result.code, {
+                    await verifyLoginCode(currentPhoneNumber, result.code, {
                         user: result.user,
                         token: result.token
                     });
@@ -525,8 +550,8 @@ const AuthFlow = () => {
     // Handle resend verification code
     const handleResendCode = () => {
         setIsLoading(true);
-        setTimeout(() => {
-            const newPin = generatePin();
+        setTimeout(async () => {
+            const newPin = await generatePin();
             setVerificationPin(newPin);
             toast({
                 title: "Code Resent",
@@ -558,6 +583,10 @@ const AuthFlow = () => {
         } else if (currentStep === 'email-verification') {
             setCurrentStep('registration');
         } else if (currentStep === 'default-account' || currentStep === 'ipa-verification' || currentStep === 'registration') {
+            // Make sure the phone number is still saved in localStorage before going back
+            if (phoneNumber) {
+                localStorage.setItem('auth_phone', phoneNumber);
+            }
             setCurrentStep('phone-verification');
         } else if (currentStep === 'account-blocked') {
             // Allow users to go back to phone entry from blocked screen

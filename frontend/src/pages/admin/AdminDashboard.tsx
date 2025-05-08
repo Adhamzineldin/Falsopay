@@ -436,56 +436,57 @@ const AdminDashboard = () => {
 
   return (
     <MainLayout>
-      <div className="container mx-auto px-4 py-4 md:py-8 max-w-full">
-        <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-8">Admin Dashboard</h1>
+      <div className="container mx-auto px-2 py-2 md:px-4 md:py-4 max-w-full">
+        <h1 className="text-xl md:text-2xl lg:text-3xl font-bold mb-3 md:mb-4">Admin Dashboard</h1>
         
         <Tabs defaultValue="support" className="w-full">
-          <TabsList className="mb-4 md:mb-6 w-full overflow-x-auto flex-nowrap whitespace-nowrap max-w-full">
-            <TabsTrigger value="support" className="text-xs md:text-sm">
-              <TicketIcon className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
-              Support Tickets
+          <TabsList className="mb-3 md:mb-4 w-full overflow-x-auto flex-nowrap whitespace-nowrap max-w-full">
+            <TabsTrigger value="support" className="text-xs sm:text-sm px-1 py-1 sm:px-2">
+              <TicketIcon className="h-3 w-3 md:h-4 md:w-4 mr-1" />
+              <span className="hidden xs:inline">Support</span> Tickets
             </TabsTrigger>
-            <TabsTrigger value="users" className="text-xs md:text-sm">
-              <Users className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
-              User Management
+            <TabsTrigger value="users" className="text-xs sm:text-sm px-1 py-1 sm:px-2">
+              <Users className="h-3 w-3 md:h-4 md:w-4 mr-1" />
+              <span className="hidden xs:inline">User</span> Management
             </TabsTrigger>
-            <TabsTrigger value="transfers" className="text-xs md:text-sm">
-              <DollarSign className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
-              Transfer Settings
+            <TabsTrigger value="transfers" className="text-xs sm:text-sm px-1 py-1 sm:px-2">
+              <DollarSign className="h-3 w-3 md:h-4 md:w-4 mr-1" />
+              <span className="hidden xs:inline">Transfer</span> Settings
             </TabsTrigger>
-            <TabsTrigger value="system" className="text-xs md:text-sm">
-              <Activity className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
-              System Status
+            <TabsTrigger value="system" className="text-xs sm:text-sm px-1 py-1 sm:px-2">
+              <Activity className="h-3 w-3 md:h-4 md:w-4 mr-1" />
+              <span className="hidden xs:inline">System</span> Status
             </TabsTrigger>
           </TabsList>
           
           <TabsContent value="support">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-4">
               <div className="lg:col-span-1">
-                <Card>
-                  <CardHeader className="p-4 md:p-6">
-                    <CardTitle className="flex justify-between items-center text-lg md:text-xl">
-                      <span>Support Tickets</span>
+                <Card className="overflow-hidden">
+                  <CardHeader className="p-3 md:p-4">
+                    <CardTitle className="flex justify-between items-center text-base md:text-lg">
+                      <span className="truncate">Support Tickets</span>
                       <Button 
                         variant="outline" 
                         size="icon" 
                         onClick={fetchTickets}
                         title="Refresh tickets"
+                        className="h-7 w-7"
                       >
-                        <RefreshCw className="h-4 w-4" />
+                        <RefreshCw className="h-3 w-3 md:h-4 md:w-4" />
                       </Button>
                     </CardTitle>
-                    <CardDescription>
+                    <CardDescription className="text-xs md:text-sm">
                       Manage customer support tickets
                     </CardDescription>
                     
-                    <div className="mt-3 md:mt-4">
-                      <Label htmlFor="status-filter">Filter by Status</Label>
+                    <div className="mt-2 md:mt-3">
+                      <Label htmlFor="status-filter" className="text-xs md:text-sm">Filter by Status</Label>
                       <Select 
                         value={statusFilter} 
                         onValueChange={handleStatusFilterChange}
                       >
-                        <SelectTrigger id="status-filter" className="mt-1">
+                        <SelectTrigger id="status-filter" className="mt-1 h-8 text-xs md:text-sm">
                           <SelectValue placeholder="Filter by status" />
                         </SelectTrigger>
                         <SelectContent>
@@ -498,32 +499,32 @@ const AdminDashboard = () => {
                       </Select>
                     </div>
                   </CardHeader>
-                  <CardContent className="p-4 md:p-6 pt-0 md:pt-0 max-h-[40vh] md:max-h-[calc(100vh-300px)] overflow-y-auto">
+                  <CardContent className="p-3 md:p-4 pt-0 md:pt-0 max-h-[40vh] md:max-h-[calc(100vh-300px)] overflow-y-auto">
                     {isLoadingTickets ? (
-                      <div className="flex justify-center py-4 md:py-8">
-                        <div className="loader">Loading...</div>
+                      <div className="flex justify-center py-3 md:py-4">
+                        <div className="loader text-sm">Loading...</div>
                       </div>
                     ) : tickets.length === 0 ? (
-                      <div className="text-center py-4 md:py-8">
-                        <p className="text-gray-500">No tickets found</p>
+                      <div className="text-center py-3 md:py-4">
+                        <p className="text-gray-500 text-xs md:text-sm">No tickets found</p>
                       </div>
                     ) : (
-                      <div className="space-y-2 md:space-y-3">
+                      <div className="space-y-2">
                         {tickets && tickets.map((ticket) => (
                           <div 
                             key={ticket.ticket_id}
-                            className={`border rounded-lg p-2 md:p-3 hover:bg-gray-50 cursor-pointer transition-colors ${activeTicket?.ticket.ticket_id === ticket.ticket_id ? 'border-blue-500 bg-blue-50' : ''}`}
+                            className={`border rounded-lg p-2 hover:bg-gray-50 cursor-pointer transition-colors ${activeTicket?.ticket.ticket_id === ticket.ticket_id ? 'border-blue-500 bg-blue-50' : ''}`}
                             onClick={() => fetchTicketDetails(ticket.ticket_id)}
                           >
-                            <div className="flex items-center gap-1 md:gap-2 mb-1">
+                            <div className="flex items-center gap-1 mb-1">
                               {getStatusIcon(ticket.status)}
-                              <h3 className="font-semibold text-xs md:text-sm line-clamp-1">{ticket.subject}</h3>
+                              <h3 className="font-semibold text-xs line-clamp-1">{ticket.subject}</h3>
                               {ticket.is_public ? (
-                                <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-300 text-xs shrink-0">Public</Badge>
+                                <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-300 text-[10px] px-1 py-0 h-4 shrink-0">Public</Badge>
                               ) : " "}
                             </div>
                             <div className="flex justify-between items-center">
-                              <p className="text-xs text-gray-500 line-clamp-1 mr-1">
+                              <p className="text-[10px] md:text-xs text-gray-500 line-clamp-1 mr-1">
                                 {ticket.is_public 
                                   ? ticket.contact_name || `${ticket.first_name} ${ticket.last_name}`
                                   : `${ticket.first_name} ${ticket.last_name}`
@@ -533,7 +534,7 @@ const AdminDashboard = () => {
                                 {getStatusBadge(ticket.status)}
                               </div>
                             </div>
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-[10px] md:text-xs text-gray-500 mt-1">
                               {formatDate(ticket.created_at)}
                             </p>
                           </div>
@@ -544,45 +545,45 @@ const AdminDashboard = () => {
                 </Card>
               </div>
               
-              <div className="lg:col-span-2">
+              <div className="lg:col-span-2 mt-3 lg:mt-0">
                 {activeTicket ? (
-                  <Card>
-                    <CardHeader className="p-4 md:p-6">
-                      <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-2 md:gap-0">
+                  <Card className="overflow-hidden">
+                    <CardHeader className="p-3 md:p-4">
+                      <div className="flex flex-col gap-2">
                         <div>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <CardTitle className="text-lg md:text-xl break-words">{activeTicket.ticket.subject}</CardTitle>
+                          <div className="flex flex-wrap items-center gap-1 md:gap-2">
+                            <CardTitle className="text-base md:text-lg break-words">{activeTicket.ticket.subject}</CardTitle>
                             {activeTicket.ticket.is_public ? (
-                              <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-300 mt-1 md:mt-0">Public Ticket</Badge>
+                              <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-300 text-xs">Public</Badge>
                             ) : " "}
                           </div>
-                          <CardDescription className="mt-1">
+                          <CardDescription className="mt-1 text-xs md:text-sm">
                             {activeTicket.ticket.is_public ? (
                               <>
-                                <span className="block md:inline">From: {activeTicket.ticket.contact_name || `${activeTicket.ticket.first_name} ${activeTicket.ticket.last_name}`}</span> 
-                                <span className="block md:inline">({activeTicket.ticket.contact_email || activeTicket.ticket.email})</span>
+                                <span className="block">From: {activeTicket.ticket.contact_name || `${activeTicket.ticket.first_name} ${activeTicket.ticket.last_name}`}</span> 
+                                <span className="block">({activeTicket.ticket.contact_email || activeTicket.ticket.email})</span>
                                 {activeTicket.ticket.contact_phone && (
-                                  <span className="block md:ml-2 mt-1 md:mt-0">Phone: {activeTicket.ticket.contact_phone}</span>
+                                  <span className="block mt-1">Phone: {activeTicket.ticket.contact_phone}</span>
                                 )}
                               </>
                             ) : (
                               <>
-                                <span className="block md:inline">From: {activeTicket.ticket.first_name} {activeTicket.ticket.last_name}</span> 
-                                <span className="block md:inline">({activeTicket.ticket.email})</span>
+                                <span className="block">From: {activeTicket.ticket.first_name} {activeTicket.ticket.last_name}</span> 
+                                <span className="block">({activeTicket.ticket.email})</span>
                               </>
                             )}
                           </CardDescription>
-                          <div className="text-sm text-gray-500 mt-1">
+                          <div className="text-[10px] md:text-xs text-gray-500 mt-1">
                             Created on {formatDate(activeTicket.ticket.created_at)}
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 mt-2 md:mt-0">
+                        <div className="flex flex-wrap items-center gap-2 mt-1">
                           {getStatusBadge(activeTicket.ticket.status)}
                           <Select 
                             value={activeTicket.ticket.status} 
                             onValueChange={(status) => handleUpdateTicketStatus(activeTicket.ticket.ticket_id, status)}
                           >
-                            <SelectTrigger className="w-32">
+                            <SelectTrigger className="h-8 text-xs w-full md:w-32">
                               <SelectValue placeholder="Change status" />
                             </SelectTrigger>
                             <SelectContent>
@@ -594,69 +595,69 @@ const AdminDashboard = () => {
                         </div>
                       </div>
                     </CardHeader>
-                    <CardContent className="p-4 md:p-6 pt-0 md:pt-0 space-y-4 md:space-y-6 max-h-[50vh] md:max-h-[calc(100vh-400px)] overflow-y-auto">
-                      <div className="border rounded-lg p-3 md:p-4 bg-gray-50">
-                        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-1 md:gap-0 mb-2">
-                          <div className="font-semibold">
+                    <CardContent className="p-3 md:p-4 pt-0 md:pt-0 space-y-3 md:space-y-4 max-h-[50vh] md:max-h-[calc(100vh-400px)] overflow-y-auto">
+                      <div className="border rounded-lg p-2 md:p-3 bg-gray-50">
+                        <div className="flex flex-col mb-1">
+                          <div className="font-semibold text-xs md:text-sm">
                             {activeTicket.ticket.is_public 
                               ? activeTicket.ticket.contact_name || `${activeTicket.ticket.first_name} ${activeTicket.ticket.last_name}`
                               : `${activeTicket.ticket.first_name} ${activeTicket.ticket.last_name}`
                             }
                           </div>
-                          <div className="text-xs md:text-sm text-gray-500">
+                          <div className="text-[10px] md:text-xs text-gray-500">
                             {formatDate(activeTicket.ticket.created_at)}
                           </div>
                         </div>
-                        <p className="whitespace-pre-wrap text-sm md:text-base">{activeTicket.ticket.message}</p>
+                        <p className="whitespace-pre-wrap text-xs md:text-sm">{activeTicket.ticket.message}</p>
                       </div>
                       
                       {activeTicket.replies.length > 0 && (
-                        <div className="space-y-3 md:space-y-4">
-                          <h3 className="font-semibold text-base md:text-lg">Responses</h3>
+                        <div className="space-y-2 md:space-y-3">
+                          <h3 className="font-semibold text-sm md:text-base">Responses</h3>
                           {activeTicket.replies.map((reply) => (
                             <div 
                               key={reply.reply_id} 
-                              className={`border rounded-lg p-3 md:p-4 ${reply.is_admin ? 'bg-blue-50' : 'bg-gray-50'}`}
+                              className={`border rounded-lg p-2 md:p-3 ${reply.is_admin ? 'bg-blue-50' : 'bg-gray-50'}`}
                             >
-                              <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-1 md:gap-0 mb-2">
-                                <div className="font-semibold flex items-center flex-wrap gap-2">
+                              <div className="flex flex-col mb-1">
+                                <div className="font-semibold text-xs md:text-sm flex items-center flex-wrap gap-1">
                                   {[reply.first_name, reply.last_name].filter(Boolean).join(' ')}
                                   {reply.is_admin ? (
-                                    <Badge variant="secondary" className="text-xs">Support Team</Badge>
+                                    <Badge variant="secondary" className="text-[10px] h-4 px-1">Support</Badge>
                                   ) : " "}
                                 </div>
-                                <div className="text-xs md:text-sm text-gray-500">
+                                <div className="text-[10px] md:text-xs text-gray-500">
                                   {formatDate(reply.created_at)}
                                 </div>
                               </div>
-                              <p className="whitespace-pre-wrap text-sm md:text-base">{reply.message}</p>
+                              <p className="whitespace-pre-wrap text-xs md:text-sm">{reply.message}</p>
                             </div>
                           ))}
                         </div>
                       )}
                       
                       {activeTicket.ticket.status !== 'closed' && (
-                        <div className="space-y-2">
-                          <Label htmlFor="admin-reply">Add Admin Reply</Label>
+                        <div className="space-y-1 md:space-y-2">
+                          <Label htmlFor="admin-reply" className="text-xs md:text-sm">Add Admin Reply</Label>
                           <Textarea
                             id="admin-reply"
                             placeholder="Type your reply here..."
-                            rows={4}
+                            rows={3}
                             value={reply}
                             onChange={(e) => setReply(e.target.value)}
-                            className="min-h-[100px]"
+                            className="min-h-[80px] md:min-h-[100px] text-xs md:text-sm"
                           />
                           <Button 
                             onClick={handleSendReply} 
                             disabled={isSubmittingReply}
-                            className="w-full md:w-auto"
+                            className="w-full md:w-auto h-8 text-xs"
                           >
                             {isSubmittingReply ? (
                               "Sending..."
                             ) : (
                               <>
-                                <Send className="h-4 w-4 mr-2" />
-                                Send Admin Reply
+                                <Send className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                                Send Reply
                               </>
                             )}
                           </Button>
@@ -666,12 +667,12 @@ const AdminDashboard = () => {
                   </Card>
                 ) : (
                   <Card>
-                    <CardContent className="flex items-center justify-center py-8 md:py-16">
+                    <CardContent className="flex items-center justify-center py-6 md:py-8">
                       <div className="text-center">
-                        <TicketIcon className="h-8 w-8 md:h-12 md:w-12 mx-auto text-gray-400 mb-2 md:mb-4" />
-                        <h3 className="text-base md:text-lg font-medium">No ticket selected</h3>
-                        <p className="text-gray-500 mt-1 md:mt-2 text-sm md:text-base">
-                          Select a ticket from the list to view details
+                        <TicketIcon className="h-6 w-6 md:h-8 md:w-8 mx-auto text-gray-400 mb-2" />
+                        <h3 className="text-sm md:text-base font-medium">No ticket selected</h3>
+                        <p className="text-gray-500 mt-1 text-xs md:text-sm">
+                          Select a ticket from the list
                         </p>
                       </div>
                     </CardContent>
@@ -682,227 +683,230 @@ const AdminDashboard = () => {
           </TabsContent>
           
           <TabsContent value="users">
-            <Card>
-              <CardHeader className="p-4 md:p-6">
+            <Card className="overflow-hidden">
+              <CardHeader className="p-3 md:p-4">
                 <div className="flex justify-between items-center">
-                  <CardTitle className="text-lg md:text-xl">User Management</CardTitle>
+                  <CardTitle className="text-base md:text-lg truncate">User Management</CardTitle>
                   <Button 
                     variant="outline" 
                     size="sm"
                     onClick={fetchUsers}
+                    className="h-7 text-xs"
                   >
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Refresh
+                    <RefreshCw className="h-3 w-3 md:h-4 md:w-4 mr-1" />
+                    <span className="hidden xs:inline">Refresh</span>
                   </Button>
                 </div>
-                <CardDescription>
+                <CardDescription className="text-xs md:text-sm">
                   View and manage user accounts
                 </CardDescription>
               </CardHeader>
-              <CardContent className="p-4 md:p-6 pt-0 md:pt-0">
+              <CardContent className="p-0 md:p-4 md:pt-0">
                 {isLoadingUsers ? (
-                  <div className="flex justify-center py-8">
-                    <div className="loader">Loading...</div>
+                  <div className="flex justify-center py-6">
+                    <div className="loader text-sm">Loading...</div>
                   </div>
                 ) : (
-                  <div className="rounded-md border overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="w-[50px]">ID</TableHead>
-                          <TableHead>Name</TableHead>
-                          <TableHead className="hidden md:table-cell">Email</TableHead>
-                          <TableHead className="hidden md:table-cell">Phone</TableHead>
-                          <TableHead>Role</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead className="hidden md:table-cell">Created</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {users.length === 0 ? (
+                  <div className="overflow-x-auto -mx-2 md:mx-0">
+                    <div className="inline-block min-w-full align-middle md:rounded-md md:border">
+                      <Table className="min-w-full">
+                        <TableHeader>
                           <TableRow>
-                            <TableCell colSpan={8} className="text-center py-8">
-                              No users found
-                            </TableCell>
+                            <TableHead className="w-[40px] p-2 md:p-4 text-xs md:text-sm">ID</TableHead>
+                            <TableHead className="p-2 md:p-4 text-xs md:text-sm">Name</TableHead>
+                            <TableHead className="hidden md:table-cell p-2 md:p-4 text-xs md:text-sm">Email</TableHead>
+                            <TableHead className="hidden md:table-cell p-2 md:p-4 text-xs md:text-sm">Phone</TableHead>
+                            <TableHead className="p-2 md:p-4 text-xs md:text-sm">Role</TableHead>
+                            <TableHead className="p-2 md:p-4 text-xs md:text-sm">Status</TableHead>
+                            <TableHead className="hidden md:table-cell p-2 md:p-4 text-xs md:text-sm">Created</TableHead>
+                            <TableHead className="text-right p-2 md:p-4 text-xs md:text-sm">Actions</TableHead>
                           </TableRow>
-                        ) : (
-                          users.map((userData, index) => (
-                            <TableRow key={userData.user_id}>
-                              <TableCell className="font-medium">{index + 1}</TableCell>
-                              <TableCell className="max-w-[120px] truncate">
-                                {userData.first_name} {userData.last_name}
-                              </TableCell>
-                              <TableCell className="hidden md:table-cell max-w-[200px] truncate">
-                                {userData.email}
-                              </TableCell>
-                              <TableCell className="hidden md:table-cell">
-                                {userData.phone_number}
-                              </TableCell>
-                              <TableCell>
-                                {getRoleBadge(userData.role || 'user')}
-                              </TableCell>
-                              <TableCell>
-                                {getUserStatusBadge(userData.status)}
-                              </TableCell>
-                              <TableCell className="hidden md:table-cell">
-                                {formatDate(userData.created_at || '')}
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <div className="flex flex-wrap justify-end gap-1 md:gap-2">
-                                  <Dialog>
-                                    <DialogTrigger asChild>
-                                      <Button 
-                                        size="sm" 
-                                        variant="outline" 
-                                        className="h-8 px-2 text-xs md:text-sm"
-                                        onClick={() => setSelectedUser(userData)}
-                                      >
-                                        <ShieldCheck className="h-3 w-3 md:h-4 md:w-4 mr-1" />
-                                        <span className="hidden md:inline">Role</span>
-                                      </Button>
-                                    </DialogTrigger>
-                                    {selectedUser && (
-                                      <DialogContent className="sm:max-w-md">
-                                        <DialogHeader>
-                                          <DialogTitle>Change User Role</DialogTitle>
-                                          <DialogDescription>
-                                            Update the role for {selectedUser.first_name} {selectedUser.last_name}
-                                          </DialogDescription>
-                                        </DialogHeader>
-                                        <div className="py-4">
-                                          <Label htmlFor="role">Select New Role</Label>
-                                          <Select
-                                            defaultValue={selectedUser.role || 'user'}
-                                            onValueChange={(value) => handleSetUserRole(selectedUser.user_id, value)}
-                                            disabled={isChangingRole}
-                                          >
-                                            <SelectTrigger>
-                                              <SelectValue placeholder="Select role" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                              <SelectItem value="user">User</SelectItem>
-                                              <SelectItem value="admin">Admin</SelectItem>
-                                            </SelectContent>
-                                          </Select>
-                                        </div>
-                                        <DialogFooter>
-                                          <Button variant="outline" onClick={() => setSelectedUser(null)}>
-                                            Close
-                                          </Button>
-                                        </DialogFooter>
-                                      </DialogContent>
-                                    )}
-                                  </Dialog>
-                                  
-                                  {/* Block User Dialog */}
-                                  <Dialog open={showBlockDialog && selectedUser?.user_id === userData.user_id} onOpenChange={(open) => {
-                                    if (!open) {
-                                      setShowBlockDialog(false);
-                                      setBlockReason('');
-                                    }
-                                  }}>
-                                    <DialogTrigger asChild>
-                                      <Button 
-                                        size="sm" 
-                                        variant="outline"
-                                        className={`h-8 px-2 text-xs md:text-sm ${userData.status === 'blocked' ? 'hidden' : ''}`}
-                                        onClick={() => {
-                                          setSelectedUser(userData);
-                                          setShowBlockDialog(true);
-                                        }}
-                                      >
-                                        <Lock className="h-3 w-3 md:h-4 md:w-4 mr-1" />
-                                        <span className="hidden md:inline">Block</span>
-                                      </Button>
-                                    </DialogTrigger>
-                                    {selectedUser && (
-                                      <DialogContent className="sm:max-w-md">
-                                        <DialogHeader>
-                                          <DialogTitle>Block User</DialogTitle>
-                                          <DialogDescription>
-                                            Block access for {selectedUser.first_name} {selectedUser.last_name}. 
-                                            This will prevent the user from logging in.
-                                          </DialogDescription>
-                                        </DialogHeader>
-                                        <div className="py-4">
-                                          <Label htmlFor="block-reason">Reason for Blocking</Label>
-                                          <Textarea
-                                            id="block-reason"
-                                            placeholder="Please provide a reason for blocking this user"
-                                            value={blockReason}
-                                            onChange={(e) => setBlockReason(e.target.value)}
-                                            className="mt-1"
-                                            rows={3}
-                                          />
-                                        </div>
-                                        <DialogFooter className="flex-col sm:flex-row gap-2">
-                                          <Button variant="outline" onClick={() => {
-                                            setShowBlockDialog(false);
-                                            setBlockReason('');
-                                          }}>
-                                            Cancel
-                                          </Button>
-                                          <Button 
-                                            variant="destructive" 
-                                            onClick={() => handleBlockUser(selectedUser.user_id, blockReason)}
-                                            disabled={isProcessingUserAction || !blockReason.trim()}
-                                          >
-                                            {isProcessingUserAction ? 'Processing...' : 'Block User'}
-                                          </Button>
-                                        </DialogFooter>
-                                      </DialogContent>
-                                    )}
-                                  </Dialog>
-                                  
-                                  {/* Unblock User Button */}
-                                  <Dialog open={showUnblockDialog && selectedUser?.user_id === userData.user_id} onOpenChange={(open) => {
-                                    if (!open) setShowUnblockDialog(false);
-                                  }}>
-                                    <DialogTrigger asChild>
-                                      <Button 
-                                        size="sm" 
-                                        variant="outline"
-                                        className={`h-8 px-2 text-xs md:text-sm ${userData.status !== 'blocked' ? 'hidden' : ''}`}
-                                        onClick={() => {
-                                          setSelectedUser(userData);
-                                          setShowUnblockDialog(true);
-                                        }}
-                                      >
-                                        <Unlock className="h-3 w-3 md:h-4 md:w-4 mr-1" />
-                                        <span className="hidden md:inline">Unblock</span>
-                                      </Button>
-                                    </DialogTrigger>
-                                    {selectedUser && (
-                                      <DialogContent className="sm:max-w-md">
-                                        <DialogHeader>
-                                          <DialogTitle>Unblock User</DialogTitle>
-                                          <DialogDescription>
-                                            Restore access for {selectedUser.first_name} {selectedUser.last_name}. 
-                                            This will allow the user to log in again.
-                                          </DialogDescription>
-                                        </DialogHeader>
-                                        <DialogFooter className="flex-col sm:flex-row gap-2">
-                                          <Button variant="outline" onClick={() => setShowUnblockDialog(false)}>
-                                            Cancel
-                                          </Button>
-                                          <Button 
-                                            onClick={() => handleUnblockUser(selectedUser.user_id)}
-                                            disabled={isProcessingUserAction}
-                                          >
-                                            {isProcessingUserAction ? 'Processing...' : 'Unblock User'}
-                                          </Button>
-                                        </DialogFooter>
-                                      </DialogContent>
-                                    )}
-                                  </Dialog>
-                                </div>
+                        </TableHeader>
+                        <TableBody>
+                          {users.length === 0 ? (
+                            <TableRow>
+                              <TableCell colSpan={8} className="text-center py-6 text-xs md:text-sm">
+                                No users found
                               </TableCell>
                             </TableRow>
-                          ))
-                        )}
-                      </TableBody>
-                    </Table>
+                          ) : (
+                            users.map((userData, index) => (
+                              <TableRow key={userData.user_id}>
+                                <TableCell className="font-medium p-2 md:p-4 text-xs md:text-sm">{index + 1}</TableCell>
+                                <TableCell className="max-w-[80px] md:max-w-[120px] truncate p-2 md:p-4 text-xs md:text-sm">
+                                  {userData.first_name} {userData.last_name}
+                                </TableCell>
+                                <TableCell className="hidden md:table-cell max-w-[200px] truncate p-2 md:p-4 text-xs md:text-sm">
+                                  {userData.email}
+                                </TableCell>
+                                <TableCell className="hidden md:table-cell p-2 md:p-4 text-xs md:text-sm">
+                                  {userData.phone_number}
+                                </TableCell>
+                                <TableCell className="p-2 md:p-4 text-xs md:text-sm">
+                                  {getRoleBadge(userData.role || 'user')}
+                                </TableCell>
+                                <TableCell className="p-2 md:p-4 text-xs md:text-sm">
+                                  {getUserStatusBadge(userData.status)}
+                                </TableCell>
+                                <TableCell className="hidden md:table-cell p-2 md:p-4 text-xs md:text-sm">
+                                  {formatDate(userData.created_at || '')}
+                                </TableCell>
+                                <TableCell className="text-right p-1 md:p-4">
+                                  <div className="flex flex-wrap justify-end gap-1">
+                                    <Dialog>
+                                      <DialogTrigger asChild>
+                                        <Button 
+                                          size="sm" 
+                                          variant="outline" 
+                                          className="h-7 w-7 md:h-8 md:w-auto md:px-2 p-0 md:py-0 text-xs"
+                                          onClick={() => setSelectedUser(userData)}
+                                        >
+                                          <ShieldCheck className="h-3 w-3 md:h-4 md:w-4 md:mr-1" />
+                                          <span className="hidden md:inline">Role</span>
+                                        </Button>
+                                      </DialogTrigger>
+                                      {selectedUser && (
+                                        <DialogContent className="max-w-[90vw] sm:max-w-md">
+                                          <DialogHeader>
+                                            <DialogTitle className="text-base">Change User Role</DialogTitle>
+                                            <DialogDescription className="text-xs md:text-sm">
+                                              Update role for {selectedUser.first_name} {selectedUser.last_name}
+                                            </DialogDescription>
+                                          </DialogHeader>
+                                          <div className="py-3">
+                                            <Label htmlFor="role" className="text-xs md:text-sm">Select New Role</Label>
+                                            <Select
+                                              defaultValue={selectedUser.role || 'user'}
+                                              onValueChange={(value) => handleSetUserRole(selectedUser.user_id, value)}
+                                              disabled={isChangingRole}
+                                            >
+                                              <SelectTrigger className="h-8 text-xs md:text-sm mt-1">
+                                                <SelectValue placeholder="Select role" />
+                                              </SelectTrigger>
+                                              <SelectContent>
+                                                <SelectItem value="user">User</SelectItem>
+                                                <SelectItem value="admin">Admin</SelectItem>
+                                              </SelectContent>
+                                            </Select>
+                                          </div>
+                                          <DialogFooter>
+                                            <Button variant="outline" onClick={() => setSelectedUser(null)} className="h-8 text-xs">
+                                              Close
+                                            </Button>
+                                          </DialogFooter>
+                                        </DialogContent>
+                                      )}
+                                    </Dialog>
+                                    
+                                    {/* Block User Dialog */}
+                                    <Dialog open={showBlockDialog && selectedUser?.user_id === userData.user_id} onOpenChange={(open) => {
+                                      if (!open) {
+                                        setShowBlockDialog(false);
+                                        setBlockReason('');
+                                      }
+                                    }}>
+                                      <DialogTrigger asChild>
+                                        <Button 
+                                          size="sm" 
+                                          variant="outline"
+                                          className={`h-7 w-7 md:h-8 md:w-auto md:px-2 p-0 md:py-0 text-xs ${userData.status === 'blocked' ? 'hidden' : ''}`}
+                                          onClick={() => {
+                                            setSelectedUser(userData);
+                                            setShowBlockDialog(true);
+                                          }}
+                                        >
+                                          <Lock className="h-3 w-3 md:h-4 md:w-4 md:mr-1" />
+                                          <span className="hidden md:inline">Block</span>
+                                        </Button>
+                                      </DialogTrigger>
+                                      {selectedUser && (
+                                        <DialogContent className="max-w-[90vw] sm:max-w-md">
+                                          <DialogHeader>
+                                            <DialogTitle className="text-base">Block User</DialogTitle>
+                                            <DialogDescription className="text-xs md:text-sm">
+                                              Block access for {selectedUser.first_name} {selectedUser.last_name}
+                                            </DialogDescription>
+                                          </DialogHeader>
+                                          <div className="py-3">
+                                            <Label htmlFor="block-reason" className="text-xs md:text-sm">Reason for Blocking</Label>
+                                            <Textarea
+                                              id="block-reason"
+                                              placeholder="Please provide a reason"
+                                              value={blockReason}
+                                              onChange={(e) => setBlockReason(e.target.value)}
+                                              className="mt-1 text-xs md:text-sm"
+                                              rows={2}
+                                            />
+                                          </div>
+                                          <DialogFooter className="flex-col sm:flex-row gap-2">
+                                            <Button variant="outline" onClick={() => {
+                                              setShowBlockDialog(false);
+                                              setBlockReason('');
+                                            }} className="h-8 text-xs">
+                                              Cancel
+                                            </Button>
+                                            <Button 
+                                              variant="destructive" 
+                                              onClick={() => handleBlockUser(selectedUser.user_id, blockReason)}
+                                              disabled={isProcessingUserAction || !blockReason.trim()}
+                                              className="h-8 text-xs"
+                                            >
+                                              {isProcessingUserAction ? 'Processing...' : 'Block'}
+                                            </Button>
+                                          </DialogFooter>
+                                        </DialogContent>
+                                      )}
+                                    </Dialog>
+                                    
+                                    {/* Unblock User Button */}
+                                    <Dialog open={showUnblockDialog && selectedUser?.user_id === userData.user_id} onOpenChange={(open) => {
+                                      if (!open) setShowUnblockDialog(false);
+                                    }}>
+                                      <DialogTrigger asChild>
+                                        <Button 
+                                          size="sm" 
+                                          variant="outline"
+                                          className={`h-7 w-7 md:h-8 md:w-auto md:px-2 p-0 md:py-0 text-xs ${userData.status !== 'blocked' ? 'hidden' : ''}`}
+                                          onClick={() => {
+                                            setSelectedUser(userData);
+                                            setShowUnblockDialog(true);
+                                          }}
+                                        >
+                                          <Unlock className="h-3 w-3 md:h-4 md:w-4 md:mr-1" />
+                                          <span className="hidden md:inline">Unblock</span>
+                                        </Button>
+                                      </DialogTrigger>
+                                      {selectedUser && (
+                                        <DialogContent className="max-w-[90vw] sm:max-w-md">
+                                          <DialogHeader>
+                                            <DialogTitle className="text-base">Unblock User</DialogTitle>
+                                            <DialogDescription className="text-xs md:text-sm">
+                                              Restore access for {selectedUser.first_name} {selectedUser.last_name}
+                                            </DialogDescription>
+                                          </DialogHeader>
+                                          <DialogFooter className="flex-col sm:flex-row gap-2">
+                                            <Button variant="outline" onClick={() => setShowUnblockDialog(false)} className="h-8 text-xs">
+                                              Cancel
+                                            </Button>
+                                            <Button 
+                                              onClick={() => handleUnblockUser(selectedUser.user_id)}
+                                              disabled={isProcessingUserAction}
+                                              className="h-8 text-xs"
+                                            >
+                                              {isProcessingUserAction ? 'Processing...' : 'Unblock'}
+                                            </Button>
+                                          </DialogFooter>
+                                        </DialogContent>
+                                      )}
+                                    </Dialog>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </div>
                 )}
               </CardContent>
@@ -910,13 +914,13 @@ const AdminDashboard = () => {
           </TabsContent>
           
           <TabsContent value="transfers">
-            <div className="grid grid-cols-1 gap-4 md:gap-6">
+            <div className="grid grid-cols-1 gap-3 md:gap-4">
               <AdminTransferSettings />
             </div>
           </TabsContent>
           
           <TabsContent value="system">
-            <div className="grid grid-cols-1 gap-4 md:gap-6">
+            <div className="grid grid-cols-1 gap-3 md:gap-4">
               <AdminSystemStatus />
             </div>
           </TabsContent>

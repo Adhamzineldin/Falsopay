@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useApp } from '@/contexts/AppContext';
@@ -37,9 +36,13 @@ const Login = () => {
         return;
       }
       
+      // Clean up phone number format, remove spaces, dashes, etc.
+      const cleanPhoneNumber = phoneNumber.replace(/\s+/g, '').replace(/-/g, '');
+      
       setIsLoading(true);
       try {
-        const result = await login(phoneNumber, ipaAddress);
+        // Pass the actual IPA address (not null) to ensure it's included in the request
+        const result = await login(cleanPhoneNumber, ipaAddress);
         if (result && result.success) {
           if (result.code) {
             // If a verification code was returned, we need to verify
@@ -69,8 +72,8 @@ const Login = () => {
     
     setIsLoading(true);
     try {
-      // Pass the code as the "IPA address" for verification
-      await verifyLoginCode(phoneNumber, code);
+      // Always pass the cleaned phone number and the code
+      await verifyLoginCode(phoneNumber.replace(/\s+/g, '').replace(/-/g, ''), code);
     } catch (error) {
       console.error('Verification error:', error);
     } finally {
@@ -81,7 +84,9 @@ const Login = () => {
   const handleResendCode = async () => {
     setIsLoading(true);
     try {
-      const result = await login(phoneNumber, ipaAddress);
+      // Clean phone number and always pass the IPA address
+      const cleanPhoneNumber = phoneNumber.replace(/\s+/g, '').replace(/-/g, '');
+      const result = await login(cleanPhoneNumber, ipaAddress);
       if (result && result.code) {
         // Update the verification code
         setVerificationPin(result.code);
@@ -107,59 +112,61 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-6 px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-[90%] sm:max-w-md space-y-6">
         <div className="text-center">
           <Link to="/" className="inline-block">
-            <h1 className="text-3xl font-bold text-falsopay-primary">FalsoPay</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-falsopay-primary">FalsoPay</h1>
           </Link>
         </div>
         
-        <Card className="animate-fade-in">
-          <CardHeader>
-            <CardTitle className="text-2xl text-center">
+        <Card className="animate-fade-in w-full">
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-xl sm:text-2xl text-center">
               {verificationStep ? "Verify Your Phone" : "Welcome Back"}
             </CardTitle>
-            <CardDescription className="text-center">
+            <CardDescription className="text-center text-sm">
               {verificationStep 
                 ? "Enter the verification code sent to your phone" 
                 : "Login to access your FalsoPay account"}
             </CardDescription>
           </CardHeader>
           
-          <CardContent>
+          <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0">
             {!verificationStep ? (
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="phoneNumber">Phone Number</Label>
+              <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+                <div className="space-y-1 sm:space-y-2">
+                  <Label htmlFor="phoneNumber" className="text-sm">Phone Number</Label>
                   <Input
                     id="phoneNumber"
                     placeholder="Enter your phone number"
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
+                    className="text-sm h-9"
                     required
                   />
                 </div>
                 
-                <div className="space-y-2">
-                  <Label htmlFor="ipaAddress">IPA Address</Label>
+                <div className="space-y-1 sm:space-y-2">
+                  <Label htmlFor="ipaAddress" className="text-sm">IPA Address</Label>
                   <Input
                     id="ipaAddress"
                     placeholder="Enter your IPA address"
                     value={ipaAddress}
                     onChange={(e) => setIpaAddress(e.target.value)}
+                    className="text-sm h-9"
                     required
                   />
                 </div>
                 
-                <Button type="submit" className="w-full" disabled={isLoading}>
+                <Button type="submit" className="w-full h-9 text-sm" disabled={isLoading}>
                   {isLoading ? 'Sending Code...' : 'Request Code'}
                 </Button>
               </form>
             ) : (
-              <div className="flex flex-col items-center justify-center space-y-4">
-                <div className="text-center mb-4">
-                  <p className="text-sm text-gray-500">
+              <div className="flex flex-col items-center justify-center space-y-3 sm:space-y-4">
+                <div className="text-center mb-2 sm:mb-4">
+                  <p className="text-xs sm:text-sm text-gray-500">
                     Verification code sent to: {phoneNumber}
                   </p>
                 </div>
@@ -178,7 +185,7 @@ const Login = () => {
                 <Button 
                   type="button" 
                   variant="link" 
-                  className="mx-auto block" 
+                  className="mx-auto block text-sm" 
                   onClick={handleBackToLogin}
                 >
                   Back to login
@@ -187,8 +194,8 @@ const Login = () => {
             )}
           </CardContent>
           
-          <CardFooter className="flex flex-col space-y-4">
-            <div className="text-center text-sm">
+          <CardFooter className="flex flex-col space-y-3 sm:space-y-4 p-4 sm:p-6 pt-0 sm:pt-0">
+            <div className="text-center text-xs sm:text-sm">
               Don't have an account?{' '}
               <Link to="/register" className="text-falsopay-primary hover:underline">
                 Sign up
@@ -198,8 +205,8 @@ const Login = () => {
         </Card>
         
         <div className="text-center">
-          <Link to="/" className="text-sm text-gray-500 hover:text-gray-700 inline-flex items-center">
-            <ArrowLeft className="h-4 w-4 mr-1" />
+          <Link to="/" className="text-xs sm:text-sm text-gray-500 hover:text-gray-700 inline-flex items-center">
+            <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
             Back to home
           </Link>
         </div>

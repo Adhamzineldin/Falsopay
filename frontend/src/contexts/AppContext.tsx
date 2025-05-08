@@ -177,10 +177,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     try {
       console.log('Attempting to login with phone', ipa ? 'and IPA' : 'without IPA');
       try {
+        // Make sure IPA address is never null when making the request
+        const ipaToSend = ipa || '';
+        
         // Step 1: Try to log in directly
         const loginResponse = await AuthService.login({
           phone_number: phone,
-          ipa_address: ipa // This can be null for non-default accounts
+          ipa_address: ipaToSend // Always send an IPA address value (even if empty string)
         });
 
         // Check if user is blocked

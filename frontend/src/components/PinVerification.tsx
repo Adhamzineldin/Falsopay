@@ -98,33 +98,37 @@ const PinVerification: React.FC<PinVerificationProps> = ({
   };
 
   return (
-    <div className="flex justify-center items-center flex-col space-y-4 w-full">
+    <div className="flex justify-center items-center flex-col space-y-2 sm:space-y-4 w-full">
       <div className="space-y-2 w-full flex flex-col items-center">
-        <Label htmlFor="pin-input">{title}</Label>
+        <Label htmlFor="pin-input" className="text-xs sm:text-sm">{title}</Label>
         <InputOTP
           maxLength={maxLength}
           value={pin}
           onChange={setPin}
           autoFocus
           render={({ slots }) => (
-            <InputOTPGroup>
+            <InputOTPGroup className="gap-1 sm:gap-2">
               {slots.map((slot, i) => (
-                <InputOTPSlot key={i} {...slot} />
+                <InputOTPSlot 
+                  key={i} 
+                  {...slot} 
+                  className="h-8 w-8 sm:h-10 sm:w-10 text-sm sm:text-base border-gray-300"
+                />
               ))}
             </InputOTPGroup>
           )}
         />
-        {error && <p className="text-sm text-red-500 text-center">{error}</p>}
+        {error && <p className="text-xs sm:text-sm text-red-500 text-center mt-1">{error}</p>}
         
         {!hideVerifyButton && (
           <Button 
             onClick={handleVerify} 
             disabled={pin.length !== maxLength || loading || isLoading || verifying}
-            className="w-full"
+            className="w-full h-8 sm:h-10 text-xs sm:text-sm mt-2"
           >
             {verifying || loading || isLoading ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4 animate-spin" />
                 Verifying...
               </>
             ) : (
@@ -137,11 +141,11 @@ const PinVerification: React.FC<PinVerificationProps> = ({
           <Button
             type="button"
             variant="ghost"
-            className="text-xs flex items-center mt-2"
+            className="text-[10px] sm:text-xs flex items-center mt-1 sm:mt-2 h-6 sm:h-8"
             onClick={handleResend}
             disabled={resent}
           >
-            <RefreshCw className="mr-1 h-4 w-4" />
+            <RefreshCw className="mr-1 h-3 w-3 sm:h-4 sm:w-4" />
             {resent ? "Code Sent!" : "Resend Code"}
           </Button>
         )}

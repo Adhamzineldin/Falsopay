@@ -1,4 +1,3 @@
-
 import api from './api';
 import { DateTime } from 'luxon';
 interface LoginCredentials {
@@ -107,7 +106,14 @@ export const AuthService = {
   login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
     try {
       console.log('Logging in with credentials:', credentials);
-      const response = await api.post('/api/login', credentials);
+      
+      // Make sure phone number and ipa_address are properly formatted
+      const formattedCredentials = {
+        phone_number: credentials.phone_number.trim(),
+        ipa_address: credentials.ipa_address.trim()
+      };
+      
+      const response = await api.post('/api/login', formattedCredentials);
       console.log('Login response:', response.data);
       return response.data;
     } catch (error) {

@@ -43,17 +43,16 @@ const Login = () => {
       try {
         // Pass the actual IPA address (not null) to ensure it's included in the request
         const result = await login(cleanPhoneNumber, ipaAddress);
-        if (result && result.success) {
-          if (result.code) {
-            // If a verification code was returned, we need to verify
-            setVerificationPin(result.code);
-            setVerificationStep(true);
-          }
-          // If no code was returned but successful, the user is already logged in
-          // and redirected by the login function
+        
+        // Only proceed to verification step if we got a successful response with a code
+        if (result && result.success && result.code) {
+          setVerificationPin(result.code);
+          setVerificationStep(true);
         }
+        // If login failed, we'll stay on the login form with values intact
       } catch (error) {
         console.error('Login error:', error);
+        // Don't clear the form or change steps on error
       } finally {
         setIsLoading(false);
       }
@@ -73,21 +72,27 @@ const Login = () => {
     setIsLoading(true);
     try {
       // Always pass the cleaned phone number and the code
-      await verifyLoginCode(phoneNumber.replace(/\s+/g, '').replace(/-/g, ''), code);
+      const cleanPhoneNumber = phoneNumber.replace(/\s+/g, '').replace(/-/g, '');
+      await verifyLoginCode(cleanPhoneNumber, code);
+      // Don't do anything here - success will be handled by AppContext which will redirect
     } catch (error) {
       console.error('Verification error:', error);
+      // On error, stay on the verification page - don't reset the form
+      // Toast is already shown by AppContext
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleResendCode = async () => {
+    if (isLoading) return; // Prevent multiple simultaneous requests
+    
     setIsLoading(true);
     try {
       // Clean phone number and always pass the IPA address
       const cleanPhoneNumber = phoneNumber.replace(/\s+/g, '').replace(/-/g, '');
       const result = await login(cleanPhoneNumber, ipaAddress);
-      if (result && result.code) {
+      if (result && result.success && result.code) {
         // Update the verification code
         setVerificationPin(result.code);
         toast({
@@ -95,6 +100,7 @@ const Login = () => {
           description: "A new verification code has been sent to your phone",
         });
       }
+      // If the request failed, we'll stay on the verification page with existing data
     } catch (error) {
       console.error('Resend code error:', error);
       toast({
@@ -102,6 +108,7 @@ const Login = () => {
         description: "Failed to resend verification code",
         variant: "destructive",
       });
+      // Keep the existing verification page state
     } finally {
       setIsLoading(false);
     }

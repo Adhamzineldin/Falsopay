@@ -254,7 +254,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }
         
         setIsLoading(false);
-        // Return an object with success:false to signal failure without resetting the UI
+        // Return an object with success:false to signal failure without changing state or navigation
         return { success: false };
       }
     } catch (error: any) {
@@ -284,7 +284,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       });
       
       setIsLoading(false);
-      // Return an object with success:false to signal failure without resetting the UI
+      // Return an object with success:false to signal failure without changing state or navigation
       return { success: false };
     }
   };
@@ -323,13 +323,26 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       console.log('User verified and logged in:', userData.user_id, 'Is admin:', isUserAdmin);
 
       WebSocketService.connect(userData.user_id.toString());
+      
+      // On successful verification, navigate to the returnTo path or dashboard
+      // Include a small delay to ensure state updates complete
+      setTimeout(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const returnTo = urlParams.get('returnTo') || '/dashboard';
+        navigate(returnTo);
+      }, 100);
+      
     } catch (error: any) {
       console.error('Verification error:', error);
+      // Show error but preserve the form state
       toast({
         title: "Verification Failed",
-        description: error.message || "Invalid verification code",
+        description: error.message || "Invalid verification code. Please try again.",
         variant: "destructive",
       });
+      
+      // Re-throw to let the login component know there was an error
+      // but don't navigate or reset state
       throw error;
     } finally {
       setIsLoading(false);

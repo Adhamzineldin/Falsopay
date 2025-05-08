@@ -183,6 +183,11 @@ export default function MoneyRequestsPage() {
       return;
     }
     
+    if (pin.length !== 6) {
+      toast.error('Please enter a valid 6-digit PIN');
+      return;
+    }
+    
     try {
       setIsProcessing(true);
       
@@ -525,9 +530,9 @@ export default function MoneyRequestsPage() {
             <div className="space-y-2">
               <Label htmlFor="pin" className="text-sm font-medium">Your PIN</Label>
               <PinVerification 
-                maxLength={4} 
+                maxLength={6} 
                 onPinSubmit={val => setPin(val)}
-                hideVerifyButton={false}
+                hideVerifyButton={true}
                 autoSubmit={true}
               />
             </div>
@@ -568,7 +573,7 @@ export default function MoneyRequestsPage() {
             <Button
               type="button"
               onClick={() => processRequest(pin)}
-              disabled={pin.length < 4 || !selectedIpa || isProcessing}
+              disabled={pin.length < 6 || !selectedIpa || isProcessing}
               className="w-full sm:w-auto"
             >
               {isProcessing ? (

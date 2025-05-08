@@ -113,10 +113,19 @@ export const AuthService = {
         ipa_address: credentials.ipa_address.trim()
       };
       
+      // Make the API call but don't change state or navigation on errors
       const response = await api.post('/api/login', formattedCredentials);
       console.log('Login response:', response.data);
+      
+      // Only return valid data with proper structure
+      if (!response.data || !response.data.user_token || !response.data.user) {
+        throw new Error('Invalid response data format');
+      }
+      
       return response.data;
     } catch (error) {
+      console.error('Auth service login error:', error);
+      // Re-throw to let the calling function handle it
       throw error;
     }
   },

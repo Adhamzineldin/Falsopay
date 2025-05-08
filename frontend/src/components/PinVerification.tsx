@@ -25,7 +25,7 @@ const PinVerification: React.FC<PinVerificationProps> = ({
   loading,
   isLoading,
   title = "Enter PIN",
-  maxLength = 4,
+  maxLength = 6,
   expectedPin,
   ipaAddress,
   hideVerifyButton = false,
@@ -36,10 +36,12 @@ const PinVerification: React.FC<PinVerificationProps> = ({
   const [verifying, setVerifying] = useState(false);
   const [resent, setResent] = useState(false);
 
-  // Reset pin input when expectedPin changes
+  // Only reset pin input when expectedPin changes and isn't empty
   useEffect(() => {
-    setPin('');
-    setError('');
+    if (expectedPin) {
+      setPin('');
+      setError('');
+    }
   }, [expectedPin]);
 
   // Auto-submit when PIN is complete and autoSubmit is true
@@ -56,17 +58,18 @@ const PinVerification: React.FC<PinVerificationProps> = ({
     }
     
     setVerifying(true);
+    setError(''); // Clear previous errors
     
     // If we have an expected PIN, verify locally
     if (expectedPin) {
       console.log(`Verifying PIN: ${pin}, Expected: ${expectedPin}`);
       setTimeout(() => {
         if (pin === expectedPin) {
-          setError('');
           if (onVerify) onVerify(true);
           if (onPinSubmit) onPinSubmit(pin);
         } else {
           setError('Invalid code');
+          // Do not clear the PIN on error to allow the user to fix it
           if (onVerify) onVerify(false);
         }
         setVerifying(false);
@@ -75,11 +78,12 @@ const PinVerification: React.FC<PinVerificationProps> = ({
       // Otherwise just submit the PIN
       if (onPinSubmit) {
         try {
-          onPinSubmit(pin);
-          setError('');
+          await onPinSubmit(pin);
+          // Don't clear the PIN unless submission was successful
         } catch (error) {
           console.error('Error submitting PIN:', error);
           setError('Failed to submit PIN');
+          // Keep the PIN to allow the user to retry
         } finally {
           setVerifying(false);
         }

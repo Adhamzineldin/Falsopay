@@ -190,12 +190,12 @@ export function MoneyRequests() {
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4 p-5">
+      <CardContent className="space-y-4 p-5 sm:p-6">
         {pendingRequests.map((request) => (
           <Card key={request.request_id} className="overflow-hidden border-border/50 hover:shadow-sm transition-shadow">
             <div className="bg-yellow-50 py-1 border-b border-yellow-100">
-              <div className="px-4 flex items-center justify-between">
-                <Badge variant="outline" className="bg-yellow-100 text-yellow-700 border-yellow-200">
+              <div className="px-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <Badge variant="outline" className="bg-yellow-100 text-yellow-700 border-yellow-200 w-fit">
                   Pending
                 </Badge>
                 <div className="text-xl font-semibold text-primary">
@@ -203,36 +203,36 @@ export function MoneyRequests() {
                 </div>
               </div>
             </div>
-            <CardContent className="p-4 pt-3">
-              <div className="flex items-start gap-3 mb-3">
+            <CardContent className="p-3 sm:p-4 pt-3">
+              <div className="flex items-start gap-2 sm:gap-3 mb-3">
                 <div className="bg-primary/10 rounded-full p-2 mt-1">
                   <UserRound className="h-4 w-4 text-primary" />
                 </div>
                 <div>
                   <h4 className="font-medium">{request.requester_name}</h4>
-                  <p className="text-xs text-muted-foreground">{request.requester_ipa_address}</p>
+                  <p className="text-xs text-muted-foreground break-all">{request.requester_ipa_address}</p>
                 </div>
               </div>
               
               {request.message && (
-                <div className="bg-muted/50 p-3 rounded-md my-3">
+                <div className="bg-muted/50 p-2 sm:p-3 rounded-md my-2 sm:my-3">
                   <p className="text-sm italic">"{request.message}"</p>
                 </div>
               )}
               
-              <div className="flex items-center text-xs text-muted-foreground mb-4 mt-2">
-                <Clock className="h-3.5 w-3.5 mr-1.5" />
-                <span>Requested {new Date(request.created_at).toLocaleString()}</span>
+              <div className="flex items-center text-xs text-muted-foreground mb-3 mt-2">
+                <Clock className="h-3.5 w-3.5 mr-1.5 flex-shrink-0" />
+                <span className="truncate">{new Date(request.created_at).toLocaleString()}</span>
               </div>
               
               <Separator className="my-3" />
               
-              <div className="flex space-x-3 justify-end mt-4">
+              <div className="flex flex-col sm:flex-row sm:space-x-3 space-y-2 sm:space-y-0 justify-end mt-4">
                 <Button
                   variant="outline"
                   onClick={() => declineRequest(request.request_id)}
                   disabled={processingId === request.request_id}
-                  className="h-9"
+                  className="h-9 w-full sm:w-auto"
                 >
                   {processingId === request.request_id ? (
                     <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
@@ -246,29 +246,24 @@ export function MoneyRequests() {
                   variant="default"
                   onClick={() => acceptRequest(request.request_id)}
                   disabled={processingId === request.request_id}
-                  className="h-9"
+                  className="h-9 w-full sm:w-auto"
                 >
                   {processingId === request.request_id ? (
                     <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
                   ) : (
                     <Check className="h-4 w-4 mr-1.5" />
                   )}
-                  Pay Now
+                  Pay {formatCurrency(request.amount)}
                 </Button>
               </div>
             </CardContent>
           </Card>
         ))}
       </CardContent>
-      <CardFooter className="justify-center border-t p-4">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={loadPendingRequests}
-          className="text-xs flex items-center gap-1.5"
-        >
-          <RefreshCw className="h-3 w-3" />
-          Refresh Requests
+      <CardFooter className="flex justify-center p-4 pt-0">
+        <Button variant="ghost" size="sm" onClick={loadPendingRequests} className="text-xs">
+          <RefreshCw className="h-3 w-3 mr-1.5" />
+          Refresh
         </Button>
       </CardFooter>
     </Card>

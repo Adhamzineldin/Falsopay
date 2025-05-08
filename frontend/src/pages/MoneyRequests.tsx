@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Loader2, RefreshCw, Clock, Send, Download, Calendar, DollarSign, ListFilter, X, Check, Lock } from 'lucide-react';
+import { Loader2, RefreshCw, Clock, Send, Download, Calendar, DollarSign, ListFilter, X, Check, Lock, Mail } from 'lucide-react';
 import WebSocketService from '@/services/websocket.service';
 import moneyRequestService from '@/services/money-request.service';
 import { RequestMoney } from '@/components/money-requests/RequestMoney';
@@ -359,268 +359,235 @@ export default function MoneyRequestsPage() {
 
   return (
     <MainLayout>
-      <div className="container max-w-6xl py-8">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Money Requests</h1>
-            <p className="text-muted-foreground mt-1">Request and manage payments between FalsoPay users</p>
+      <div className="container mx-auto px-4 py-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+          <h1 className="text-2xl sm:text-3xl font-bold">Money Requests</h1>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Button onClick={loadAllRequests} variant="outline" size="sm" className="text-xs flex-1 sm:flex-auto">
+              <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+              Refresh
+            </Button>
           </div>
-          <Button 
-            variant="outline"
-            onClick={loadAllRequests}
-            disabled={loading}
-            className="flex items-center gap-2"
-          >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Left column - Request Money */}
-          <div className="md:col-span-1 space-y-6">
-            {/* Request Money Form */}
-            <RequestMoney onRequestSent={loadAllRequests} />
-          </div>
-
-          {/* Right column - Money Request History */}
-          <div className="md:col-span-2">
-            <Card className="shadow-md border-primary/10 bg-card/50 backdrop-blur-sm">
-              <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-t-lg pb-4">
-                <div className="flex items-center gap-2">
-                  <div className="bg-primary/20 p-2 rounded-full">
-                    <Clock className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-xl">Money Request History</CardTitle>
-                    <CardDescription className="text-sm">View all your sent and received money requests</CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="p-6">
-                <Tabs defaultValue="all" onValueChange={setActiveTab} className="w-full">
-                  <TabsList className="mb-5 grid grid-cols-4 h-11">
-                    <TabsTrigger value="all" className="flex items-center gap-1">
-                      <ListFilter className="h-4 w-4" />
-                      <span>All</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="pending" className="flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
-                      <span>Pending</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="sent" className="flex items-center gap-1">
-                      <Send className="h-4 w-4" />
-                      <span>Sent</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="received" className="flex items-center gap-1">
-                      <Download className="h-4 w-4" />
-                      <span>Received</span>
-                    </TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value={activeTab}>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="lg:col-span-7 space-y-6">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid grid-cols-4 mb-6">
+                <TabsTrigger value="all">All</TabsTrigger>
+                <TabsTrigger value="pending">Pending</TabsTrigger>
+                <TabsTrigger value="sent">Sent</TabsTrigger>
+                <TabsTrigger value="received">Received</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value={activeTab} className="mt-0">
+                <Card className="relative overflow-hidden">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle>
+                        {activeTab === 'all' && 'All Requests'}
+                        {activeTab === 'pending' && 'Pending Requests'}
+                        {activeTab === 'sent' && 'Sent Requests'}
+                        {activeTab === 'received' && 'Received Requests'}
+                      </CardTitle>
+                      {loading && (
+                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                      )}
+                    </div>
+                    <CardDescription>
+                      {getFilteredRequests().length} request{getFilteredRequests().length !== 1 ? 's' : ''}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-0">
                     {loading ? (
-                      <div className="flex justify-center py-10">
-                        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                      <div className="flex justify-center items-center py-16">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary/70" />
                       </div>
                     ) : getFilteredRequests().length === 0 ? (
-                      <div className="text-center py-12 space-y-3">
-                        <RefreshCw className="h-10 w-10 mx-auto text-muted-foreground opacity-20" />
-                        <p className="text-muted-foreground text-lg">No money requests found</p>
+                      <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+                        <DollarSign className="h-12 w-12 text-muted-foreground/30 mb-4" />
+                        <p className="text-muted-foreground">No money requests found</p>
+                        <p className="text-xs text-muted-foreground mt-1 max-w-xs">
+                          {activeTab === 'pending' && "You don't have any pending money requests"}
+                          {activeTab === 'sent' && "You haven't sent any money requests yet"}
+                          {activeTab === 'received' && "You haven't received any money requests yet"}
+                          {activeTab === 'all' && "No money requests found in your account"}
+                        </p>
                       </div>
                     ) : (
-                      <div className="space-y-5">
+                      <div className="divide-y divide-border">
                         {getFilteredRequests().map((request) => (
-                          <Card key={request.request_id} className="border border-border/50 overflow-hidden hover:shadow-md transition-shadow">
-                            <div className="flex flex-col sm:flex-row">
-                              {/* Status indicator column */}
-                              <div className={`w-full sm:w-2 
-                                ${request.status === 'pending' ? 'bg-yellow-200' : 
-                                  request.status === 'accepted' ? 'bg-green-200' : 
-                                  request.status === 'declined' ? 'bg-red-200' : 'bg-gray-200'}`}
-                              />
-                              
-                              <div className="flex-1 p-4">
-                                <div className="flex justify-between items-start mb-3">
-                                  <div>
-                                    {isRequestSentByUser(request) ? (
-                                      <div className="flex items-center gap-1.5">
-                                        <span className="text-sm text-muted-foreground">To:</span>
-                                        <span className="font-medium">{request.requested_name}</span>
-                                      </div>
-                                    ) : (
-                                      <div className="flex items-center gap-1.5">
-                                        <span className="text-sm text-muted-foreground">From:</span>
-                                        <span className="font-medium">{request.requester_name}</span>
-                                      </div>
-                                    )}
-                                    
-                                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
-                                      <span>{isRequestSentByUser(request) 
-                                        ? request.requested_ipa_address
-                                        : request.requester_ipa_address}
-                                      </span>
-                                    </div>
-                                  </div>
-                                  
-                                  <div className="flex flex-col items-end gap-2">
-                                    <div className="flex items-center gap-2">
-                                      {getStatusIcon(request.status)}
-                                      {getStatusBadge(request.status)}
-                                    </div>
-                                    <div className="text-lg font-semibold mt-1">
-                                      {formatCurrency(request.amount)}
-                                    </div>
-                                  </div>
-                                </div>
-                                
-                                {request.message && (
-                                  <div className="bg-muted/50 p-3 rounded-md mb-3">
-                                    <p className="text-sm italic">"{request.message}"</p>
-                                  </div>
-                                )}
-
-                                <div className="flex items-center text-xs text-muted-foreground mb-4">
-                                  <Calendar className="h-3.5 w-3.5 mr-1.5" />
-                                  <span>Requested {new Date(request.created_at).toLocaleString()}</span>
-                                </div>
-                                
-                                {/* Action buttons for pending requests that are not sent by the current user */}
-                                {request.status === 'pending' && !isRequestSentByUser(request) && (
-                                  <>
-                                    <Separator className="my-3" />
-                                    <div className="flex justify-end space-x-3 mt-3">
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => handleDeclineRequest(request.request_id)}
-                                        className="text-xs h-8"
-                                      >
-                                        <X className="h-3.5 w-3.5 mr-1.5" />
-                                        Decline
-                                      </Button>
-                                      <Button
-                                        variant="default"
-                                        size="sm"
-                                        onClick={() => handleAcceptRequest(request.request_id)}
-                                        className="text-xs h-8"
-                                      >
-                                        <Check className="h-3.5 w-3.5 mr-1.5" />
-                                        Pay Now
-                                      </Button>
-                                    </div>
-                                  </>
-                                )}
+                          <div 
+                            key={request.request_id} 
+                            className="p-4 hover:bg-muted/30 transition-colors"
+                          >
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                              <div className="flex items-center gap-1.5">
+                                {getStatusIcon(request.status)}
+                                <h3 className="font-medium">
+                                  {isRequestSentByUser(request) 
+                                    ? `To: ${request.requested_name}` 
+                                    : `From: ${request.requester_name}`}
+                                </h3>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {getStatusBadge(request.status)}
+                                <span className="font-semibold text-primary">
+                                  {formatCurrency(request.amount)}
+                                </span>
                               </div>
                             </div>
-                          </Card>
+                            
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 mt-1 text-sm">
+                              <div className="flex items-center gap-1.5 text-muted-foreground">
+                                <Mail className="h-3.5 w-3.5" />
+                                <span className="text-xs truncate">
+                                  {isRequestSentByUser(request) 
+                                    ? request.requested_ipa_address 
+                                    : request.requester_ipa_address}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1.5 text-muted-foreground">
+                                <Calendar className="h-3.5 w-3.5" />
+                                <span className="text-xs">
+                                  {new Date(request.created_at).toLocaleString()}
+                                </span>
+                              </div>
+                            </div>
+                            
+                            {request.message && (
+                              <div className="bg-muted/30 p-2 rounded-md mt-3 mb-1">
+                                <p className="text-sm italic">"{request.message}"</p>
+                              </div>
+                            )}
+                            
+                            {request.status === 'pending' && !isRequestSentByUser(request) && (
+                              <div className="flex flex-col xs:flex-row gap-2 mt-3">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  onClick={() => handleDeclineRequest(request.request_id)}
+                                  className="flex-1 xs:flex-initial"
+                                >
+                                  <X className="h-4 w-4 mr-1.5" />
+                                  Decline
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  onClick={() => handleAcceptRequest(request.request_id)}
+                                  className="flex-1 xs:flex-initial"
+                                >
+                                  <Check className="h-4 w-4 mr-1.5" />
+                                  Pay {formatCurrency(request.amount)}
+                                </Button>
+                              </div>
+                            )}
+                            
+                            {request.transaction_id && request.status === 'accepted' && (
+                              <div className="mt-2">
+                                <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                                  Transaction ID: {request.transaction_id}
+                                </Badge>
+                              </div>
+                            )}
+                          </div>
                         ))}
                       </div>
                     )}
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
-            </Card>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
+          
+          <div className="lg:col-span-5">
+            <RequestMoney onRequestSent={() => loadAllRequests()} />
           </div>
         </div>
       </div>
-
-      {/* PIN Verification Dialog */}
+      
+      {/* PIN verification dialog */}
       <Dialog open={isPinDialogOpen} onOpenChange={setIsPinDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Confirm Payment</DialogTitle>
             <DialogDescription>
-              Please enter your PIN to accept this money request. A WhatsApp notification will be sent to the requester.
+              {selectedRequest && (
+                <div className="text-sm mt-2">
+                  Pay <span className="font-semibold">{formatCurrency(selectedRequest.amount)}</span> to{' '}
+                  <span className="font-semibold">{selectedRequest.requester_name}</span>
+                </div>
+              )}
             </DialogDescription>
           </DialogHeader>
           
-          {selectedRequest && (
-            <div className="space-y-4 py-4">
-              <div className="bg-muted/30 p-4 rounded-md space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">Amount:</span>
-                  <span className="text-lg font-semibold text-primary">{formatCurrency(selectedRequest.amount)}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">From:</span>
-                  <span className="text-sm">{selectedRequest.requester_name}</span>
-                </div>
-                {selectedRequest.message && (
-                  <div className="flex justify-between items-start pt-2">
-                    <span className="text-sm font-medium">Message:</span>
-                    <span className="text-sm text-right max-w-[200px]">{selectedRequest.message}</span>
-                  </div>
-                )}
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="ipa-select">Send money from</Label>
-                <select 
-                  id="ipa-select"
-                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                  value={selectedIpa}
-                  onChange={(e) => setSelectedIpa(e.target.value)}
-                  disabled={isLoadingIpas || isProcessing}
-                >
-                  {isLoadingIpas ? (
-                    <option>Loading accounts...</option>
-                  ) : currentUserIpas.length === 0 ? (
-                    <option>No IPA addresses available</option>
-                  ) : (
-                    currentUserIpas.map((ipa) => (
-                      <option key={ipa.ipa_id} value={ipa.ipa_address}>
-                        {ipa.ipa_address} - {ipa.bank_name || 'Unknown Bank'}
-                      </option>
-                    ))
-                  )}
-                </select>
-                
-                <div className="mt-4">
-                  <div className="flex justify-between">
-                    <Label htmlFor="pin">Security PIN</Label>
-                  </div>
-                  <PinVerification 
-                    onPinSubmit={processRequest}
-                    isLoading={isProcessing}
-                    loading={!selectedIpa}
-                    maxLength={6}
-                    title="Enter your PIN"
-                    hideVerifyButton={true}
-                    autoSubmit={true}
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  After confirming payment, the requester will receive a WhatsApp notification about the completed transaction.
-                </p>
-              </div>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="pin" className="text-sm font-medium">Your PIN</Label>
+              <PinVerification 
+                maxLength={4} 
+                onPinSubmit={val => setPin(val)}
+                hideVerifyButton={false}
+                autoSubmit={true}
+              />
             </div>
-          )}
+            
+            <div className="space-y-2">
+              <Label htmlFor="ipa" className="text-sm font-medium">From IPA Address</Label>
+              <select
+                className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
+                value={selectedIpa}
+                onChange={(e) => setSelectedIpa(e.target.value)}
+                disabled={isLoadingIpas}
+              >
+                {isLoadingIpas && <option value="">Loading...</option>}
+                {!isLoadingIpas && currentUserIpas.length === 0 && (
+                  <option value="">No IPAs available</option>
+                )}
+                {currentUserIpas.map(ipa => (
+                  <option key={ipa.ipa_id} value={ipa.ipa_address}>
+                    {ipa.ipa_address} ({ipa.bank_name || 'Unknown Bank'})
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
           
-          <DialogFooter className="flex space-x-2 justify-end">
-            <Button 
-              variant="outline" 
+          <DialogFooter className="flex-col sm:flex-row sm:justify-between gap-2">
+            <Button
+              type="button"
+              variant="outline"
               onClick={() => {
                 setIsPinDialogOpen(false);
                 setPin('');
-                setSelectedRequest(null);
               }}
-              disabled={isProcessing}
+              className="w-full sm:w-auto"
             >
               Cancel
             </Button>
-            {/* Only show loading indicator if processing */}
-            {isProcessing && (
-              <div className="flex items-center text-primary">
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Processing...
-              </div>
-            )}
+            <Button
+              type="button"
+              onClick={() => processRequest(pin)}
+              disabled={pin.length < 4 || !selectedIpa || isProcessing}
+              className="w-full sm:w-auto"
+            >
+              {isProcessing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <Lock className="mr-2 h-4 w-4" />
+                  Confirm & Pay
+                </>
+              )}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Decline Confirmation Dialog */}
+      
+      {/* Decline confirmation dialog */}
       <Dialog open={isDeclineDialogOpen} onOpenChange={setIsDeclineDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -630,30 +597,33 @@ export default function MoneyRequestsPage() {
             </DialogDescription>
           </DialogHeader>
           
-          <div className="py-4">
-            <p className="text-sm text-muted-foreground">
-              The requester will be notified that you have declined their request. This action cannot be undone.
-            </p>
-          </div>
-          
-          <DialogFooter className="flex space-x-2 justify-end">
-            <Button 
-              variant="outline" 
+          <DialogFooter className="flex-col sm:flex-row sm:justify-between gap-2">
+            <Button
+              type="button"
+              variant="outline"
               onClick={() => {
                 setIsDeclineDialogOpen(false);
                 setRequestToDecline(null);
               }}
-              disabled={isProcessing}
+              className="w-full sm:w-auto"
             >
               Cancel
             </Button>
-            <Button 
+            <Button
+              type="button"
               variant="destructive"
               onClick={confirmDeclineRequest}
               disabled={isProcessing}
+              className="w-full sm:w-auto"
             >
-              {isProcessing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              Decline Request
+              {isProcessing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                'Decline Request'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -88,18 +88,18 @@ export function RequestMoney({ onRequestSent }: RequestMoneyProps) {
         </div>
       </CardHeader>
       <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-5 pt-6">
+        <CardContent className="space-y-4 sm:space-y-5 p-4 sm:p-6 pt-4 sm:pt-6">
           <Alert className="bg-blue-50 text-blue-800 border-blue-200">
             <AlertDescription className="text-xs flex items-center gap-2">
-              <Mail className="h-4 w-4" />
-              The recipient will receive a notification once your request is sent
+              <Mail className="h-4 w-4 flex-shrink-0" />
+              <span>The recipient will receive a notification once your request is sent</span>
             </AlertDescription>
           </Alert>
           
           <div className="space-y-2">
             <Label htmlFor="amount" className="text-sm font-medium">Amount (EGP) *</Label>
             <div className="relative">
-              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+              <div className="absolute inset-y-0 left-2 sm:left-3 flex items-center pointer-events-none">
                 <span className="text-gray-500">EGP</span>
               </div>
               <Input
@@ -109,7 +109,7 @@ export function RequestMoney({ onRequestSent }: RequestMoneyProps) {
                 onChange={handleAmountChange}
                 disabled={isSubmitting}
                 required
-                className="pl-12 text-lg font-medium h-12"
+                className="pl-10 sm:pl-12 text-base sm:text-lg font-medium h-10 sm:h-12"
               />
             </div>
           </div>
@@ -117,7 +117,7 @@ export function RequestMoney({ onRequestSent }: RequestMoneyProps) {
           <div className="space-y-2">
             <Label htmlFor="ipa" className="text-sm font-medium">IPA Address *</Label>
             <div className="relative">
-              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+              <div className="absolute inset-y-0 left-2 sm:left-3 flex items-center pointer-events-none">
                 <Mail className="h-4 w-4 text-gray-500" />
               </div>
               <Input
@@ -127,7 +127,7 @@ export function RequestMoney({ onRequestSent }: RequestMoneyProps) {
                 onChange={(e) => setIpaAddress(e.target.value)}
                 disabled={isSubmitting}
                 required
-                className="pl-10 h-12"
+                className="pl-8 sm:pl-10 h-10 sm:h-12"
               />
             </div>
           </div>
@@ -138,7 +138,7 @@ export function RequestMoney({ onRequestSent }: RequestMoneyProps) {
               <span className="text-xs text-muted-foreground">(Optional)</span>
             </div>
             <div className="relative">
-              <div className="absolute top-3 left-3 flex items-start pointer-events-none">
+              <div className="absolute top-2 sm:top-3 left-2 sm:left-3 flex items-start pointer-events-none">
                 <MessageSquare className="h-4 w-4 text-gray-500" />
               </div>
               <Textarea
@@ -148,25 +148,25 @@ export function RequestMoney({ onRequestSent }: RequestMoneyProps) {
                 onChange={(e) => setMessage(e.target.value)}
                 disabled={isSubmitting}
                 rows={3}
-                className="pl-10 resize-none"
+                className="pl-8 sm:pl-10 resize-none min-h-[80px]"
               />
             </div>
           </div>
         </CardContent>
-        <CardFooter className="pt-2 pb-6 px-6">
+        <CardFooter className="pt-0 sm:pt-2 pb-4 sm:pb-6 px-4 sm:px-6">
           <Button 
             type="submit" 
             disabled={isSubmitting} 
-            className="w-full h-12 font-medium shadow-sm transition-all hover:shadow-md"
+            className="w-full h-10 sm:h-12 font-medium shadow-sm transition-all hover:shadow-md"
           >
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Processing Request...
+                <span className="whitespace-nowrap">Processing...</span>
               </>
             ) : (
               <>
-                Request Money
+                <span>Request Money</span>
                 <ArrowRight className="ml-2 h-4 w-4" />
               </>
             )}

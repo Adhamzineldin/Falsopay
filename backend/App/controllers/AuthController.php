@@ -21,7 +21,7 @@ class AuthController
         } else {
             echo "Recipient or message is missing.";
         }
-        
+
     }
 
 
@@ -34,22 +34,22 @@ class AuthController
             EmailService::sendVerificationCode($recipient, $code);
             self::json(['success' => true, 'message' => 'Verification email sent successfully'], 200);
         } else {
-            self::json(['success' => false, 'message' => 'Verification email is missing.'], 400);   
+            self::json(['success' => false, 'message' => 'Verification email is missing.'], 400);
         }
 
     }
-    
+
     #[NoReturn] public static function checkIfUserWithPhoneNumberExists(array $data): void
     {
         $userModel = new User();
         $phoneNumber = $data['phone_number'] ?? null;
-        
+
         if (!$phoneNumber) {
             self::json(['error' => 'Phone number is required'], 400);
         }
-        
+
         $user = $userModel->getUserByPhoneNumber($phoneNumber);
-        
+
         if (!$user) {
             self::json(['exists' => false]);
         } else {
@@ -102,19 +102,13 @@ class AuthController
     }
 
 
-    /**
-     * Handle user login
-     * 
-     * @param array $data Request data containing phone_number and pin
-     * @return void
-     */
     #[NoReturn] public static function login(array $data): void
     {
         $userModel = new User();
         $authMiddleware = new AuthMiddleware();
         $ipaModel = new InstantPaymentAddress();
 
-        $fields = ['phone_number', 'pin'];
+        $fields = ['phone_number', 'ipa_address'];
 
         foreach ($fields as $field) {
             if (!isset($data[$field])) {
@@ -127,29 +121,32 @@ class AuthController
         if (!$user) {
             self::json(['error' => 'User not found'], 404);
         }
-        
+
+        // Check if user is blocked
         if ($user['status'] === 'blocked') {
             self::json(['error' => 'Your account has been blocked. Please contact support for assistance.'], 403);
         }
 
         $ipa_accounts = $ipaModel->getAllByUserId($user['user_id']);
-        
+
         if (empty($ipa_accounts)) {
-            self::json(['error' => 'No IPA accounts found for this user'], 401);
+            $user_token = $authMiddleware->generateToken($user['user_id']);
+            self::json(['success' => true, 'user_token' => $user_token, 'user' => $user]);
         } else {
-            $validPin = false;
+            $ipaExists = false;
             foreach ($ipa_accounts as $ipa_account) {
-                if ($ipaModel->verifyPin($user['user_id'], $ipa_account['ipa_address'], $data['pin'])) {
-                    $validPin = true;
+                // Compare IPA addresses in lowercase
+                if (strtolower($ipa_account['ipa_address']) === strtolower($data['ipa_address'])) {
+                    $ipaExists = true;
                     break;
                 }
             }
 
-            if ($validPin) {
+            if ($ipaExists) {
                 $user_token = $authMiddleware->generateToken($user['user_id']);
                 self::json(['success' => true, 'user_token' => $user_token, 'user' => $user]);
             } else {
-                self::json(['error' => 'Invalid PIN'], 401);
+                self::json(['error' => 'Invalid IPA'], 401);
             }
         }
     }
@@ -160,42 +157,42 @@ class AuthController
         $authMiddleware = new AuthMiddleware();
         $userModel = new User();
         $ipaModel = new InstantPaymentAddress();
-        
+
         if (!$data["phone_number"]){
             self::json(['error' => 'Phone number is required'], 400);
         }
-        
+
         $user = $userModel->getUserByPhoneNumber($data['phone_number']);
-        
+
         if (!$user) {
             self::json(['error' => 'User not found'], 404);
         }
-        
+
         $ipa = $ipaModel->getAllByUserId($user['user_id']);
-        
+
         if (empty($ipa)) {
             self::json(['success' => true, 'message' => 'No IPA found for this user']);
         } else {
             $ipaDeletionStatus = $ipaModel->deleteByUserId($user['user_id']);
             if (!$ipaDeletionStatus) {
                 self::json(['error' => 'Failed to delete IPA'], 500);
-            } 
+            }
         }
 
-        $userDeletionStatus = $userModel->deleteUser($user['user_id']); 
+        $userDeletionStatus = $userModel->deleteUser($user['user_id']);
         if (!$userDeletionStatus) {
             self::json(['error' => 'Failed to delete user'], 500);
         } else {
             self::json(['success' => true, 'message' => 'User account deleted successfully']);
         }
     }
-    
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
+
 
 
     #[NoReturn] private static function json($data, int $code = 200): void

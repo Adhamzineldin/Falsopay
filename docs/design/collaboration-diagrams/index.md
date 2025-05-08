@@ -4,12 +4,13 @@ This directory contains collaboration diagrams for the main business processes o
 
 ## Available Diagrams
 
-1. [User Registration](user-registration.puml) - Shows the process of a new user registering for a FalsoPay account
-2. [Send Money](send-money.puml) - Illustrates the process of sending money to another user
-3. [Link Bank Account](link-bank-account.puml) - Depicts the process of linking a bank account to a FalsoPay account
-4. [Dispute Transaction](dispute-transaction.puml) - Shows the process of disputing a transaction
-5. [Request Money](request-money.puml) - Illustrates the process of requesting money from another user
-6. [Contact Customer Support](contact-customer-support.puml) - Depicts the process of contacting customer support
+1. [User Registration](UC1-Register.puml) - Shows the process of a new user registering for a FalsoPay account
+2. [User Login](UC2-LogIn.puml) - Illustrates the process of a registered user logging into the system
+3. [Check Balance](UC3-CheckBalance.puml) - Shows the process of a user checking their account balance
+4. [Link Bank Account](UC5-LinkBankAccount.puml) - Depicts the process of linking a bank account to a FalsoPay account
+5. [Send Money](UC9-SendMoney.puml) - Illustrates the process of sending money to another user
+6. [Request Money](UC12-RequestMoney.puml) - Illustrates the process of requesting money from another user
+7. [Contact Customer Support](contact-customer-support.puml) - Depicts the process of contacting customer support
 
 ## Viewing the Diagrams
 

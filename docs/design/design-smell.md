@@ -14,7 +14,7 @@ Common categories of design smells include:
 6. **Needless Repetition**: Repeated structures that could be unified
 7. **Opacity**: Difficulty in understanding the design
 
-## Identified Design Smell in FalsoPay: God Class / Bloated Service
+## Identified Design Smell in FalsoPay: Bloated Service
 
 ### Description
 

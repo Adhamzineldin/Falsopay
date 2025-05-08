@@ -19,29 +19,27 @@ interface PinVerificationProps {
 }
 
 const PinVerification: React.FC<PinVerificationProps> = ({
-  onVerify,
-  onPinSubmit,
-  onResend,
-  loading,
-  isLoading,
-  title = "Enter PIN",
-  maxLength = 6,
-  expectedPin,
-  ipaAddress,
-  hideVerifyButton = false,
-  autoSubmit = false,
-}) => {
+                                                           onVerify,
+                                                           onPinSubmit,
+                                                           onResend,
+                                                           loading,
+                                                           isLoading,
+                                                           title = "Enter PIN",
+                                                           maxLength = 4,
+                                                           expectedPin,
+                                                           ipaAddress,
+                                                           hideVerifyButton = false,
+                                                           autoSubmit = false,
+                                                         }) => {
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
   const [verifying, setVerifying] = useState(false);
   const [resent, setResent] = useState(false);
 
-  // Only reset pin input when expectedPin changes and isn't empty
+  // Reset pin input when expectedPin changes
   useEffect(() => {
-    if (expectedPin) {
-      setPin('');
-      setError('');
-    }
+    setPin('');
+    setError('');
   }, [expectedPin]);
 
   // Auto-submit when PIN is complete and autoSubmit is true
@@ -56,20 +54,19 @@ const PinVerification: React.FC<PinVerificationProps> = ({
       setError(`PIN must be ${maxLength} digits`);
       return;
     }
-    
+
     setVerifying(true);
-    setError(''); // Clear previous errors
-    
+
     // If we have an expected PIN, verify locally
     if (expectedPin) {
       console.log(`Verifying PIN: ${pin}, Expected: ${expectedPin}`);
       setTimeout(() => {
         if (pin === expectedPin) {
+          setError('');
           if (onVerify) onVerify(true);
           if (onPinSubmit) onPinSubmit(pin);
         } else {
           setError('Invalid code');
-          // Do not clear the PIN on error to allow the user to fix it
           if (onVerify) onVerify(false);
         }
         setVerifying(false);
@@ -78,12 +75,11 @@ const PinVerification: React.FC<PinVerificationProps> = ({
       // Otherwise just submit the PIN
       if (onPinSubmit) {
         try {
-          await onPinSubmit(pin);
-          // Don't clear the PIN unless submission was successful
+          onPinSubmit(pin);
+          setError('');
         } catch (error) {
           console.error('Error submitting PIN:', error);
           setError('Failed to submit PIN');
-          // Keep the PIN to allow the user to retry
         } finally {
           setVerifying(false);
         }
@@ -102,59 +98,55 @@ const PinVerification: React.FC<PinVerificationProps> = ({
   };
 
   return (
-    <div className="flex justify-center items-center flex-col space-y-2 sm:space-y-4 w-full">
-      <div className="space-y-2 w-full flex flex-col items-center">
-        <Label htmlFor="pin-input" className="text-xs sm:text-sm">{title}</Label>
-        <InputOTP
-          maxLength={maxLength}
-          value={pin}
-          onChange={setPin}
-          autoFocus
-          render={({ slots }) => (
-            <InputOTPGroup className="gap-1 sm:gap-2">
-              {slots.map((slot, i) => (
-                <InputOTPSlot 
-                  key={i} 
-                  {...slot} 
-                  className="h-8 w-8 sm:h-10 sm:w-10 text-sm sm:text-base border-gray-300"
-                />
-              ))}
-            </InputOTPGroup>
+      <div className="flex justify-center items-center flex-col space-y-4 w-full">
+        <div className="space-y-2 w-full flex flex-col items-center">
+          <Label htmlFor="pin-input">{title}</Label>
+          <InputOTP
+              maxLength={maxLength}
+              value={pin}
+              onChange={setPin}
+              autoFocus
+              render={({ slots }) => (
+                  <InputOTPGroup>
+                    {slots.map((slot, i) => (
+                        <InputOTPSlot key={i} {...slot} />
+                    ))}
+                  </InputOTPGroup>
+              )}
+          />
+          {error && <p className="text-sm text-red-500 text-center">{error}</p>}
+
+          {!hideVerifyButton && (
+              <Button
+                  onClick={handleVerify}
+                  disabled={pin.length !== maxLength || loading || isLoading || verifying}
+                  className="w-full"
+              >
+                {verifying || loading || isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Verifying...
+                    </>
+                ) : (
+                    'Verify Code'
+                )}
+              </Button>
           )}
-        />
-        {error && <p className="text-xs sm:text-sm text-red-500 text-center mt-1">{error}</p>}
-        
-        {!hideVerifyButton && (
-          <Button 
-            onClick={handleVerify} 
-            disabled={pin.length !== maxLength || loading || isLoading || verifying}
-            className="w-full h-8 sm:h-10 text-xs sm:text-sm mt-2"
-          >
-            {verifying || loading || isLoading ? (
-              <>
-                <Loader2 className="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4 animate-spin" />
-                Verifying...
-              </>
-            ) : (
-              'Verify Code'
-            )}
-          </Button>
-        )}
-        
-        {onResend && (
-          <Button
-            type="button"
-            variant="ghost"
-            className="text-[10px] sm:text-xs flex items-center mt-1 sm:mt-2 h-6 sm:h-8"
-            onClick={handleResend}
-            disabled={resent}
-          >
-            <RefreshCw className="mr-1 h-3 w-3 sm:h-4 sm:w-4" />
-            {resent ? "Code Sent!" : "Resend Code"}
-          </Button>
-        )}
+
+          {onResend && (
+              <Button
+                  type="button"
+                  variant="ghost"
+                  className="text-xs flex items-center mt-2"
+                  onClick={handleResend}
+                  disabled={resent}
+              >
+                <RefreshCw className="mr-1 h-4 w-4" />
+                {resent ? "Code Sent!" : "Resend Code"}
+              </Button>
+          )}
+        </div>
       </div>
-    </div>
   );
 };
 

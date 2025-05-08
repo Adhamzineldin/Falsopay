@@ -370,10 +370,10 @@ export default function MoneyRequestsPage() {
           </div>
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-7 space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
+          <div className="lg:col-span-7 space-y-4 sm:space-y-6 w-full">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid grid-cols-4 mb-6">
+              <TabsList className="grid grid-cols-4 mb-4 sm:mb-6 text-xs sm:text-sm">
                 <TabsTrigger value="all">All</TabsTrigger>
                 <TabsTrigger value="pending">Pending</TabsTrigger>
                 <TabsTrigger value="sent">Sent</TabsTrigger>
@@ -422,9 +422,9 @@ export default function MoneyRequestsPage() {
                             className="p-4 hover:bg-muted/30 transition-colors"
                           >
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-                              <div className="flex items-center gap-1.5">
+                              <div className="flex items-center gap-2">
                                 {getStatusIcon(request.status)}
-                                <h3 className="font-medium">
+                                <h3 className="font-medium truncate">
                                   {isRequestSentByUser(request) 
                                     ? `To: ${request.requested_name}` 
                                     : `From: ${request.requester_name}`}
@@ -432,7 +432,7 @@ export default function MoneyRequestsPage() {
                               </div>
                               <div className="flex items-center gap-2">
                                 {getStatusBadge(request.status)}
-                                <span className="font-semibold text-primary">
+                                <span className="font-semibold text-primary whitespace-nowrap">
                                   {formatCurrency(request.amount)}
                                 </span>
                               </div>
@@ -467,7 +467,7 @@ export default function MoneyRequestsPage() {
                                   variant="outline" 
                                   size="sm" 
                                   onClick={() => handleDeclineRequest(request.request_id)}
-                                  className="flex-1 xs:flex-initial"
+                                  className="flex-1 xs:flex-initial h-9"
                                 >
                                   <X className="h-4 w-4 mr-1.5" />
                                   Decline
@@ -475,7 +475,7 @@ export default function MoneyRequestsPage() {
                                 <Button 
                                   size="sm" 
                                   onClick={() => handleAcceptRequest(request.request_id)}
-                                  className="flex-1 xs:flex-initial"
+                                  className="flex-1 xs:flex-initial h-9"
                                 >
                                   <Check className="h-4 w-4 mr-1.5" />
                                   Pay {formatCurrency(request.amount)}
@@ -500,7 +500,7 @@ export default function MoneyRequestsPage() {
             </Tabs>
           </div>
           
-          <div className="lg:col-span-5">
+          <div className="lg:col-span-5 w-full">
             <RequestMoney onRequestSent={() => loadAllRequests()} />
           </div>
         </div>
@@ -508,7 +508,7 @@ export default function MoneyRequestsPage() {
       
       {/* PIN verification dialog */}
       <Dialog open={isPinDialogOpen} onOpenChange={setIsPinDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md max-w-[calc(100%-2rem)] p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle>Confirm Payment</DialogTitle>
             <DialogDescription>
@@ -589,7 +589,7 @@ export default function MoneyRequestsPage() {
       
       {/* Decline confirmation dialog */}
       <Dialog open={isDeclineDialogOpen} onOpenChange={setIsDeclineDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md max-w-[calc(100%-2rem)] p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle>Confirm Decline</DialogTitle>
             <DialogDescription>

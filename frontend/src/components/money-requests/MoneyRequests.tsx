@@ -176,7 +176,7 @@ export function MoneyRequests() {
   }
 
   return (
-    <Card className="shadow-md border-primary/10 bg-card/50 backdrop-blur-sm">
+    <Card className="shadow-md border-primary/10 bg-card/50 backdrop-blur-sm w-full">
       <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-t-lg pb-4">
         <div className="flex items-center gap-2">
           <div className="bg-primary/20 p-2 rounded-full">
@@ -198,7 +198,7 @@ export function MoneyRequests() {
                 <Badge variant="outline" className="bg-yellow-100 text-yellow-700 border-yellow-200 w-fit">
                   Pending
                 </Badge>
-                <div className="text-xl font-semibold text-primary">
+                <div className="text-lg sm:text-xl font-semibold text-primary whitespace-nowrap">
                   {formatCurrency(request.amount)}
                 </div>
               </div>
@@ -208,9 +208,9 @@ export function MoneyRequests() {
                 <div className="bg-primary/10 rounded-full p-2 mt-1">
                   <UserRound className="h-4 w-4 text-primary" />
                 </div>
-                <div>
-                  <h4 className="font-medium">{request.requester_name}</h4>
-                  <p className="text-xs text-muted-foreground break-all">{request.requester_ipa_address}</p>
+                <div className="min-w-0 flex-1">
+                  <h4 className="font-medium truncate">{request.requester_name}</h4>
+                  <p className="text-xs text-muted-foreground break-words">{request.requester_ipa_address}</p>
                 </div>
               </div>
               

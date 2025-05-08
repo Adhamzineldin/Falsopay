@@ -222,14 +222,14 @@ const ManageFavorites = () => {
         <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Manage Favorites</h1>
         
         <Tabs defaultValue="all" onValueChange={setCurrentFilter}>
-          <div className="overflow-x-auto pb-2">
+          <div className="overflow-x-auto -mx-4 px-4 pb-1">
             <TabsList className="mb-4 sm:mb-6 w-auto inline-flex">
-              <TabsTrigger value="all" className="text-xs sm:text-sm">All</TabsTrigger>
-              <TabsTrigger value="ipa" className="text-xs sm:text-sm">IPA</TabsTrigger>
-              <TabsTrigger value="mobile" className="text-xs sm:text-sm">Mobile</TabsTrigger>
-              <TabsTrigger value="card" className="text-xs sm:text-sm">Card</TabsTrigger>
-              <TabsTrigger value="account" className="text-xs sm:text-sm">Account</TabsTrigger>
-              <TabsTrigger value="iban" className="text-xs sm:text-sm">IBAN</TabsTrigger>
+              <TabsTrigger value="all" className="text-xs sm:text-sm px-2 sm:px-4">All</TabsTrigger>
+              <TabsTrigger value="ipa" className="text-xs sm:text-sm px-2 sm:px-4">IPA</TabsTrigger>
+              <TabsTrigger value="mobile" className="text-xs sm:text-sm px-2 sm:px-4">Mobile</TabsTrigger>
+              <TabsTrigger value="card" className="text-xs sm:text-sm px-2 sm:px-4">Card</TabsTrigger>
+              <TabsTrigger value="account" className="text-xs sm:text-sm px-2 sm:px-4">Account</TabsTrigger>
+              <TabsTrigger value="iban" className="text-xs sm:text-sm px-2 sm:px-4">IBAN</TabsTrigger>
             </TabsList>
           </div>
           
@@ -311,7 +311,7 @@ const ManageFavorites = () => {
         
         {/* Edit Dialog */}
         <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-          <DialogContent className="sm:max-w-md max-w-[calc(100%-2rem)]">
+          <DialogContent className="sm:max-w-md max-w-[calc(100%-2rem)] p-4 sm:p-6">
             <DialogHeader>
               <DialogTitle>Edit Favorite</DialogTitle>
               <DialogDescription>
@@ -365,7 +365,7 @@ const ManageFavorites = () => {
 
         {/* Delete Confirmation Dialog */}
         <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-          <DialogContent className="sm:max-w-md max-w-[calc(100%-2rem)]">
+          <DialogContent className="sm:max-w-md max-w-[calc(100%-2rem)] p-4 sm:p-6">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-red-500" />

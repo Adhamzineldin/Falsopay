@@ -75,7 +75,7 @@ export function RequestMoney({ onRequestSent }: RequestMoneyProps) {
   };
 
   return (
-    <Card className="shadow-md border-primary/10 bg-card/50 backdrop-blur-sm">
+    <Card className="shadow-md border-primary/10 bg-card/50 backdrop-blur-sm w-full">
       <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-t-lg pb-4">
         <div className="flex items-center gap-2">
           <div className="bg-primary/20 p-2 rounded-full">
@@ -110,6 +110,7 @@ export function RequestMoney({ onRequestSent }: RequestMoneyProps) {
                 disabled={isSubmitting}
                 required
                 className="pl-10 sm:pl-12 text-base sm:text-lg font-medium h-10 sm:h-12"
+                inputMode="decimal"
               />
             </div>
           </div>

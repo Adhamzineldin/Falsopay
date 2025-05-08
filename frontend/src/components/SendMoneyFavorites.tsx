@@ -240,7 +240,7 @@ const SendMoneyFavorites = ({
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 w-full">
       {/* Only show Add to Favorites when recipient is validated */}
       {currentRecipient && recipientValidated && (
         <TooltipProvider>
@@ -251,7 +251,7 @@ const SendMoneyFavorites = ({
                 size="icon"
                 onClick={handleOpenAddDialog}
                 disabled={isSaving || isCurrentRecipientInFavorites()}
-                className="h-9 w-9"
+                className="h-9 w-9 flex-shrink-0"
               >
                 {isCurrentRecipientInFavorites() ? (
                   <StarOff className="h-4 w-4 text-yellow-500" />
@@ -272,7 +272,7 @@ const SendMoneyFavorites = ({
       {showOnlyFavoriteButton === false && (
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="outline" size="sm" className="flex items-center gap-2 text-xs sm:text-sm h-9">
+            <Button variant="outline" size="sm" className="flex items-center gap-2 text-xs sm:text-sm h-9 px-2 sm:px-3">
               <Star className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
               <span className="whitespace-nowrap">Favorites</span>
               {favorites.length > 0 && (
@@ -352,7 +352,7 @@ const SendMoneyFavorites = ({
 
       {/* Add to Favorites Dialog */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent className="sm:max-w-md max-w-[calc(100%-2rem)]">
+        <DialogContent className="sm:max-w-md max-w-[calc(100%-2rem)] p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle>Add to Favorites</DialogTitle>
             <DialogDescription>
@@ -360,9 +360,9 @@ const SendMoneyFavorites = ({
             </DialogDescription>
           </DialogHeader>
           
-          <div className="grid gap-4 py-4">
+          <div className="grid gap-4 py-2 sm:py-4">
             <div className="space-y-2">
-              <Label htmlFor="recipient-info">Recipient Information</Label>
+              <Label htmlFor="recipient-info" className="text-sm">Recipient Information</Label>
               <div className="flex items-center p-3 bg-gray-50 rounded-md overflow-hidden">
                 <div className="bg-gray-100 p-2 rounded-full mr-3 flex-shrink-0">
                   {getMethodIcon(method)}
@@ -375,7 +375,7 @@ const SendMoneyFavorites = ({
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="display-name">Display Name</Label>
+              <Label htmlFor="display-name" className="text-sm">Display Name</Label>
               <Input
                 id="display-name"
                 value={customName}
@@ -409,7 +409,7 @@ const SendMoneyFavorites = ({
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent className="sm:max-w-md max-w-[calc(100%-2rem)]">
+        <DialogContent className="sm:max-w-md max-w-[calc(100%-2rem)] p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-red-500" />

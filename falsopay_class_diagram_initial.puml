@@ -1,0 +1,178 @@
+@startuml Falsopay_Initial_Class_Diagram
+
+' Basic styling
+skinparam classAttributeIconSize 0
+skinparam classFontStyle bold
+skinparam classBackgroundColor #f5f5f5
+skinparam classBorderColor #2196F3
+skinparam arrowColor #2196F3
+skinparam stereotypeCBackgroundColor #a3e4d7
+
+' Title
+title Falsopay - Initial Class Diagram
+
+' User Management
+class User {
+  -userId: int
+  -firstName: string
+  -lastName: string
+  -email: string
+  -phoneNumber: string
+  -role: string
+  -status: string
+  -createdAt: datetime
+  +register(): boolean
+  +login(): boolean
+  +updateProfile(): boolean
+  +getTransactionHistory(): array
+}
+
+' Bank and Account
+class Bank {
+  -bankId: int
+  -bankName: string
+  -bankCode: string
+  -swiftCode: string
+  +getAccounts(): array
+}
+
+class BankUser {
+  -bankUserId: int
+  -firstName: string
+  -lastName: string
+  -email: string
+  -phoneNumber: string
+  -dateOfBirth: date
+  -createdAt: datetime
+  +getAccounts(): array
+}
+
+class BankAccount {
+  -accountId: int
+  -accountNumber: string
+  -iban: string
+  -type: string
+  -status: string
+  -balance: float
+  -createdAt: datetime
+  +deposit(amount: float): boolean
+  +withdraw(amount: float): boolean
+  +getBalance(): float
+}
+
+' Payment Methods
+class InstantPaymentAddress {
+  -ipaId: int
+  -ipaAddress: string
+  -pin: string
+  -createdAt: datetime
+  +validatePin(pin: string): boolean
+  +updatePin(pin: string): boolean
+}
+
+class Card {
+  -cardId: int
+  -cardNumber: string
+  -expirationDate: string
+  -cvv: string
+  -pin: string
+  -cardType: string
+  -createdAt: datetime
+  +validateCard(): boolean
+}
+
+' Money Transfer
+class Transaction {
+  -transactionId: int
+  -senderInfo: string
+  -receiverInfo: string
+  -amount: float
+  -transferMethod: string
+  -transactionTime: datetime
+  +createTransaction(): boolean
+  +getTransactionDetails(): array
+}
+
+class MoneyRequest {
+  -requestId: int
+  -requesterInfo: string
+  -requestedInfo: string
+  -amount: float
+  -message: string
+  -status: string
+  -createdAt: datetime
+  -updatedAt: datetime
+  +createRequest(): boolean
+  +acceptRequest(): boolean
+  +rejectRequest(): boolean
+}
+
+' User Preferences
+class Favorite {
+  -favoriteId: int
+  -recipientIdentifier: string
+  -recipientName: string
+  -method: string
+  -createdAt: datetime
+  +addFavorite(): boolean
+  +removeFavorite(): boolean
+}
+
+' Support System
+class SupportTicket {
+  -ticketId: int
+  -subject: string
+  -message: string
+  -status: string
+  -contactInfo: string
+  -createdAt: datetime
+  -updatedAt: datetime
+  +createTicket(): boolean
+  +updateStatus(status: string): boolean
+}
+
+class SupportReply {
+  -replyId: int
+  -message: string
+  -isAdmin: boolean
+  -createdAt: datetime
+  +addReply(): boolean
+}
+
+' System Configuration
+class SystemSettings {
+  -settingId: int
+  -transferLimitEnabled: boolean
+  -transferLimitAmount: float
+  -transactionsBlocked: boolean
+  -blockMessage: string
+  -maintenanceMode: boolean
+  -maintenanceMessage: string
+  -updatedAt: datetime
+  -createdAt: datetime
+  +updateSettings(): boolean
+  +getSettings(): array
+}
+
+' Basic Relationships
+User "1" -- "0..*" InstantPaymentAddress
+User "1" -- "0..*" Favorite
+User "1" -- "0..*" SupportTicket
+User "1" -- "0..*" SupportReply
+User "1" -- "0..*" Transaction : sends/receives
+User "1" -- "0..*" MoneyRequest : requests/receives
+User "1" -- "1" BankUser : linked to
+
+Bank "1" -- "0..*" BankAccount : offers
+Bank "1" -- "0..*" Card : issues
+
+BankUser "1" -- "0..*" BankAccount : owns
+BankUser "1" -- "0..*" Card : owns
+
+SupportTicket "1" -- "0..*" SupportReply : has
+
+BankAccount "1" -- "0..*" InstantPaymentAddress : linked to
+
+Transaction "0..1" -- "0..1" MoneyRequest : fulfills
+
+@enduml 

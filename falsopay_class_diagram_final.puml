@@ -1,0 +1,751 @@
+@startuml Falsopay_Final_Class_Diagram
+
+' Basic styling
+skinparam classAttributeIconSize 0
+skinparam classFontStyle bold
+skinparam classBackgroundColor #f5f5f5
+skinparam classBorderColor #2196F3
+skinparam arrowColor #2196F3
+skinparam stereotypeCBackgroundColor #a3e4d7
+skinparam packageBackgroundColor #FAFAFA
+skinparam packageBorderColor #78909C
+
+' Title
+title Falsopay - Final Class Diagram with Design Patterns
+
+' Packages
+package "User Management" {
+    ' Abstract Person class (Generalization/Inheritance)
+    abstract class Person {
+        #firstName: string
+        #lastName: string
+        #email: string
+        #phoneNumber: string
+        +getFullName(): string
+        +{abstract} validate(): boolean
+    }
+
+    ' User extends Person (Inheritance)
+    class User extends Person {
+        -userId: int
+        -password: string
+        -role: UserRole
+        -status: UserStatus
+        -createdAt: datetime
+        -defaultAccount: int
+        +register(userData: array): boolean
+        +login(email: string, password: string): string
+        +logout(): boolean
+        +verifyPhoneNumber(phoneNumber: string): boolean
+        +generateVerificationCode(): string
+        +verifyCode(code: string): boolean
+        +updateProfile(userData: array): boolean
+        +getTransactionHistory(filters: array): array
+        +validate(): boolean
+    }
+
+    ' BankUser extends Person (Inheritance)
+    class BankUser extends Person {
+        -bankUserId: int
+        -dateOfBirth: date
+        -createdAt: datetime
+        +getAccounts(): array
+        +validate(): boolean
+    }
+    
+    ' User Role Enumeration
+    enum UserRole {
+        USER
+        ADMIN
+        AGENT
+    }
+    
+    ' User Status Enumeration
+    enum UserStatus {
+        ACTIVE
+        INACTIVE
+        SUSPENDED
+    }
+    
+    ' UserRepository Interface (Repository Pattern)
+    interface UserRepository {
+        +findById(id: int): User
+        +findByEmail(email: string): User
+        +findByPhoneNumber(phoneNumber: string): User
+        +save(user: User): User
+        +update(id: int, data: array): boolean
+        +delete(id: int): boolean
+    }
+    
+    ' Database implementation of UserRepository (Repository Pattern)
+    class UserRepositoryDatabase implements UserRepository {
+        -db: Database
+        +findById(id: int): User
+        +findByEmail(email: string): User
+        +findByPhoneNumber(phoneNumber: string): User
+        +save(user: User): User
+        +update(id: int, data: array): boolean
+        +delete(id: int): boolean
+    }
+    
+    ' UserService (Service Pattern)
+    class UserService {
+        -userRepository: UserRepository
+        -authService: AuthService
+        -logger: Logger
+        +createUser(userData: array): User
+        +authenticateUser(email: string, password: string): string
+        +verifyUserPhoneNumber(userId: int, phoneNumber: string): boolean
+        +updateUserProfile(userId: int, userData: array): boolean
+        +getUserTransactions(userId: int, filters: array): array
+        +setDefaultAccount(userId: int, accountId: int): boolean
+        +linkBankUser(userId: int, bankUserId: int): boolean
+    }
+}
+
+package "Auth" {
+    ' AuthService Interface (Facade Pattern)
+    interface AuthService {
+        +generateToken(userId: int, role: UserRole): string
+        +verifyToken(token: string): boolean
+        +refreshToken(token: string): string
+        +hashPassword(password: string): string
+        +verifyPassword(password: string, hash: string): boolean
+    }
+    
+    ' JWT Implementation of AuthService (Strategy Pattern)
+    class JWTAuthService implements AuthService {
+        -secretKey: string
+        -tokenExpiry: int
+        -refreshTokenExpiry: int
+        +generateToken(userId: int, role: UserRole): string
+        +verifyToken(token: string): boolean
+        +refreshToken(token: string): string
+        +hashPassword(password: string): string
+        +verifyPassword(password: string, hash: string): boolean
+    }
+    
+    ' Auth Middleware (Decorator Pattern)
+    class AuthMiddleware {
+        -authService: AuthService
+        +requireAuthentication(): boolean
+        +requireAuthorization(role: UserRole): boolean
+        +generatePin(length: int): string
+        +verifyPin(pin: string, storedPin: string): boolean
+    }
+}
+
+package "Banking" {
+    ' Bank Entity
+    class Bank {
+        -bankId: int
+        -bankName: string
+        -bankCode: string
+        -swiftCode: string
+        +getAccounts(): array
+    }
+    
+    ' Account Status Enumeration
+    enum AccountStatus {
+        ACTIVE
+        INACTIVE
+        SUSPENDED
+        CLOSED
+    }
+    
+    ' Account Type Enumeration
+    enum AccountType {
+        CHECKING
+        SAVINGS
+        CREDIT
+        LOAN
+    }
+    
+    ' BankAccount Entity
+    class BankAccount {
+        -accountId: int
+        -bankId: int
+        -accountNumber: string
+        -bankUserId: int
+        -iban: string
+        -type: AccountType
+        -status: AccountStatus
+        -balance: Money
+        -createdAt: datetime
+        +deposit(amount: Money): Transaction
+        +withdraw(amount: Money): Transaction
+        +getBalance(): Money
+        +getTransactions(filters: array): array
+    }
+    
+    ' Repository Interfaces (Repository Pattern)
+    interface BankRepository {
+        +findById(id: int): Bank
+        +findByCode(code: string): Bank
+        +save(bank: Bank): Bank
+        +update(id: int, data: array): boolean
+    }
+    
+    interface BankAccountRepository {
+        +findById(id: int): BankAccount
+        +findByBankUser(bankUserId: int): array
+        +findByBank(bankId: int): array
+        +save(account: BankAccount): BankAccount
+        +update(id: int, data: array): boolean
+    }
+    
+    ' Repository implementations (Repository Pattern)
+    class BankRepositoryDatabase implements BankRepository {
+        -db: Database
+    }
+    
+    class BankAccountRepositoryDatabase implements BankAccountRepository {
+        -db: Database
+    }
+    
+    ' Service classes (Service Pattern)
+    class BankService {
+        -bankRepository: BankRepository
+        -logger: Logger
+        +getBankById(bankId: int): Bank
+        +getBankByCode(code: string): Bank
+        +createBank(bankData: array): Bank
+        +updateBank(bankId: int, data: array): boolean
+    }
+    
+    class BankAccountService {
+        -bankAccountRepository: BankAccountRepository
+        -transactionService: TransactionService
+        -logger: Logger
+        +getAccountById(accountId: int): BankAccount
+        +getUserAccounts(bankUserId: int): array
+        +createAccount(accountData: array): BankAccount
+        +updateAccount(accountId: int, data: array): boolean
+        +performDeposit(accountId: int, amount: Money): Transaction
+        +performWithdrawal(accountId: int, amount: Money): Transaction
+        +getAccountBalance(accountId: int): Money
+    }
+}
+
+package "Payment" {
+    ' Money Value Object (Value Object Pattern)
+    class Money {
+        -amount: float
+        -currency: string
+        +add(money: Money): Money
+        +subtract(money: Money): Money
+        +multiply(factor: float): Money
+        +toString(): string
+        +{static} fromFloat(amount: float, currency: string): Money
+    }
+    
+    ' InstantPaymentAddress Entity
+    class InstantPaymentAddress {
+        -ipaId: int
+        -bankId: int
+        -accountNumber: string
+        -ipaAddress: string
+        -userId: int
+        -pin: string
+        -createdAt: datetime
+        +validatePin(inputPin: string): boolean
+        +updatePin(newPin: string): boolean
+    }
+    
+    ' Card Entity
+    class Card {
+        -cardId: int
+        -bankUserId: int
+        -bankId: int
+        -cardNumber: string
+        -expirationDate: string
+        -cvv: string
+        -pin: string
+        -cardType: CardType
+        -createdAt: datetime
+        +validateCard(): boolean
+    }
+    
+    ' Card Type Enumeration
+    enum CardType {
+        DEBIT
+        CREDIT
+    }
+    
+    ' Repositories (Repository Pattern)
+    interface IpaRepository {
+        +findById(id: int): InstantPaymentAddress
+        +findByAddress(address: string): InstantPaymentAddress
+        +findByUser(userId: int): array
+        +save(ipa: InstantPaymentAddress): InstantPaymentAddress
+        +update(id: int, data: array): boolean
+        +delete(id: int): boolean
+    }
+    
+    interface CardRepository {
+        +findById(id: int): Card
+        +findByUser(bankUserId: int): array
+        +save(card: Card): Card
+        +update(id: int, data: array): boolean
+        +delete(id: int): boolean
+    }
+    
+    ' Service implementations
+    class IpaService {
+        -ipaRepository: IpaRepository
+        -authService: AuthService
+        -logger: Logger
+        +getIpaById(ipaId: int): InstantPaymentAddress
+        +getIpaByAddress(address: string): InstantPaymentAddress
+        +getUserIpas(userId: int): array
+        +createIpa(ipaData: array): InstantPaymentAddress
+        +updateIpa(ipaId: int, data: array): boolean
+        +deleteIpa(ipaId: int): boolean
+        +setPrimaryIpa(userId: int, ipaId: int): boolean
+        +verifyIpa(address: string, pin: string): boolean
+    }
+    
+    class CardService {
+        -cardRepository: CardRepository
+        -authService: AuthService
+        -logger: Logger
+        +getCardById(cardId: int): Card
+        +getUserCards(bankUserId: int): array
+        +createCard(cardData: array): Card
+        +updateCard(cardId: int, data: array): boolean
+        +deleteCard(cardId: int): boolean
+        +verifyCard(cardNumber: string, expirationDate: string, cvv: string): boolean
+    }
+}
+
+package "Transaction" {
+    ' Transfer Method Enumeration
+    enum TransferMethod {
+        IPA
+        ACCOUNT
+        CARD
+        PHONE
+        IBAN
+    }
+    
+    ' Transaction Status Enumeration
+    enum TransactionStatus {
+        PENDING
+        COMPLETED
+        FAILED
+        REVERSED
+    }
+    
+    ' Abstract Transaction class (Template Method Pattern)
+    abstract class AbstractTransaction {
+        #transactionId: int
+        #amount: Money
+        #transactionTime: datetime
+        #status: TransactionStatus
+        +{abstract} validate(): boolean
+        +{abstract} process(): boolean
+        +getTransactionDetails(): array
+        +getReceipt(): string
+        +final execute(): boolean
+    }
+    
+    ' MoneyTransfer extends AbstractTransaction (Template Method Pattern)
+    class MoneyTransfer extends AbstractTransaction {
+        -senderUserId: int
+        -receiverUserId: int
+        -senderName: string
+        -receiverName: string
+        -senderBankId: int
+        -receiverBankId: int
+        -senderAccountNumber: string
+        -receiverAccountNumber: string
+        -senderIpaAddress: string
+        -receiverIpaAddress: string
+        -receiverPhone: string
+        -receiverCard: string
+        -receiverIban: string
+        -transferMethod: TransferMethod
+        +validate(): boolean
+        +process(): boolean
+    }
+    
+    ' MoneyRequest Entity
+    class MoneyRequest {
+        -requestId: int
+        -requesterUserId: int
+        -requestedUserId: int
+        -requesterName: string
+        -requestedName: string
+        -amount: Money
+        -requesterIpaAddress: string
+        -requestedIpaAddress: string
+        -message: string
+        -status: RequestStatus
+        -transactionId: int
+        -createdAt: datetime
+        -updatedAt: datetime
+        +accept(): Transaction
+        +reject(): boolean
+        +cancel(): boolean
+    }
+    
+    ' Request Status Enumeration
+    enum RequestStatus {
+        PENDING
+        ACCEPTED
+        REJECTED
+        EXPIRED
+        CANCELLED
+    }
+    
+    ' Transaction Validator (Strategy Pattern)
+    interface TransactionValidator {
+        +validate(transaction: AbstractTransaction): boolean
+    }
+    
+    ' Concrete validators (Strategy Pattern)
+    class AmountValidator implements TransactionValidator {
+        +validate(transaction: AbstractTransaction): boolean
+    }
+    
+    class LimitValidator implements TransactionValidator {
+        -systemSettings: SystemSettings
+        +validate(transaction: AbstractTransaction): boolean
+    }
+    
+    class ReceiverValidator implements TransactionValidator {
+        +validate(transaction: AbstractTransaction): boolean
+    }
+    
+    class SystemAvailabilityValidator implements TransactionValidator {
+        -systemSettings: SystemSettings
+        +validate(transaction: AbstractTransaction): boolean
+    }
+    
+    ' Validator Chain (Chain of Responsibility Pattern)
+    class TransactionValidatorChain {
+        -validators: array
+        +addValidator(validator: TransactionValidator): void
+        +validate(transaction: AbstractTransaction): boolean
+    }
+    
+    ' Transaction Factory (Factory Method Pattern)
+    interface TransactionFactory {
+        +createTransaction(transactionData: array): AbstractTransaction
+    }
+    
+    class MoneyTransferFactory implements TransactionFactory {
+        +createTransaction(transactionData: array): MoneyTransfer
+    }
+    
+    ' Transaction Repository (Repository Pattern)
+    interface TransactionRepository {
+        +findById(id: int): AbstractTransaction
+        +findByUser(userId: int, filters: array): array
+        +save(transaction: AbstractTransaction): AbstractTransaction
+        +update(id: int, data: array): boolean
+    }
+    
+    ' Transaction Service (Service Pattern + Facade Pattern)
+    class TransactionService {
+        -transactionRepository: TransactionRepository
+        -transactionFactory: TransactionFactory
+        -validatorChain: TransactionValidatorChain
+        -notificationService: NotificationService
+        -logger: Logger
+        +createTransaction(transactionData: array): AbstractTransaction
+        +processTransaction(transactionId: int): boolean
+        +getUserTransactions(userId: int, filters: array): array
+        +getTransactionById(transactionId: int): AbstractTransaction
+        +getTransactionReceipt(transactionId: int): string
+        +exportTransactionHistory(userId: int, format: string, dateRange: array): string
+    }
+    
+    ' Money Request Repository and Service
+    interface MoneyRequestRepository {
+        +findById(id: int): MoneyRequest
+        +findByUser(userId: int, filters: array): array
+        +save(request: MoneyRequest): MoneyRequest
+        +update(id: int, data: array): boolean
+    }
+    
+    class MoneyRequestService {
+        -requestRepository: MoneyRequestRepository
+        -transactionService: TransactionService
+        -notificationService: NotificationService
+        -logger: Logger
+        +createRequest(requestData: array): MoneyRequest
+        +acceptRequest(requestId: int): Transaction
+        +rejectRequest(requestId: int): boolean
+        +cancelRequest(requestId: int): boolean
+        +getUserRequests(userId: int, filters: array): array
+        +getRequestById(requestId: int): MoneyRequest
+    }
+}
+
+package "Support" {
+    ' Ticket Status Enumeration
+    enum TicketStatus {
+        OPEN
+        IN_PROGRESS
+        RESOLVED
+        CLOSED
+    }
+    
+    ' Support Ticket Entity
+    class SupportTicket {
+        -ticketId: int
+        -userId: int
+        -subject: string
+        -message: string
+        -status: TicketStatus
+        -contactName: string
+        -contactEmail: string
+        -contactPhone: string
+        -createdAt: datetime
+        -updatedAt: datetime
+        +updateStatus(status: TicketStatus): boolean
+    }
+    
+    ' Support Reply Entity
+    class SupportReply {
+        -replyId: int
+        -ticketId: int
+        -userId: int
+        -isAdmin: boolean
+        -message: string
+        -createdAt: datetime
+    }
+    
+    ' Repositories (Repository Pattern)
+    interface TicketRepository {
+        +findById(id: int): SupportTicket
+        +findByUser(userId: int): array
+        +findAll(filters: array): array
+        +save(ticket: SupportTicket): SupportTicket
+        +update(id: int, data: array): boolean
+    }
+    
+    interface ReplyRepository {
+        +findById(id: int): SupportReply
+        +findByTicket(ticketId: int): array
+        +save(reply: SupportReply): SupportReply
+    }
+    
+    ' Services (Service Pattern)
+    class SupportService {
+        -ticketRepository: TicketRepository
+        -replyRepository: ReplyRepository
+        -notificationService: NotificationService
+        -logger: Logger
+        +createTicket(ticketData: array): SupportTicket
+        +updateTicketStatus(ticketId: int, status: TicketStatus): boolean
+        +getUserTickets(userId: int): array
+        +getAllTickets(filters: array): array
+        +assignTicket(ticketId: int, agentId: int): boolean
+        +addReply(ticketId: int, userId: int, message: string, isAdmin: boolean): SupportReply
+        +getTicketReplies(ticketId: int): array
+    }
+}
+
+package "System" {
+    ' System Settings Entity (Singleton Pattern)
+    class SystemSettings {
+        -instance: SystemSettings {static}
+        -settingId: int
+        -transferLimitEnabled: boolean
+        -transferLimitAmount: Money
+        -transactionsBlocked: boolean
+        -blockMessage: string
+        -maintenanceMode: boolean
+        -maintenanceMessage: string
+        -updatedBy: int
+        -updatedAt: datetime
+        -createdAt: datetime
+        -constructor()
+        +{static} getInstance(): SystemSettings
+        +updateSettings(settingData: array, updatedBy: int): boolean
+        +isMaintenanceMode(): boolean
+        +isTransactionsBlocked(): boolean
+        +getTransferLimitAmount(): Money
+        +toggleTransferLimit(enabled: boolean, amount: Money): boolean
+        +toggleMaintenanceMode(enabled: boolean, message: string): boolean
+        +toggleTransactionsBlock(enabled: boolean, message: string): boolean
+    }
+    
+    ' Settings Repository (Repository Pattern)
+    interface SettingsRepository {
+        +findSettings(): SystemSettings
+        +update(settings: SystemSettings): boolean
+    }
+    
+    ' Favorite Entity
+    class Favorite {
+        -favoriteId: int
+        -userId: int
+        -recipientIdentifier: string
+        -recipientName: string
+        -method: TransferMethod
+        -bankId: int
+        -createdAt: datetime
+    }
+    
+    ' Favorite Repository (Repository Pattern)
+    interface FavoriteRepository {
+        +findById(id: int): Favorite
+        +findByUser(userId: int): array
+        +save(favorite: Favorite): Favorite
+        +update(id: int, data: array): boolean
+        +delete(id: int): boolean
+    }
+    
+    ' Favorite Service (Service Pattern)
+    class FavoriteService {
+        -favoriteRepository: FavoriteRepository
+        -logger: Logger
+        +getFavoriteById(favoriteId: int): Favorite
+        +getUserFavorites(userId: int): array
+        +addFavorite(favoriteData: array): Favorite
+        +updateFavorite(favoriteId: int, data: array): boolean
+        +removeFavorite(favoriteId: int): boolean
+    }
+}
+
+package "Util" {
+    ' Notification Service (Observer Pattern)
+    interface NotificationObserver {
+        +update(event: string, data: object): void
+    }
+    
+    class EmailNotifier implements NotificationObserver {
+        +update(event: string, data: object): void
+        +sendEmail(recipient: string, subject: string, body: string): boolean
+    }
+    
+    class SMSNotifier implements NotificationObserver {
+        +update(event: string, data: object): void
+        +sendSMS(phoneNumber: string, message: string): boolean
+    }
+    
+    class PushNotifier implements NotificationObserver {
+        +update(event: string, data: object): void
+        +sendPushNotification(userId: int, title: string, body: string): boolean
+    }
+    
+    ' Notification Service (Subject in Observer Pattern)
+    class NotificationService {
+        -observers: array
+        +registerObserver(observer: NotificationObserver): void
+        +removeObserver(observer: NotificationObserver): void
+        +notifyObservers(event: string, data: object): void
+        +sendTransactionNotification(transactionId: int): boolean
+        +sendRequestNotification(requestId: int): boolean
+        +sendSupportTicketNotification(ticketId: int): boolean
+    }
+    
+    ' Database Service (Singleton Pattern)
+    class Database {
+        -instance: Database {static}
+        -connection: PDO
+        -constructor()
+        +{static} getInstance(): Database
+        +getConnection(): PDO
+        +executeQuery(sql: string, params: array): array
+        +insert(table: string, data: array): int
+        +update(table: string, data: array, condition: string): boolean
+        +delete(table: string, condition: string): boolean
+        +select(table: string, fields: array, condition: string, order: string, limit: int): array
+        +beginTransaction(): boolean
+        +commit(): boolean
+        +rollback(): boolean
+    }
+    
+    ' Logger using Singleton Pattern
+    class Logger {
+        -instance: Logger {static}
+        -logFile: string
+        -constructor()
+        +{static} getInstance(): Logger
+        +logInfo(message: string, context: array): void
+        +logError(message: string, context: array): void
+        +logWarning(message: string, context: array): void
+        +logTransaction(transactionId: int, status: string): void
+        +logUserActivity(userId: int, action: string): void
+        +logSystemChange(setting: string, value: string, updatedBy: int): void
+    }
+}
+
+' Association Relationships
+User "1" o-- "0..*" InstantPaymentAddress : has
+User "1" o-- "0..*" Favorite : has
+User "1" o-- "0..*" SupportTicket : creates
+User "1" o-- "0..*" SupportReply : creates
+User "1" o-- "0..*" MoneyTransfer : sends/receives >
+User "1" o-- "0..*" MoneyRequest : requests/receives >
+User "1" -- "1" BankUser : linked to >
+
+Bank "1" o-- "0..*" BankAccount : offers >
+Bank "1" o-- "0..*" Card : issues >
+
+BankUser "1" o-- "0..*" BankAccount : owns >
+BankUser "1" o-- "0..*" Card : owns >
+
+SupportTicket "1" *-- "0..*" SupportReply : contains
+
+BankAccount "1" -- "0..*" InstantPaymentAddress : linked to >
+
+MoneyTransfer "0..1" -- "0..1" MoneyRequest : fulfills >
+
+' Service Dependencies
+UserService --> UserRepository : uses >
+UserService --> AuthService : uses >
+
+TransactionService --> TransactionRepository : uses >
+TransactionService --> TransactionFactory : uses >
+TransactionService --> TransactionValidatorChain : uses >
+TransactionService --> NotificationService : uses >
+
+BankAccountService --> BankAccountRepository : uses >
+BankAccountService --> TransactionService : uses >
+
+IpaService --> IpaRepository : uses >
+CardService --> CardRepository : uses >
+
+MoneyRequestService --> MoneyRequestRepository : uses >
+MoneyRequestService --> TransactionService : uses >
+
+SupportService --> TicketRepository : uses >
+SupportService --> ReplyRepository : uses >
+
+' Chain of Responsibility Pattern
+TransactionValidatorChain o-- "1..*" TransactionValidator : contains >
+
+' Observer Pattern
+NotificationService o-- "0..*" NotificationObserver : notifies >
+
+' Qualified Association
+User "1" -- "0..*" BankAccount : default account >
+note on link
+  User has one default BankAccount
+  selected from all accounts
+end note
+
+' Association Class
+class UserBankAccount {
+  -userId: int
+  -bankAccountId: int
+  -isDefault: boolean
+  -dateLinked: datetime
+}
+
+User "1" -- "0..*" BankAccount
+(User, BankAccount) .. UserBankAccount
+
+' Self-association (Recursive)
+User "1" -- "0..*" User : refers >
+note on link
+  Users can refer other users 
+  to the platform
+end note
+
+@enduml 

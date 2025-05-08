@@ -1,0 +1,199 @@
+@startuml Falsopay_DB_Diagram
+
+' Color scheme
+!define TABLE_BGCOLOR #F5F5F5
+!define PK_BGCOLOR #E3F2FD
+!define FK_BGCOLOR #FFF9C4
+!define COLUMN_BGCOLOR #FFFFFF
+
+' Font style
+skinparam class {
+    BackgroundColor TABLE_BGCOLOR
+    ArrowColor #2196F3
+    BorderColor #2196F3
+    FontSize 12
+    FontName Arial
+}
+
+' Entities
+entity "users" as users {
+    + user_id : INT [PK]
+    --
+    first_name : VARCHAR(50)
+    last_name : VARCHAR(50)
+    email : VARCHAR(100)
+    phone_number : VARCHAR(20)
+    created_at : DATETIME
+    default_account : INT [FK]
+    role : ENUM
+    status : ENUM
+}
+
+entity "banks" as banks {
+    + bank_id : INT [PK]
+    --
+    bank_name : VARCHAR(100)
+    bank_code : VARCHAR(20)
+    swift_code : VARCHAR(11)
+}
+
+entity "bank_users" as bank_users {
+    + bank_user_id : INT [PK]
+    --
+    first_name : VARCHAR(50)
+    last_name : VARCHAR(50)
+    email : VARCHAR(100)
+    phone_number : VARCHAR(20)
+    date_of_birth : DATE
+    created_at : DATETIME
+}
+
+entity "bank_accounts" as bank_accounts {
+    + bank_account_id : INT [PK]
+    --
+    bank_id : INT [FK]
+    account_number : VARCHAR(30)
+    bank_user_id : INT [FK]
+    iban : VARCHAR(34)
+    status : ENUM
+    type : ENUM
+    balance : DECIMAL
+    created_at : DATETIME
+}
+
+entity "instant_payment_addresses" as ipas {
+    + ipa_id : INT [PK]
+    --
+    bank_id : INT [FK]
+    account_number : VARCHAR(30) [FK]
+    ipa_address : VARCHAR(50)
+    user_id : INT [FK]
+    pin : CHAR(6)
+    created_at : DATETIME
+}
+
+entity "cards" as cards {
+    + card_id : INT [PK]
+    --
+    bank_user_id : INT [FK]
+    bank_id : INT [FK]
+    card_number : VARCHAR(19)
+    expiration_date : VARCHAR(7)
+    cvv : CHAR(3)
+    pin : CHAR(4)
+    card_type : ENUM
+    created_at : DATETIME
+}
+
+entity "transactions" as transactions {
+    + transaction_id : INT [PK]
+    --
+    sender_user_id : INT [FK]
+    receiver_user_id : INT [FK]
+    sender_name : VARCHAR(100)
+    receiver_name : VARCHAR(100)
+    amount : DECIMAL
+    sender_bank_id : INT [FK]
+    receiver_bank_id : INT [FK]
+    sender_account_number : VARCHAR(30)
+    receiver_account_number : VARCHAR(30)
+    transaction_time : DATETIME
+    sender_ipa_address : VARCHAR(50)
+    receiver_ipa_address : VARCHAR(50)
+    receiver_phone : VARCHAR(20)
+    receiver_card : VARCHAR(19)
+    receiver_iban : VARCHAR(34)
+    transfer_method : ENUM
+}
+
+entity "money_requests" as money_requests {
+    + request_id : INT [PK]
+    --
+    requester_user_id : INT [FK]
+    requested_user_id : INT [FK]
+    requester_name : VARCHAR(100)
+    requested_name : VARCHAR(100)
+    amount : DECIMAL
+    requester_ipa_address : VARCHAR(50)
+    requested_ipa_address : VARCHAR(50)
+    message : TEXT
+    status : ENUM
+    transaction_id : INT [FK]
+    created_at : DATETIME
+    updated_at : DATETIME
+}
+
+entity "favorites" as favorites {
+    + favorite_id : INT [PK]
+    --
+    user_id : INT [FK]
+    recipient_identifier : VARCHAR(100)
+    recipient_name : VARCHAR(100)
+    method : ENUM
+    bank_id : INT [FK]
+    created_at : DATETIME
+}
+
+entity "support_tickets" as support_tickets {
+    + ticket_id : INT [PK]
+    --
+    user_id : INT [FK]
+    subject : VARCHAR(100)
+    message : TEXT
+    status : ENUM
+    contact_name : VARCHAR(100)
+    contact_email : VARCHAR(100)
+    contact_phone : VARCHAR(20)
+    created_at : DATETIME
+    updated_at : DATETIME
+}
+
+entity "support_replies" as support_replies {
+    + reply_id : INT [PK]
+    --
+    ticket_id : INT [FK]
+    user_id : INT [FK]
+    is_admin : BOOLEAN
+    message : TEXT
+    created_at : DATETIME
+}
+
+entity "system_settings" as system_settings {
+    + setting_id : INT [PK]
+    --
+    transfer_limit_enabled : BOOLEAN
+    transfer_limit_amount : DECIMAL
+    transactions_blocked : BOOLEAN
+    block_message : TEXT
+    maintenance_mode : BOOLEAN
+    maintenance_message : TEXT
+    updated_by : INT [FK]
+    updated_at : DATETIME
+    created_at : DATETIME
+}
+
+' Relationships
+users ||--o{ ipas : has
+users ||--o{ favorites : has
+users ||--o{ support_tickets : creates
+users ||--o{ support_replies : creates
+users ||--o{ transactions : "sends/receives"
+users ||--o{ money_requests : "requests/receives"
+system_settings }o--|| users : "updated by"
+users }o--|| bank_accounts : "default account"
+
+banks ||--o{ bank_accounts : offers
+banks ||--o{ cards : issues
+banks ||--o{ ipas : associates
+banks ||--o{ favorites : "referenced in"
+
+bank_users ||--o{ bank_accounts : owns
+bank_users ||--o{ cards : owns
+
+bank_accounts |o--o{ ipas : "linked to"
+
+support_tickets ||--o{ support_replies : has
+
+transactions ||--o| money_requests : fulfills
+
+@enduml 

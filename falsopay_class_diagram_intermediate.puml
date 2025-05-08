@@ -1,0 +1,332 @@
+@startuml Falsopay_Intermediate_Class_Diagram
+
+' Basic styling
+skinparam classAttributeIconSize 0
+skinparam classFontStyle bold
+skinparam classBackgroundColor #f5f5f5
+skinparam classBorderColor #2196F3
+skinparam arrowColor #2196F3
+skinparam stereotypeCBackgroundColor #a3e4d7
+
+' Title
+title Falsopay - Intermediate Class Diagram
+
+' User Management
+class User {
+  -userId: int
+  -firstName: string
+  -lastName: string
+  -email: string
+  -phoneNumber: string
+  -role: string
+  -status: string
+  -createdAt: datetime
+  -defaultAccount: int
+  +register(userData: array): boolean
+  +login(email: string, password: string): string
+  +logout(): boolean
+  +verifyPhoneNumber(phoneNumber: string): boolean
+  +generateVerificationCode(): string
+  +verifyCode(code: string): boolean
+  +updateProfile(userData: array): boolean
+  +getTransactionHistory(filters: array): array
+  +getUserById(userId: int): User
+  +getUserByEmail(email: string): User
+  +getUserByPhoneNumber(phoneNumber: string): User
+  +createUser(firstName: string, lastName: string, email: string, phoneNumber: string): User
+  +updateUser(userId: int, data: array): boolean
+  +setDefaultAccount(accountId: int): boolean
+  +resetPassword(email: string): boolean
+}
+
+' Auth and Security
+class Auth {
+  -jwt: string
+  -refreshToken: string
+  +generateToken(userId: int, role: string): string
+  +verifyToken(token: string): boolean
+  +refreshToken(token: string): string
+  +hashPassword(password: string): string
+  +verifyPassword(password: string, hash: string): boolean
+  +generatePIN(length: int): string
+  +requireAuthentication(): boolean
+  +requireAuthorization(role: string): boolean
+}
+
+' Bank and Account
+class Bank {
+  -bankId: int
+  -bankName: string
+  -bankCode: string
+  -swiftCode: string
+  +getAccounts(bankId: int): array
+  +getBankById(bankId: int): Bank
+  +getBankByCode(code: string): Bank
+  +createBank(bankName: string, bankCode: string, swiftCode: string): Bank
+  +updateBank(bankId: int, data: array): boolean
+}
+
+class BankUser {
+  -bankUserId: int
+  -firstName: string
+  -lastName: string
+  -email: string
+  -phoneNumber: string
+  -dateOfBirth: date
+  -createdAt: datetime
+  +getAccounts(bankUserId: int): array
+  +getBankUserById(bankUserId: int): BankUser
+  +createBankUser(firstName: string, lastName: string, email: string, phoneNumber: string, dateOfBirth: date): BankUser
+  +updateBankUser(bankUserId: int, data: array): boolean
+  +linkToUser(userId: int, bankUserId: int): boolean
+}
+
+class BankAccount {
+  -accountId: int
+  -bankId: int
+  -accountNumber: string
+  -bankUserId: int
+  -iban: string
+  -type: string
+  -status: string
+  -balance: float
+  -createdAt: datetime
+  +deposit(accountId: int, amount: float): Transaction
+  +withdraw(accountId: int, amount: float): Transaction
+  +getBalance(accountId: int): float
+  +getTransactions(accountId: int, filters: array): array
+  +getAccountById(accountId: int): BankAccount
+  +getAccountsByBankUser(bankUserId: int): array
+  +getAccountsByBank(bankId: int): array
+  +createAccount(bankId: int, bankUserId: int, accountNumber: string, iban: string, type: string): BankAccount
+  +updateAccount(accountId: int, data: array): boolean
+  +changeStatus(accountId: int, status: string): boolean
+}
+
+' Payment Methods
+class InstantPaymentAddress {
+  -ipaId: int
+  -bankId: int
+  -accountNumber: string
+  -ipaAddress: string
+  -userId: int
+  -pin: string
+  -createdAt: datetime
+  +validatePin(ipaAddress: string, pin: string): boolean
+  +updatePin(ipaId: int, pin: string): boolean
+  +getIpaById(ipaId: int): InstantPaymentAddress
+  +getIpaByAddress(ipaAddress: string): InstantPaymentAddress
+  +getUserIpas(userId: int): array
+  +createIpa(userId: int, bankId: int, accountNumber: string, ipaAddress: string, pin: string): InstantPaymentAddress
+  +deleteIpa(ipaId: int): boolean
+  +setPrimaryIpa(userId: int, ipaId: int): boolean
+}
+
+class Card {
+  -cardId: int
+  -bankUserId: int
+  -bankId: int
+  -cardNumber: string
+  -expirationDate: string
+  -cvv: string
+  -pin: string
+  -cardType: string
+  -createdAt: datetime
+  +validateCard(cardNumber: string, expirationDate: string, cvv: string): boolean
+  +getCardById(cardId: int): Card
+  +getUserCards(bankUserId: int): array
+  +createCard(bankUserId: int, bankId: int, cardNumber: string, expirationDate: string, cvv: string, pin: string, cardType: string): Card
+  +updateCard(cardId: int, data: array): boolean
+  +deleteCard(cardId: int): boolean
+}
+
+' Money Transfer
+class Transaction {
+  -transactionId: int
+  -senderUserId: int
+  -receiverUserId: int
+  -senderName: string
+  -receiverName: string
+  -amount: float
+  -senderBankId: int
+  -receiverBankId: int
+  -senderAccountNumber: string
+  -receiverAccountNumber: string
+  -transactionTime: datetime
+  -senderIpaAddress: string
+  -receiverIpaAddress: string
+  -receiverPhone: string
+  -receiverCard: string
+  -receiverIban: string
+  -transferMethod: string
+  +createTransaction(senderInfo: array, receiverInfo: array, amount: float, method: string): Transaction
+  +getTransactionById(transactionId: int): Transaction
+  +getUserTransactions(userId: int, filters: array): array
+  +verifyTransaction(transactionDetails: array): boolean
+  +processTransaction(transactionId: int): boolean
+  +getReceiptDetails(transactionId: int): array
+  +exportTransactionHistory(userId: int, format: string, dateRange: array): string
+}
+
+class TransactionValidator {
+  +validateAmount(amount: float): boolean
+  +validateSender(senderInfo: array): boolean
+  +validateReceiver(receiverInfo: array): boolean
+  +validateTransferLimit(userId: int, amount: float): boolean
+  +checkSystemAvailability(): boolean
+}
+
+class MoneyRequest {
+  -requestId: int
+  -requesterUserId: int
+  -requestedUserId: int
+  -requesterName: string
+  -requestedName: string
+  -amount: float
+  -requesterIpaAddress: string
+  -requestedIpaAddress: string
+  -message: string
+  -status: string
+  -transactionId: int
+  -createdAt: datetime
+  -updatedAt: datetime
+  +createRequest(requesterUserId: int, requestedUserId: int, amount: float, message: string): MoneyRequest
+  +acceptRequest(requestId: int): Transaction
+  +rejectRequest(requestId: int): boolean
+  +cancelRequest(requestId: int): boolean
+  +getRequestById(requestId: int): MoneyRequest
+  +getUserRequests(userId: int, filters: array): array
+  +updateRequestStatus(requestId: int, status: string): boolean
+}
+
+' User Preferences
+class Favorite {
+  -favoriteId: int
+  -userId: int
+  -recipientIdentifier: string
+  -recipientName: string
+  -method: string
+  -bankId: int
+  -createdAt: datetime
+  +addFavorite(userId: int, recipientData: array): Favorite
+  +removeFavorite(favoriteId: int): boolean
+  +getFavoriteById(favoriteId: int): Favorite
+  +getUserFavorites(userId: int): array
+  +updateFavorite(favoriteId: int, data: array): boolean
+}
+
+' Support System
+class SupportTicket {
+  -ticketId: int
+  -userId: int
+  -subject: string
+  -message: string
+  -status: string
+  -contactName: string
+  -contactEmail: string
+  -contactPhone: string
+  -createdAt: datetime
+  -updatedAt: datetime
+  +createTicket(userData: array, subject: string, message: string): SupportTicket
+  +updateStatus(ticketId: int, status: string): boolean
+  +getTicketById(ticketId: int): SupportTicket
+  +getUserTickets(userId: int): array
+  +getAllTickets(filters: array): array
+  +assignTicket(ticketId: int, agentId: int): boolean
+}
+
+class SupportReply {
+  -replyId: int
+  -ticketId: int
+  -userId: int
+  -isAdmin: boolean
+  -message: string
+  -createdAt: datetime
+  +addReply(ticketId: int, userId: int, message: string, isAdmin: boolean): SupportReply
+  +getTicketReplies(ticketId: int): array
+  +getReplyById(replyId: int): SupportReply
+}
+
+' System Configuration
+class SystemSettings {
+  -settingId: int
+  -transferLimitEnabled: boolean
+  -transferLimitAmount: float
+  -transactionsBlocked: boolean
+  -blockMessage: string
+  -maintenanceMode: boolean
+  -maintenanceMessage: string
+  -updatedBy: int
+  -updatedAt: datetime
+  -createdAt: datetime
+  +updateSettings(settingData: array, updatedBy: int): boolean
+  +getSettings(): SystemSettings
+  +isMaintenanceMode(): boolean
+  +isTransactionsBlocked(): boolean
+  +getTransferLimitAmount(): float
+  +toggleTransferLimit(enabled: boolean, amount: float): boolean
+  +toggleMaintenanceMode(enabled: boolean, message: string): boolean
+  +toggleTransactionsBlock(enabled: boolean, message: string): boolean
+}
+
+' Notification Service
+class NotificationService {
+  +sendEmail(recipient: string, subject: string, body: string): boolean
+  +sendSMS(phoneNumber: string, message: string): boolean
+  +sendPushNotification(userId: int, title: string, body: string): boolean
+  +sendTransactionNotification(transactionId: int): boolean
+  +sendRequestNotification(requestId: int): boolean
+  +sendSupportTicketNotification(ticketId: int): boolean
+}
+
+' Database Services
+class Database {
+  -connection: PDO
+  +connect(): PDO
+  +executeQuery(sql: string, params: array): array
+  +insert(table: string, data: array): int
+  +update(table: string, data: array, condition: string): boolean
+  +delete(table: string, condition: string): boolean
+  +select(table: string, fields: array, condition: string, order: string, limit: int): array
+  +beginTransaction(): boolean
+  +commit(): boolean
+  +rollback(): boolean
+}
+
+' Logger Service
+class Logger {
+  +logInfo(message: string, context: array): void
+  +logError(message: string, context: array): void
+  +logWarning(message: string, context: array): void
+  +logTransaction(transactionId: int, status: string): void
+  +logUserActivity(userId: int, action: string): void
+  +logSystemChange(setting: string, value: string, updatedBy: int): void
+}
+
+' Relationships
+User "1" -- "0..*" InstantPaymentAddress
+User "1" -- "0..*" Favorite
+User "1" -- "0..*" SupportTicket
+User "1" -- "0..*" SupportReply
+User "1" -- "0..*" Transaction : sends/receives
+User "1" -- "0..*" MoneyRequest : requests/receives
+User "1" -- "1" BankUser : linked to
+
+Bank "1" -- "0..*" BankAccount : offers
+Bank "1" -- "0..*" Card : issues
+
+BankUser "1" -- "0..*" BankAccount : owns
+BankUser "1" -- "0..*" Card : owns
+
+SupportTicket "1" -- "0..*" SupportReply : has
+
+BankAccount "1" -- "0..*" InstantPaymentAddress : linked to
+
+Transaction "0..1" -- "0..1" MoneyRequest : fulfills
+
+Transaction -- TransactionValidator : validates
+Transaction -- NotificationService : sends notifications
+User -- Auth : authenticates
+SystemSettings -- User : updated by
+
+@enduml 

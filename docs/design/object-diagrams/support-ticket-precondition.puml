@@ -1,0 +1,80 @@
+@startuml Support-Ticket-Precondition
+
+!define OBJECT_STYLE_FILL #E0F7FA
+!define OBJECT_STYLE_BORDER #00BCD4
+!define OBJECT_STYLE_TEXT #000000
+
+skinparam object {
+    backgroundColor OBJECT_STYLE_FILL
+    borderColor OBJECT_STYLE_BORDER
+    fontColor OBJECT_STYLE_TEXT
+}
+
+skinparam note {
+    backgroundColor #FFFDE7
+    borderColor #FFC107
+    fontColor #000000
+}
+
+title "FalsoPay: Support Ticket - Precondition"
+
+object "user : User" as user {
+    userId = 1001
+    firstName = "John"
+    lastName = "Doe"
+    email = "john.doe@example.com"
+    phoneNumber = "+1234567890"
+    role = "USER"
+    status = "ACTIVE"
+    defaultAccount = 5001
+}
+
+object "transaction : Transaction" as transaction {
+    transactionId = 7001
+    senderUserId = 1001
+    receiverUserId = 1002
+    senderName = "John Doe"
+    receiverName = "Jane Smith"
+    amount = 100.00
+    senderBankId = 101
+    receiverBankId = 102
+    senderAccountNumber = "123456789"
+    receiverAccountNumber = "987654321"
+    transactionTime = "2023-05-15 15:45:30"
+    senderIpaAddress = "john.doe"
+    receiverIpaAddress = "jane.smith"
+    transferMethod = "IPA"
+}
+
+object "supportService : SupportService" as supportService {
+}
+
+object "userService : UserService" as userService {
+}
+
+object "notificationService : NotificationService" as notificationService {
+}
+
+object "database : Database" as database {
+    users = [User(1001), User(1002)]
+    transactions = [Transaction(7001)]
+    supportTickets = []
+    supportReplies = []
+}
+
+note bottom of user
+  User has encountered an issue with a transaction
+  and needs to contact customer support
+end note
+
+note bottom of transaction
+  The transaction that the user is having issues with
+end note
+
+user --> transaction : references
+supportService --> userService : uses
+supportService --> notificationService : uses
+database --> user : contains
+database --> transaction : contains
+
+@enduml 

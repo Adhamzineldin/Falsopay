@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FalsoPay Object Diagrams Viewer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #2980b9;
+            margin-top: 30px;
+        }
+        .diagram-container {
+            margin: 20px 0;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .diagram-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+        .diagram-frame {
+            width: 100%;
+            height: 600px;
+            border: none;
+        }
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            margin-top: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #f1f1f1;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            border-radius: 5px 5px 0 0;
+            border: 1px solid #ddd;
+            border-bottom: none;
+        }
+        .tab.active {
+            background-color: #3498db;
+            color: white;
+        }
+        .diagram-content {
+            display: none;
+        }
+        .diagram-content.active {
+            display: block;
+        }
+        .description {
+            margin-top: 10px;
+            font-style: italic;
+        }
+        .process-group {
+            margin-bottom: 30px;
+        }
+        .process-title {
+            font-size: 20px;
+            color: #34495e;
+            margin-bottom: 10px;
+        }
+        .process-tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <h1>FalsoPay Object Diagrams</h1>
+    
+    <p>This viewer displays the object diagrams for the FalsoPay payment system. Object diagrams show instances of classes and their relationships at a specific point in time, illustrating the system's state before and after key operations.</p>
+    
+    <div class="process-group">
+        <div class="process-title">User Registration Process</div>
+        <div class="process-tabs">
+            <div class="tab active" onclick="showDiagram('user-registration-pre')">Precondition</div>
+            <div class="tab" onclick="showDiagram('user-registration-post')">Postcondition</div>
+        </div>
+        <div class="diagram-container">
+            <div id="user-registration-pre" class="diagram-content active">
+                <div class="diagram-title">User Registration - Precondition</div>
+                <iframe class="diagram-frame" src="http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/username/falsopay/main/docs/design/object-diagrams/user-registration-precondition.puml"></iframe>
+                <div class="description">System state before user registration process</div>
+            </div>
+            <div id="user-registration-post" class="diagram-content">
+                <div class="diagram-title">User Registration - Postcondition</div>
+                <iframe class="diagram-frame" src="http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/username/falsopay/main/docs/design/object-diagrams/user-registration-postcondition.puml"></iframe>
+                <div class="description">System state after successful user registration</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="process-group">
+        <div class="process-title">Money Transfer Process</div>
+        <div class="process-tabs">
+            <div class="tab active" onclick="showDiagram('send-money-pre')">Precondition</div>
+            <div class="tab" onclick="showDiagram('send-money-post')">Postcondition</div>
+        </div>
+        <div class="diagram-container">
+            <div id="send-money-pre" class="diagram-content active">
+                <div class="diagram-title">Send Money - Precondition</div>
+                <iframe class="diagram-frame" src="http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/username/falsopay/main/docs/design/object-diagrams/send-money-precondition.puml"></iframe>
+                <div class="description">System state before money transfer process</div>
+            </div>
+            <div id="send-money-post" class="diagram-content">
+                <div class="diagram-title">Send Money - Postcondition</div>
+                <iframe class="diagram-frame" src="http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/username/falsopay/main/docs/design/object-diagrams/send-money-postcondition.puml"></iframe>
+                <div class="description">System state after successful money transfer</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="process-group">
+        <div class="process-title">Bank Account Process</div>
+        <div class="process-tabs">
+            <div class="tab active" onclick="showDiagram('link-bank-pre')">Precondition</div>
+            <div class="tab" onclick="showDiagram('link-bank-post')">Postcondition</div>
+        </div>
+        <div class="diagram-container">
+            <div id="link-bank-pre" class="diagram-content active">
+                <div class="diagram-title">Link Bank Account - Precondition</div>
+                <iframe class="diagram-frame" src="http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/username/falsopay/main/docs/design/object-diagrams/link-bank-account-precondition.puml"></iframe>
+                <div class="description">System state before linking bank account</div>
+            </div>
+            <div id="link-bank-post" class="diagram-content">
+                <div class="diagram-title">Link Bank Account - Postcondition</div>
+                <iframe class="diagram-frame" src="http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/username/falsopay/main/docs/design/object-diagrams/link-bank-account-postcondition.puml"></iframe>
+                <div class="description">System state after successful bank account linking</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="process-group">
+        <div class="process-title">Money Request Process</div>
+        <div class="process-tabs">
+            <div class="tab active" onclick="showDiagram('request-money-pre')">Precondition</div>
+            <div class="tab" onclick="showDiagram('request-money-post')">Postcondition</div>
+        </div>
+        <div class="diagram-container">
+            <div id="request-money-pre" class="diagram-content active">
+                <div class="diagram-title">Request Money - Precondition</div>
+                <iframe class="diagram-frame" src="http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/username/falsopay/main/docs/design/object-diagrams/request-money-precondition.puml"></iframe>
+                <div class="description">System state before requesting money</div>
+            </div>
+            <div id="request-money-post" class="diagram-content">
+                <div class="diagram-title">Request Money - Postcondition</div>
+                <iframe class="diagram-frame" src="http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/username/falsopay/main/docs/design/object-diagrams/request-money-postcondition.puml"></iframe>
+                <div class="description">System state after successful money request</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="process-group">
+        <div class="process-title">Support Ticket Process</div>
+        <div class="process-tabs">
+            <div class="tab active" onclick="showDiagram('support-ticket-pre')">Precondition</div>
+            <div class="tab" onclick="showDiagram('support-ticket-post')">Postcondition</div>
+        </div>
+        <div class="diagram-container">
+            <div id="support-ticket-pre" class="diagram-content active">
+                <div class="diagram-title">Support Ticket - Precondition</div>
+                <iframe class="diagram-frame" src="http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/username/falsopay/main/docs/design/object-diagrams/support-ticket-precondition.puml"></iframe>
+                <div class="description">System state before creating support ticket</div>
+            </div>
+            <div id="support-ticket-post" class="diagram-content">
+                <div class="diagram-title">Support Ticket - Postcondition</div>
+                <iframe class="diagram-frame" src="http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/username/falsopay/main/docs/design/object-diagrams/support-ticket-postcondition.puml"></iframe>
+                <div class="description">System state after successful support ticket creation</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function showDiagram(id) {
+            // Get the parent process group
+            const processGroup = document.getElementById(id).closest('.process-group');
+            
+            // Hide all diagrams in this process group
+            const contents = processGroup.getElementsByClassName('diagram-content');
+            for (let i = 0; i < contents.length; i++) {
+                contents[i].classList.remove('active');
+            }
+            
+            // Deactivate all tabs in this process group
+            const tabs = processGroup.getElementsByClassName('tab');
+            for (let i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove('active');
+            }
+            
+            // Show selected diagram
+            document.getElementById(id).classList.add('active');
+            
+            // Activate selected tab
+            const selectedTab = processGroup.querySelector(`.tab[onclick="showDiagram('${id}')"]`);
+            selectedTab.classList.add('active');
+        }
+    </script>
+</body>
+</html> 

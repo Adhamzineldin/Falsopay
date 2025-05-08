@@ -1,0 +1,93 @@
+@startuml Link-Bank-Account-Precondition
+
+!define OBJECT_STYLE_FILL #E1F5FE
+!define OBJECT_STYLE_BORDER #03A9F4
+!define OBJECT_STYLE_TEXT #000000
+
+skinparam object {
+    backgroundColor OBJECT_STYLE_FILL
+    borderColor OBJECT_STYLE_BORDER
+    fontColor OBJECT_STYLE_TEXT
+}
+
+skinparam note {
+    backgroundColor #FFFDE7
+    borderColor #FFC107
+    fontColor #000000
+}
+
+title "FalsoPay: Link Bank Account - Precondition"
+
+object "user : User" as user {
+    userId = 1001
+    firstName = "John"
+    lastName = "Doe"
+    email = "john.doe@example.com"
+    phoneNumber = "+1234567890"
+    role = "USER"
+    status = "ACTIVE"
+    defaultAccount = null
+}
+
+object "bankUser : BankUser" as bankUser {
+    bankUserId = 2001
+    firstName = "John"
+    lastName = "Doe"
+    email = "john.doe@example.com"
+    phoneNumber = "+1234567890"
+    dateOfBirth = "1985-06-15"
+}
+
+object "bank : Bank" as bank {
+    bankId = 101
+    bankName = "First National Bank"
+    bankCode = "FNB123"
+    swiftCode = "FNBUS12345"
+}
+
+object "bankAccount : BankAccount" as bankAccount {
+    accountId = 5001
+    bankId = 101
+    accountNumber = "123456789"
+    bankUserId = 2001
+    iban = "US12345678901234567890"
+    type = "CHECKING"
+    status = "ACTIVE"
+    balance = 1000.00
+}
+
+object "bankingService : BankingService" as bankingService {
+}
+
+object "externalBankingAPI : ExternalBankingAPI" as externalBankingAPI {
+}
+
+object "userService : UserService" as userService {
+}
+
+object "database : Database" as database {
+    users = [User(1001)]
+    bankUsers = [BankUser(2001)]
+    banks = [Bank(101)]
+    bankAccounts = [BankAccount(5001)]
+    instantPaymentAddresses = []
+}
+
+note bottom of user
+  User exists in FalsoPay but has no
+  linked bank accounts yet
+end note
+
+note bottom of bankAccount
+  Bank account exists in the banking system
+  but is not yet linked to the FalsoPay user
+end note
+
+user --> bankUser : matches
+bankUser --> bankAccount : has
+bankAccount --> bank : belongs to
+bankingService --> externalBankingAPI : communicates with
+bankingService --> userService : uses
+userService --> database : connects to
+
+@enduml 

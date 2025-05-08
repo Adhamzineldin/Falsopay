@@ -1,0 +1,153 @@
+@startuml Request-Money-Postcondition
+
+!define OBJECT_STYLE_FILL #FFF9C4
+!define OBJECT_STYLE_BORDER #FFC107
+!define OBJECT_STYLE_TEXT #000000
+
+skinparam object {
+    backgroundColor OBJECT_STYLE_FILL
+    borderColor OBJECT_STYLE_BORDER
+    fontColor OBJECT_STYLE_TEXT
+}
+
+skinparam note {
+    backgroundColor #E8F5E9
+    borderColor #4CAF50
+    fontColor #000000
+}
+
+title "FalsoPay: Request Money - Postcondition"
+
+object "requesterUser : User" as requesterUser {
+    userId = 1001
+    firstName = "John"
+    lastName = "Doe"
+    email = "john.doe@example.com"
+    phoneNumber = "+1234567890"
+    role = "USER"
+    status = "ACTIVE"
+    defaultAccount = 5001
+}
+
+object "requestedUser : User" as requestedUser {
+    userId = 1002
+    firstName = "Jane"
+    lastName = "Smith"
+    email = "jane.smith@example.com"
+    phoneNumber = "+1987654321"
+    role = "USER"
+    status = "ACTIVE"
+    defaultAccount = 5002
+}
+
+object "requesterAccount : BankAccount" as requesterAccount {
+    accountId = 5001
+    bankId = 101
+    accountNumber = "123456789"
+    bankUserId = 2001
+    iban = "US12345678901234567890"
+    type = "CHECKING"
+    status = "ACTIVE"
+    balance = 500.00
+}
+
+object "requestedAccount : BankAccount" as requestedAccount {
+    accountId = 5002
+    bankId = 102
+    accountNumber = "987654321"
+    bankUserId = 2002
+    iban = "US09876543210987654321"
+    type = "CHECKING"
+    status = "ACTIVE"
+    balance = 1000.00
+}
+
+object "requesterIPA : InstantPaymentAddress" as requesterIPA {
+    ipaId = 3001
+    bankId = 101
+    accountNumber = "123456789"
+    ipaAddress = "john.doe"
+    userId = 1001
+    pin = "$2a$12$xYz..." ' Encrypted PIN
+}
+
+object "requestedIPA : InstantPaymentAddress" as requestedIPA {
+    ipaId = 3002
+    bankId = 102
+    accountNumber = "987654321"
+    ipaAddress = "jane.smith"
+    userId = 1002
+    pin = "$2a$12$abc..." ' Encrypted PIN
+}
+
+object "moneyRequest : MoneyRequest" as moneyRequest {
+    requestId = 4001
+    requesterUserId = 1001
+    requestedUserId = 1002
+    requesterName = "John Doe"
+    requestedName = "Jane Smith"
+    amount = 50.00
+    requesterIpaAddress = "john.doe"
+    requestedIpaAddress = "jane.smith"
+    message = "For lunch yesterday"
+    status = "PENDING"
+    transactionId = null
+    createdAt = "2023-05-15 17:15:30"
+    updatedAt = "2023-05-15 17:15:30"
+}
+
+object "requesterNotification : Notification" as requesterNotification {
+    notificationId = 8001
+    userId = 1001
+    type = "MONEY_REQUEST_SENT"
+    message = "You requested $50.00 from Jane Smith"
+    status = "SENT"
+    createdAt = "2023-05-15 17:15:31"
+}
+
+object "requestedNotification : Notification" as requestedNotification {
+    notificationId = 8002
+    userId = 1002
+    type = "MONEY_REQUEST_RECEIVED"
+    message = "John Doe requested $50.00 from you"
+    status = "SENT"
+    createdAt = "2023-05-15 17:15:31"
+}
+
+object "transactionService : TransactionService" as transactionService {
+}
+
+object "userService : UserService" as userService {
+}
+
+object "notificationService : NotificationService" as notificationService {
+}
+
+object "database : Database" as database {
+    users = [User(1001), User(1002)]
+    accounts = [BankAccount(5001), BankAccount(5002)]
+    ipas = [IPA(3001), IPA(3002)]
+    moneyRequests = [MoneyRequest(4001)]
+    notifications = [Notification(8001), Notification(8002)]
+}
+
+note bottom of moneyRequest
+  Money request has been created and is pending
+  action from the requested user
+end note
+
+requesterUser --> requesterAccount : has
+requestedUser --> requestedAccount : has
+requesterUser --> requesterIPA : has
+requestedUser --> requestedIPA : has
+moneyRequest --> requesterUser : from
+moneyRequest --> requestedUser : to
+requesterUser --> requesterNotification : receives
+requestedUser --> requestedNotification : receives
+transactionService --> userService : uses
+transactionService --> notificationService : uses
+database --> moneyRequest : contains
+database --> requesterNotification : contains
+database --> requestedNotification : contains
+
+@enduml 

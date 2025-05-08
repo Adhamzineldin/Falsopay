@@ -1,0 +1,109 @@
+@startuml FalsoPay_Package_Diagram
+
+' Styling
+skinparam packageStyle rectangle
+skinparam packageBackgroundColor #FAFAFA
+skinparam packageBorderColor #78909C
+skinparam arrowColor #2196F3
+skinparam componentBackgroundColor #f5f5f5
+skinparam componentBorderColor #2196F3
+skinparam stereotypeCBackgroundColor #a3e4d7
+
+title FalsoPay - Package Diagram
+
+' Main Packages
+package "User Management" {
+    component "User" as User
+    component "Person" as Person
+    component "BankUser" as BankUser
+    component "UserRepository" as UserRepo
+    component "UserService" as UserService
+    component "UserRole" as UserRole
+    component "UserStatus" as UserStatus
+}
+
+package "Auth" {
+    component "AuthService" as AuthService
+    component "JWTAuthService" as JWTAuth
+    component "AuthMiddleware" as AuthMiddleware
+}
+
+package "Banking" {
+    component "Bank" as Bank
+    component "BankAccount" as BankAccount
+    component "BankRepository" as BankRepo
+    component "BankAccountRepository" as BankAccRepo
+    component "BankService" as BankService
+    component "BankAccountService" as BankAccService
+    component "AccountStatus" as AccStatus
+    component "AccountType" as AccType
+    component "Card" as Card
+}
+
+package "Payment" {
+    component "Money" as Money
+    component "InstantPaymentAddress" as IPA
+    component "Transaction" as Transaction
+    component "TransactionService" as TransService
+    component "TransactionRepository" as TransRepo
+    component "PaymentMethod" as PayMethod
+    component "MoneyRequest" as MoneyRequest
+    component "Favorite" as Favorite
+}
+
+package "Support" {
+    component "SupportTicket" as Ticket
+    component "SupportReply" as Reply
+    component "TicketService" as TicketService
+    component "TicketRepository" as TicketRepo
+    component "TicketStatus" as TicketStatus
+}
+
+package "Notification" {
+    component "NotificationService" as NotifService
+    component "NotificationSender" as NotifSender
+    component "EmailNotification" as EmailNotif
+    component "SMSNotification" as SMSNotif
+    component "PushNotification" as PushNotif
+}
+
+package "System" {
+    component "SystemSettings" as Settings
+    component "SettingsService" as SettingsService
+    component "Logger" as Logger
+    component "Database" as DB
+}
+
+package "UI" {
+
+    component "MobileApp" as MobileApp
+    component "WebApp" as WebApp
+    component "AdminDashboard" as AdminDash
+}
+
+package "API" {
+    component "APIGateway" as Gateway
+    component "RESTController" as REST
+    component "RequestValidator" as Validator
+    component "ResponseFormatter" as Formatter
+}
+
+' Package Dependencies
+"User Management" ..> "Auth" : uses
+"User Management" ..> "Banking" : associates
+"Banking" ..> "Payment" : processes
+"Payment" ..> "Banking" : updates
+"Payment" ..> "Notification" : triggers
+"Support" ..> "User Management" : references
+"Support" ..> "Notification" : sends
+"API" ..> "User Management" : routes
+"API" ..> "Auth" : authenticates
+"API" ..> "Banking" : routes
+"API" ..> "Payment" : routes
+"API" ..> "Support" : routes
+"UI" ..> "API" : consumes
+"System" ..> "User Management" : configures
+"System" ..> "Banking" : monitors
+"System" ..> "Payment" : limits
+
+@enduml

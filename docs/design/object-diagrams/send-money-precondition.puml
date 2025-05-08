@@ -1,0 +1,113 @@
+@startuml Send-Money-Precondition
+
+!define OBJECT_STYLE_FILL #E8F5E9
+!define OBJECT_STYLE_BORDER #4CAF50
+!define OBJECT_STYLE_TEXT #000000
+
+skinparam object {
+    backgroundColor OBJECT_STYLE_FILL
+    borderColor OBJECT_STYLE_BORDER
+    fontColor OBJECT_STYLE_TEXT
+}
+
+skinparam note {
+    backgroundColor #FFFDE7
+    borderColor #FFC107
+    fontColor #000000
+}
+
+title "FalsoPay: Send Money - Precondition"
+
+object "senderUser : User" as senderUser {
+    userId = 1001
+    firstName = "John"
+    lastName = "Doe"
+    email = "john.doe@example.com"
+    phoneNumber = "+1234567890"
+    role = "USER"
+    status = "ACTIVE"
+    defaultAccount = 5001
+}
+
+object "recipientUser : User" as recipientUser {
+    userId = 1002
+    firstName = "Jane"
+    lastName = "Smith"
+    email = "jane.smith@example.com"
+    phoneNumber = "+1987654321"
+    role = "USER"
+    status = "ACTIVE"
+    defaultAccount = 5002
+}
+
+object "senderAccount : BankAccount" as senderAccount {
+    accountId = 5001
+    bankId = 101
+    accountNumber = "123456789"
+    bankUserId = 2001
+    iban = "US12345678901234567890"
+    type = "CHECKING"
+    status = "ACTIVE"
+    balance = 1000.00
+}
+
+object "recipientAccount : BankAccount" as recipientAccount {
+    accountId = 5002
+    bankId = 102
+    accountNumber = "987654321"
+    bankUserId = 2002
+    iban = "US09876543210987654321"
+    type = "CHECKING"
+    status = "ACTIVE"
+    balance = 500.00
+}
+
+object "senderIPA : InstantPaymentAddress" as senderIPA {
+    ipaId = 3001
+    bankId = 101
+    accountNumber = "123456789"
+    ipaAddress = "john.doe"
+    userId = 1001
+    pin = "$2a$12$xYz..." ' Encrypted PIN
+}
+
+object "recipientIPA : InstantPaymentAddress" as recipientIPA {
+    ipaId = 3002
+    bankId = 102
+    accountNumber = "987654321"
+    ipaAddress = "jane.smith"
+    userId = 1002
+    pin = "$2a$12$abc..." ' Encrypted PIN
+}
+
+object "transactionService : TransactionService" as transactionService {
+}
+
+object "accountService : AccountService" as accountService {
+}
+
+object "securityService : SecurityService" as securityService {
+}
+
+object "database : Database" as database {
+    users = [User(1001), User(1002)]
+    accounts = [BankAccount(5001), BankAccount(5002)]
+    ipas = [IPA(3001), IPA(3002)]
+    transactions = []
+}
+
+note bottom of senderAccount
+  Sender has sufficient balance
+  to perform the transaction
+end note
+
+senderUser --> senderAccount : has
+recipientUser --> recipientAccount : has
+senderUser --> senderIPA : has
+recipientUser --> recipientIPA : has
+transactionService --> accountService : uses
+transactionService --> securityService : uses
+accountService --> database : connects to
+securityService --> database : connects to
+
+@enduml 

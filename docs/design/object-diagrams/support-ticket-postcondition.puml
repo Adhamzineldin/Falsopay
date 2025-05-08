@@ -1,0 +1,126 @@
+@startuml Support-Ticket-Postcondition
+
+!define OBJECT_STYLE_FILL #E0F7FA
+!define OBJECT_STYLE_BORDER #00BCD4
+!define OBJECT_STYLE_TEXT #000000
+
+skinparam object {
+    backgroundColor OBJECT_STYLE_FILL
+    borderColor OBJECT_STYLE_BORDER
+    fontColor OBJECT_STYLE_TEXT
+}
+
+skinparam note {
+    backgroundColor #FFFDE7
+    borderColor #FFC107
+    fontColor #000000
+}
+
+title "FalsoPay: Support Ticket - Postcondition"
+
+object "user : User" as user {
+    userId = 1001
+    firstName = "John"
+    lastName = "Doe"
+    email = "john.doe@example.com"
+    phoneNumber = "+1234567890"
+    role = "USER"
+    status = "ACTIVE"
+    defaultAccount = 5001
+}
+
+object "transaction : Transaction" as transaction {
+    transactionId = 7001
+    senderUserId = 1001
+    receiverUserId = 1002
+    senderName = "John Doe"
+    receiverName = "Jane Smith"
+    amount = 100.00
+    senderBankId = 101
+    receiverBankId = 102
+    senderAccountNumber = "123456789"
+    receiverAccountNumber = "987654321"
+    transactionTime = "2023-05-15 15:45:30"
+    senderIpaAddress = "john.doe"
+    receiverIpaAddress = "jane.smith"
+    transferMethod = "IPA"
+}
+
+object "supportTicket : SupportTicket" as supportTicket {
+    ticketId = 9001
+    userId = 1001
+    subject = "Issue with transaction #7001"
+    message = "I sent money but the recipient says they didn't receive it"
+    status = "OPEN"
+    contactName = "John Doe"
+    contactEmail = "john.doe@example.com"
+    contactPhone = "+1234567890"
+    createdAt = "2023-05-15 18:20:15"
+    updatedAt = "2023-05-15 18:20:15"
+}
+
+object "supportAgent : User" as supportAgent {
+    userId = 2001
+    firstName = "Agent"
+    lastName = "Smith"
+    email = "agent.smith@falsopay.com"
+    phoneNumber = "+1555123456"
+    role = "AGENT"
+    status = "ACTIVE"
+}
+
+object "notification : Notification" as notification {
+    notificationId = 8001
+    userId = 1001
+    type = "SUPPORT_TICKET_CREATED"
+    message = "Your support ticket #9001 has been created"
+    status = "SENT"
+    createdAt = "2023-05-15 18:20:16"
+}
+
+object "agentNotification : Notification" as agentNotification {
+    notificationId = 8002
+    userId = 2001
+    type = "NEW_SUPPORT_TICKET"
+    message = "New support ticket #9001 has been assigned to you"
+    status = "SENT"
+    createdAt = "2023-05-15 18:20:16"
+}
+
+object "supportService : SupportService" as supportService {
+}
+
+object "userService : UserService" as userService {
+}
+
+object "notificationService : NotificationService" as notificationService {
+}
+
+object "database : Database" as database {
+    users = [User(1001), User(1002), User(2001)]
+    transactions = [Transaction(7001)]
+    supportTickets = [SupportTicket(9001)]
+    supportReplies = []
+    notifications = [Notification(8001), Notification(8002)]
+}
+
+note bottom of supportTicket
+  Support ticket has been created and is awaiting
+  response from a support agent
+end note
+
+user --> transaction : references
+user --> supportTicket : creates
+supportTicket --> transaction : references
+supportAgent --> supportTicket : assigned to
+user --> notification : receives
+supportAgent --> agentNotification : receives
+supportService --> userService : uses
+supportService --> notificationService : uses
+database --> user : contains
+database --> transaction : contains
+database --> supportTicket : contains
+database --> notification : contains
+database --> agentNotification : contains
+
+@enduml 

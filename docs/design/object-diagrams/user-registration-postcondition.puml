@@ -1,0 +1,86 @@
+@startuml User-Registration-Postcondition
+
+!define OBJECT_STYLE_FILL #E3F2FD
+!define OBJECT_STYLE_BORDER #2196F3
+!define OBJECT_STYLE_TEXT #000000
+
+skinparam object {
+    backgroundColor OBJECT_STYLE_FILL
+    borderColor OBJECT_STYLE_BORDER
+    fontColor OBJECT_STYLE_TEXT
+}
+
+skinparam note {
+    backgroundColor #FFFDE7
+    borderColor #FFC107
+    fontColor #000000
+}
+
+title "FalsoPay: User Registration - Postcondition"
+
+object "registeredUser : User" as registeredUser {
+    userId = 1001
+    firstName = "John"
+    lastName = "Doe"
+    email = "john.doe@example.com"
+    phoneNumber = "+1234567890"
+    password = "$2a$12$hKJ8s9Ywq..." ' Hashed password
+    role = "USER"
+    status = "ACTIVE"
+    createdAt = "2023-05-15 14:30:22"
+    defaultAccount = null
+}
+
+object "userService : UserService" as userService {
+}
+
+object "authService : JWTAuthService" as authService {
+    secretKey = "jwt_secret_key"
+    tokenExpiry = 3600
+}
+
+object "userRepository : UserRepositoryDatabase" as userRepository {
+}
+
+object "database : Database" as database {
+    users = [User(1001)]
+}
+
+object "authToken : JWT" as authToken {
+    token = "eyJhbGciOiJIUzI1NiIsInR5..."
+    userId = 1001
+    role = "USER"
+    issuedAt = "2023-05-15 14:30:22"
+    expiresAt = "2023-05-15 15:30:22"
+}
+
+object "notificationService : NotificationService" as notificationService {
+}
+
+object "verificationEmail : Email" as verificationEmail {
+    to = "john.doe@example.com"
+    subject = "Verify your FalsoPay account"
+    body = "Please click the link to verify..."
+    status = "SENT"
+}
+
+note bottom of registeredUser
+  User has been successfully registered
+  and stored in the database with
+  a unique userId.
+end note
+
+note bottom of authToken
+  JWT token generated for the
+  newly registered user.
+end note
+
+userService --> userRepository : uses
+userService --> authService : uses
+userRepository --> database : connects to
+authService --> authToken : generates
+database --> registeredUser : contains
+userService --> notificationService : uses
+notificationService --> verificationEmail : sends
+
+@enduml 

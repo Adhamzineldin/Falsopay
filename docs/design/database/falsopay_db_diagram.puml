@@ -1,0 +1,205 @@
+@startuml FalsoPay_Database_Diagram
+
+' UML Class Diagram for FalsoPay Database
+skinparam classAttributeIconSize 0
+skinparam classFontStyle bold
+skinparam classFontSize 14
+skinparam classFontName Arial
+skinparam classBackgroundColor #FEFECE
+skinparam classBorderColor #A80036
+skinparam arrowColor #A80036
+skinparam linetype ortho
+skinparam packageStyle rectangle
+
+title "FalsoPay Database Schema - UML Class Diagram"
+
+package "User Management" {
+    class User {
+        <<Table>>
+        +user_id : INT <<PK>>
+        first_name : VARCHAR(50)
+        last_name : VARCHAR(50)
+        email : VARCHAR(100)
+        phone_number : VARCHAR(20)
+        created_at : DATETIME
+        default_account : INT <<FK>>
+        role : ENUM
+        status : ENUM
+    }
+}
+
+package "Banking" {
+    class Bank {
+        <<Table>>
+        +bank_id : INT <<PK>>
+        bank_name : VARCHAR(100)
+        bank_code : VARCHAR(20)
+        swift_code : VARCHAR(11)
+    }
+
+    class BankUser {
+        <<Table>>
+        +bank_user_id : INT <<PK>>
+        first_name : VARCHAR(50)
+        last_name : VARCHAR(50)
+        email : VARCHAR(100)
+        phone_number : VARCHAR(20)
+        date_of_birth : DATE
+        created_at : DATETIME
+    }
+
+    class BankAccount {
+        <<Table>>
+        +bank_account_id : INT <<PK>>
+        bank_id : INT <<FK>>
+        account_number : VARCHAR(30)
+        bank_user_id : INT <<FK>>
+        iban : VARCHAR(34)
+        status : ENUM
+        type : ENUM
+        balance : DECIMAL(15,2)
+        created_at : DATETIME
+    }
+
+    class Card {
+        <<Table>>
+        +card_id : INT <<PK>>
+        bank_user_id : INT <<FK>>
+        bank_id : INT <<FK>>
+        card_number : VARCHAR(19)
+        expiration_date : VARCHAR(7)
+        cvv : CHAR(3)
+        pin : CHAR(4)
+        card_type : ENUM
+        created_at : DATETIME
+    }
+}
+
+package "Payments" {
+    class InstantPaymentAddress {
+        <<Table>>
+        +ipa_id : INT <<PK>>
+        bank_id : INT <<FK>>
+        account_number : VARCHAR(30)
+        ipa_address : VARCHAR(50)
+        user_id : INT <<FK>>
+        pin : CHAR(6)
+        created_at : DATETIME
+    }
+
+    class Transaction {
+        <<Table>>
+        +transaction_id : INT <<PK>>
+        sender_user_id : INT <<FK>>
+        receiver_user_id : INT <<FK>>
+        sender_name : VARCHAR(100)
+        receiver_name : VARCHAR(100)
+        amount : DECIMAL(15,2)
+        sender_bank_id : INT <<FK>>
+        receiver_bank_id : INT <<FK>>
+        sender_account_number : VARCHAR(30)
+        receiver_account_number : VARCHAR(30)
+        transaction_time : DATETIME
+        sender_ipa_address : VARCHAR(50)
+        receiver_ipa_address : VARCHAR(50)
+        receiver_phone : VARCHAR(20)
+        receiver_card : VARCHAR(19)
+        receiver_iban : VARCHAR(34)
+        transfer_method : ENUM
+    }
+
+    class MoneyRequest {
+        <<Table>>
+        +request_id : INT <<PK>>
+        requester_user_id : INT <<FK>>
+        requested_user_id : INT <<FK>>
+        requester_name : VARCHAR(100)
+        requested_name : VARCHAR(100)
+        amount : DECIMAL(15,2)
+        requester_ipa_address : VARCHAR(50)
+        requested_ipa_address : VARCHAR(50)
+        message : TEXT
+        status : ENUM
+        transaction_id : INT <<FK>>
+        created_at : DATETIME
+        updated_at : DATETIME
+    }
+
+    class Favorite {
+        <<Table>>
+        +favorite_id : INT <<PK>>
+        user_id : INT <<FK>>
+        recipient_identifier : VARCHAR(100)
+        recipient_name : VARCHAR(100)
+        method : ENUM
+        bank_id : INT <<FK>>
+        created_at : DATETIME
+    }
+}
+
+package "Support" {
+    class SupportTicket {
+        <<Table>>
+        +ticket_id : INT <<PK>>
+        user_id : INT <<FK>>
+        subject : VARCHAR(100)
+        message : TEXT
+        status : ENUM
+        contact_name : VARCHAR(100)
+        contact_email : VARCHAR(100)
+        contact_phone : VARCHAR(20)
+        created_at : DATETIME
+        updated_at : DATETIME
+    }
+
+    class SupportReply {
+        <<Table>>
+        +reply_id : INT <<PK>>
+        ticket_id : INT <<FK>>
+        user_id : INT <<FK>>
+        is_admin : BOOLEAN
+        message : TEXT
+        created_at : DATETIME
+    }
+}
+
+package "System" {
+    class SystemSettings {
+        <<Table>>
+        +setting_id : INT <<PK>>
+        transfer_limit_enabled : BOOLEAN
+        transfer_limit_amount : DECIMAL(15,2)
+        transactions_blocked : BOOLEAN
+        block_message : TEXT
+        maintenance_mode : BOOLEAN
+        maintenance_message : TEXT
+        updated_by : INT <<FK>>
+        updated_at : DATETIME
+        created_at : DATETIME
+    }
+}
+
+' Relationships
+User "1" -- "0..*" InstantPaymentAddress : has
+User "1" -- "0..*" Favorite : has
+User "1" -- "0..*" SupportTicket : creates
+User "1" -- "0..*" SupportReply : creates
+User "1" -- "0..*" Transaction : sends/receives
+User "1" -- "0..*" MoneyRequest : requests/receives
+User "1" -- "0..1" SystemSettings : updates
+
+Bank "1" -- "0..*" BankAccount : offers
+Bank "1" -- "0..*" Card : issues
+Bank "1" -- "0..*" InstantPaymentAddress : associates
+
+BankUser "1" -- "0..*" BankAccount : owns
+BankUser "1" -- "0..*" Card : owns
+
+SupportTicket "1" -- "0..*" SupportReply : has
+
+Transaction "0..1" -- "0..1" MoneyRequest : fulfills
+
+BankAccount "1" -- "0..*" InstantPaymentAddress : linked to
+BankAccount "0..1" -- "0..*" User : default for
+
+@enduml 

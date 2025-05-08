@@ -1,0 +1,162 @@
+@startuml Send-Money-Postcondition
+
+!define OBJECT_STYLE_FILL #E8F5E9
+!define OBJECT_STYLE_BORDER #4CAF50
+!define OBJECT_STYLE_TEXT #000000
+
+skinparam object {
+    backgroundColor OBJECT_STYLE_FILL
+    borderColor OBJECT_STYLE_BORDER
+    fontColor OBJECT_STYLE_TEXT
+}
+
+skinparam note {
+    backgroundColor #FFFDE7
+    borderColor #FFC107
+    fontColor #000000
+}
+
+title "FalsoPay: Send Money - Postcondition"
+
+object "senderUser : User" as senderUser {
+    userId = 1001
+    firstName = "John"
+    lastName = "Doe"
+    email = "john.doe@example.com"
+    phoneNumber = "+1234567890"
+    role = "USER"
+    status = "ACTIVE"
+    defaultAccount = 5001
+}
+
+object "recipientUser : User" as recipientUser {
+    userId = 1002
+    firstName = "Jane"
+    lastName = "Smith"
+    email = "jane.smith@example.com"
+    phoneNumber = "+1987654321"
+    role = "USER"
+    status = "ACTIVE"
+    defaultAccount = 5002
+}
+
+object "senderAccount : BankAccount" as senderAccount {
+    accountId = 5001
+    bankId = 101
+    accountNumber = "123456789"
+    bankUserId = 2001
+    iban = "US12345678901234567890"
+    type = "CHECKING"
+    status = "ACTIVE"
+    balance = 900.00  ' Decreased by 100.00
+}
+
+object "recipientAccount : BankAccount" as recipientAccount {
+    accountId = 5002
+    bankId = 102
+    accountNumber = "987654321"
+    bankUserId = 2002
+    iban = "US09876543210987654321"
+    type = "CHECKING"
+    status = "ACTIVE"
+    balance = 600.00  ' Increased by 100.00
+}
+
+object "senderIPA : InstantPaymentAddress" as senderIPA {
+    ipaId = 3001
+    bankId = 101
+    accountNumber = "123456789"
+    ipaAddress = "john.doe"
+    userId = 1001
+    pin = "$2a$12$xYz..." ' Encrypted PIN
+}
+
+object "recipientIPA : InstantPaymentAddress" as recipientIPA {
+    ipaId = 3002
+    bankId = 102
+    accountNumber = "987654321"
+    ipaAddress = "jane.smith"
+    userId = 1002
+    pin = "$2a$12$abc..." ' Encrypted PIN
+}
+
+object "transaction : Transaction" as transaction {
+    transactionId = 7001
+    senderUserId = 1001
+    receiverUserId = 1002
+    senderName = "John Doe"
+    receiverName = "Jane Smith"
+    amount = 100.00
+    senderBankId = 101
+    receiverBankId = 102
+    senderAccountNumber = "123456789"
+    receiverAccountNumber = "987654321"
+    transactionTime = "2023-05-15 15:45:30"
+    senderIpaAddress = "john.doe"
+    receiverIpaAddress = "jane.smith"
+    transferMethod = "IPA"
+}
+
+object "senderNotification : Notification" as senderNotification {
+    notificationId = 8001
+    userId = 1001
+    type = "TRANSACTION"
+    message = "You sent $100.00 to Jane Smith"
+    status = "SENT"
+    createdAt = "2023-05-15 15:45:31"
+}
+
+object "recipientNotification : Notification" as recipientNotification {
+    notificationId = 8002
+    userId = 1002
+    type = "TRANSACTION"
+    message = "You received $100.00 from John Doe"
+    status = "SENT"
+    createdAt = "2023-05-15 15:45:31"
+}
+
+object "transactionService : TransactionService" as transactionService {
+}
+
+object "accountService : AccountService" as accountService {
+}
+
+object "notificationService : NotificationService" as notificationService {
+}
+
+object "database : Database" as database {
+    users = [User(1001), User(1002)]
+    accounts = [BankAccount(5001), BankAccount(5002)]
+    ipas = [IPA(3001), IPA(3002)]
+    transactions = [Transaction(7001)]
+    notifications = [Notification(8001), Notification(8002)]
+}
+
+note bottom of transaction
+  Transaction has been completed successfully.
+  Money has been transferred from sender to recipient.
+end note
+
+note bottom of senderAccount
+  Balance reduced by 100.00
+end note
+
+note bottom of recipientAccount
+  Balance increased by 100.00
+end note
+
+senderUser --> senderAccount : has
+recipientUser --> recipientAccount : has
+senderUser --> senderIPA : has
+recipientUser --> recipientIPA : has
+senderUser --> senderNotification : receives
+recipientUser --> recipientNotification : receives
+transaction --> senderUser : from
+transaction --> recipientUser : to
+transactionService --> accountService : uses
+transactionService --> notificationService : uses
+database --> transaction : contains
+database --> senderNotification : contains
+database --> recipientNotification : contains
+
+@enduml 

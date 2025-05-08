@@ -1,0 +1,122 @@
+@startuml Link-Bank-Account-Postcondition
+
+!define OBJECT_STYLE_FILL #E1F5FE
+!define OBJECT_STYLE_BORDER #03A9F4
+!define OBJECT_STYLE_TEXT #000000
+
+skinparam object {
+    backgroundColor OBJECT_STYLE_FILL
+    borderColor OBJECT_STYLE_BORDER
+    fontColor OBJECT_STYLE_TEXT
+}
+
+skinparam note {
+    backgroundColor #FFFDE7
+    borderColor #FFC107
+    fontColor #000000
+}
+
+title "FalsoPay: Link Bank Account - Postcondition"
+
+object "user : User" as user {
+    userId = 1001
+    firstName = "John"
+    lastName = "Doe"
+    email = "john.doe@example.com"
+    phoneNumber = "+1234567890"
+    role = "USER"
+    status = "ACTIVE"
+    defaultAccount = 5001
+}
+
+object "bankUser : BankUser" as bankUser {
+    bankUserId = 2001
+    firstName = "John"
+    lastName = "Doe"
+    email = "john.doe@example.com"
+    phoneNumber = "+1234567890"
+    dateOfBirth = "1985-06-15"
+}
+
+object "bank : Bank" as bank {
+    bankId = 101
+    bankName = "First National Bank"
+    bankCode = "FNB123"
+    swiftCode = "FNBUS12345"
+}
+
+object "bankAccount : BankAccount" as bankAccount {
+    accountId = 5001
+    bankId = 101
+    accountNumber = "123456789"
+    bankUserId = 2001
+    iban = "US12345678901234567890"
+    type = "CHECKING"
+    status = "ACTIVE"
+    balance = 1000.00
+}
+
+object "instantPaymentAddress : InstantPaymentAddress" as ipa {
+    ipaId = 3001
+    bankId = 101
+    accountNumber = "123456789"
+    ipaAddress = "john.doe"
+    userId = 1001
+    pin = "$2a$12$xYz..." ' Encrypted PIN
+}
+
+object "bankingService : BankingService" as bankingService {
+}
+
+object "externalBankingAPI : ExternalBankingAPI" as externalBankingAPI {
+}
+
+object "userService : UserService" as userService {
+}
+
+object "notificationService : NotificationService" as notificationService {
+}
+
+object "notification : Notification" as notification {
+    notificationId = 8001
+    userId = 1001
+    type = "ACCOUNT_LINKED"
+    message = "Your bank account has been successfully linked"
+    status = "SENT"
+    createdAt = "2023-05-15 16:30:45"
+}
+
+object "database : Database" as database {
+    users = [User(1001)]
+    bankUsers = [BankUser(2001)]
+    banks = [Bank(101)]
+    bankAccounts = [BankAccount(5001)]
+    instantPaymentAddresses = [IPA(3001)]
+    notifications = [Notification(8001)]
+}
+
+note bottom of user
+  User now has a default bank account
+end note
+
+note bottom of ipa
+  A new IPA has been created for the
+  linked bank account
+end note
+
+user --> bankUser : matches
+user --> bankAccount : linked to
+user --> ipa : has
+bankUser --> bankAccount : has
+bankAccount --> bank : belongs to
+ipa --> bankAccount : references
+user --> notification : receives
+bankingService --> externalBankingAPI : communicates with
+bankingService --> userService : uses
+bankingService --> notificationService : uses
+database --> user : contains
+database --> bankAccount : contains
+database --> ipa : contains
+database --> notification : contains
+
+@enduml 

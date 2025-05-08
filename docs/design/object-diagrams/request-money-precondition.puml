@@ -1,0 +1,112 @@
+@startuml Request-Money-Precondition
+
+!define OBJECT_STYLE_FILL #FFF9C4
+!define OBJECT_STYLE_BORDER #FFC107
+!define OBJECT_STYLE_TEXT #000000
+
+skinparam object {
+    backgroundColor OBJECT_STYLE_FILL
+    borderColor OBJECT_STYLE_BORDER
+    fontColor OBJECT_STYLE_TEXT
+}
+
+skinparam note {
+    backgroundColor #E8F5E9
+    borderColor #4CAF50
+    fontColor #000000
+}
+
+title "FalsoPay: Request Money - Precondition"
+
+object "requesterUser : User" as requesterUser {
+    userId = 1001
+    firstName = "John"
+    lastName = "Doe"
+    email = "john.doe@example.com"
+    phoneNumber = "+1234567890"
+    role = "USER"
+    status = "ACTIVE"
+    defaultAccount = 5001
+}
+
+object "requestedUser : User" as requestedUser {
+    userId = 1002
+    firstName = "Jane"
+    lastName = "Smith"
+    email = "jane.smith@example.com"
+    phoneNumber = "+1987654321"
+    role = "USER"
+    status = "ACTIVE"
+    defaultAccount = 5002
+}
+
+object "requesterAccount : BankAccount" as requesterAccount {
+    accountId = 5001
+    bankId = 101
+    accountNumber = "123456789"
+    bankUserId = 2001
+    iban = "US12345678901234567890"
+    type = "CHECKING"
+    status = "ACTIVE"
+    balance = 500.00
+}
+
+object "requestedAccount : BankAccount" as requestedAccount {
+    accountId = 5002
+    bankId = 102
+    accountNumber = "987654321"
+    bankUserId = 2002
+    iban = "US09876543210987654321"
+    type = "CHECKING"
+    status = "ACTIVE"
+    balance = 1000.00
+}
+
+object "requesterIPA : InstantPaymentAddress" as requesterIPA {
+    ipaId = 3001
+    bankId = 101
+    accountNumber = "123456789"
+    ipaAddress = "john.doe"
+    userId = 1001
+    pin = "$2a$12$xYz..." ' Encrypted PIN
+}
+
+object "requestedIPA : InstantPaymentAddress" as requestedIPA {
+    ipaId = 3002
+    bankId = 102
+    accountNumber = "987654321"
+    ipaAddress = "jane.smith"
+    userId = 1002
+    pin = "$2a$12$abc..." ' Encrypted PIN
+}
+
+object "transactionService : TransactionService" as transactionService {
+}
+
+object "userService : UserService" as userService {
+}
+
+object "notificationService : NotificationService" as notificationService {
+}
+
+object "database : Database" as database {
+    users = [User(1001), User(1002)]
+    accounts = [BankAccount(5001), BankAccount(5002)]
+    ipas = [IPA(3001), IPA(3002)]
+    moneyRequests = []
+}
+
+note bottom of requesterUser
+  User wants to request money from another user
+end note
+
+requesterUser --> requesterAccount : has
+requestedUser --> requestedAccount : has
+requesterUser --> requesterIPA : has
+requestedUser --> requestedIPA : has
+transactionService --> userService : uses
+transactionService --> notificationService : uses
+userService --> database : connects to
+notificationService --> database : connects to
+
+@enduml 

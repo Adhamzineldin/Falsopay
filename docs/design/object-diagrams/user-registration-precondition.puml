@@ -1,0 +1,53 @@
+@startuml User-Registration-Precondition
+
+!define OBJECT_STYLE_FILL #E3F2FD
+!define OBJECT_STYLE_BORDER #2196F3
+!define OBJECT_STYLE_TEXT #000000
+
+skinparam object {
+    backgroundColor OBJECT_STYLE_FILL
+    borderColor OBJECT_STYLE_BORDER
+    fontColor OBJECT_STYLE_TEXT
+}
+
+skinparam note {
+    backgroundColor #FFFDE7
+    borderColor #FFC107
+    fontColor #000000
+}
+
+title "FalsoPay: User Registration - Precondition"
+
+object "unregisteredUser : Person" as unregisteredUser {
+    firstName = "John"
+    lastName = "Doe"
+    email = "john.doe@example.com"
+    phoneNumber = "+1234567890"
+}
+
+object "userService : UserService" as userService {
+}
+
+object "authService : JWTAuthService" as authService {
+    secretKey = "jwt_secret_key"
+    tokenExpiry = 3600
+}
+
+object "userRepository : UserRepositoryDatabase" as userRepository {
+}
+
+object "database : Database" as database {
+    users = []
+}
+
+note bottom of unregisteredUser
+  User has not yet been registered
+  in the system. The object only
+  represents the data being submitted.
+end note
+
+userService --> userRepository : uses
+userService --> authService : uses
+userRepository --> database : connects to
+
+@enduml 

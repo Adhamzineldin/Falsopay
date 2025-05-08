@@ -466,7 +466,7 @@ class SupportController
     {
         try {
             // Validate required fields
-            $requiredFields = ['ticket_id', 'message', 'admin_user_id'];
+            $requiredFields = ['ticket_id', 'message'];
             foreach ($requiredFields as $field) {
                 if (!isset($data[$field]) || empty($data[$field])) {
                     return [
@@ -491,7 +491,15 @@ class SupportController
             }
 
             // Use admin ID from request
-            $adminUserId = (int)$data['admin_user_id'];
+            $adminUserId = $data['admin_user_id'] ?? null;
+            
+            if (!$adminUserId) {
+                return [
+                    'status' => 'error',
+                    'message' => 'Admin user ID is required',
+                    'code' => 400
+                ];
+            }
 
             // Add the reply using admin user ID
             $reply = $this->supportTicketModel->addReply(

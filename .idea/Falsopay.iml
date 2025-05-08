@@ -6,6 +6,7 @@
       <sourceFolder url="file://$MODULE_DIR$/backend/App" isTestSource="false" packagePrefix="App\" />
       <sourceFolder url="file://$MODULE_DIR$/backend/tests/Feature" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/backend/tests/Unit" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/backend/tests/Unit" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/backend/core" isTestSource="false" packagePrefix="core\" />
       <excludeFolder url="file://$MODULE_DIR$/backend/vendor/composer" />
       <excludeFolder url="file://$MODULE_DIR$/backend/vendor/firebase/php-jwt" />

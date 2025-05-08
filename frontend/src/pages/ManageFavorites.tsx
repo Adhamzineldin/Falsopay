@@ -185,17 +185,17 @@ const ManageFavorites = () => {
   const getMethodIcon = (method: string) => {
     switch (method) {
       case 'ipa':
-        return <Star className="h-5 w-5" />;
+        return <Star className="h-4 w-4 sm:h-5 sm:w-5" />;
       case 'mobile':
-        return <Phone className="h-5 w-5" />;
+        return <Phone className="h-4 w-4 sm:h-5 sm:w-5" />;
       case 'card':
-        return <CreditCard className="h-5 w-5" />;
+        return <CreditCard className="h-4 w-4 sm:h-5 sm:w-5" />;
       case 'account':
-        return <Building className="h-5 w-5" />;
+        return <Building className="h-4 w-4 sm:h-5 sm:w-5" />;
       case 'iban':
-        return <Landmark className="h-5 w-5" />;
+        return <Landmark className="h-4 w-4 sm:h-5 sm:w-5" />;
       default:
-        return <User className="h-5 w-5" />;
+        return <User className="h-4 w-4 sm:h-5 sm:w-5" />;
     }
   };
 
@@ -218,73 +218,76 @@ const ManageFavorites = () => {
 
   return (
     <MainLayout>
-      <div className="max-w-4xl mx-auto px-4">
-        <h1 className="text-2xl font-bold mb-6">Manage Favorites</h1>
+      <div className="max-w-4xl mx-auto px-4 py-4 sm:py-6">
+        <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Manage Favorites</h1>
         
         <Tabs defaultValue="all" onValueChange={setCurrentFilter}>
-          <TabsList className="mb-6">
-            <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="ipa">IPA</TabsTrigger>
-            <TabsTrigger value="mobile">Mobile</TabsTrigger>
-            <TabsTrigger value="card">Card</TabsTrigger>
-            <TabsTrigger value="account">Account</TabsTrigger>
-            <TabsTrigger value="iban">IBAN</TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto pb-2">
+            <TabsList className="mb-4 sm:mb-6 w-auto inline-flex">
+              <TabsTrigger value="all" className="text-xs sm:text-sm">All</TabsTrigger>
+              <TabsTrigger value="ipa" className="text-xs sm:text-sm">IPA</TabsTrigger>
+              <TabsTrigger value="mobile" className="text-xs sm:text-sm">Mobile</TabsTrigger>
+              <TabsTrigger value="card" className="text-xs sm:text-sm">Card</TabsTrigger>
+              <TabsTrigger value="account" className="text-xs sm:text-sm">Account</TabsTrigger>
+              <TabsTrigger value="iban" className="text-xs sm:text-sm">IBAN</TabsTrigger>
+            </TabsList>
+          </div>
           
           <Card>
-            <CardHeader>
-              <CardTitle>Your Favorites</CardTitle>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-lg sm:text-xl">Your Favorites</CardTitle>
               <CardDescription>
                 Manage your saved payment recipients
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0">
               {isLoading ? (
                 <div className="flex justify-center py-10">
                   <RotateCw className="h-6 w-6 animate-spin text-gray-400" />
                 </div>
               ) : filteredFavorites.length === 0 ? (
-                <div className="text-center py-10">
-                  <StarOff className="h-10 w-10 mx-auto mb-3 text-gray-300" />
-                  <p className="text-gray-500">
+                <div className="text-center py-8 sm:py-10">
+                  <StarOff className="h-8 w-8 sm:h-10 sm:w-10 mx-auto mb-3 text-gray-300" />
+                  <p className="text-gray-500 text-sm sm:text-base">
                     {currentFilter === 'all' 
                       ? "You don't have any favorites yet" 
                       : `You don't have any ${getMethodName(currentFilter).toLowerCase()} favorites`}
                   </p>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {filteredFavorites.map(favorite => (
                     <div 
                       key={favorite.favorite_id}
-                      className="flex items-center justify-between border rounded-lg p-4"
+                      className="flex flex-col sm:flex-row sm:items-center justify-between border rounded-lg p-3 sm:p-4"
                     >
-                      <div className="flex items-center gap-4">
-                        <div className="bg-gray-100 p-3 rounded-full">
+                      <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-0">
+                        <div className="bg-gray-100 p-2 sm:p-3 rounded-full flex-shrink-0">
                           {getMethodIcon(favorite.method)}
                         </div>
-                        <div>
-                          <h3 className="font-medium">{favorite.recipient_name}</h3>
-                          <p className="text-sm text-gray-500">{favorite.recipient_identifier}</p>
-                          <div className="flex items-center mt-1">
-                            <span className="text-xs bg-gray-100 px-2 py-1 rounded-full">
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-medium text-sm sm:text-base truncate">{favorite.recipient_name}</h3>
+                          <p className="text-xs sm:text-sm text-gray-500 truncate">{favorite.recipient_identifier}</p>
+                          <div className="flex flex-wrap items-center gap-2 mt-1">
+                            <span className="text-xs bg-gray-100 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full whitespace-nowrap">
                               {getMethodName(favorite.method)}
                             </span>
                             {favorite.bank_name && (
-                              <span className="text-xs text-gray-500 ml-2">
+                              <span className="text-xs text-gray-500 truncate">
                                 {favorite.bank_name}
                               </span>
                             )}
                           </div>
                         </div>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 justify-end">
                         <Button 
                           variant="outline" 
                           size="icon"
                           onClick={() => handleOpenEditDialog(favorite)}
+                          className="h-8 w-8 sm:h-9 sm:w-9"
                         >
-                          <Edit className="h-4 w-4" />
+                          <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                           <span className="sr-only">Edit</span>
                         </Button>
                         <Button 
@@ -292,8 +295,9 @@ const ManageFavorites = () => {
                           size="icon"
                           onClick={() => handleOpenDeleteDialog(favorite)}
                           disabled={isDeleting}
+                          className="h-8 w-8 sm:h-9 sm:w-9"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                           <span className="sr-only">Delete</span>
                         </Button>
                       </div>
@@ -307,7 +311,7 @@ const ManageFavorites = () => {
         
         {/* Edit Dialog */}
         <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-          <DialogContent>
+          <DialogContent className="sm:max-w-md max-w-[calc(100%-2rem)]">
             <DialogHeader>
               <DialogTitle>Edit Favorite</DialogTitle>
               <DialogDescription>
@@ -318,12 +322,12 @@ const ManageFavorites = () => {
             {selectedFavorite && (
               <>
                 <div className="py-4">
-                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-md mb-4">
-                    <div className="bg-gray-100 p-2 rounded-full">
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-md mb-4 overflow-hidden">
+                    <div className="bg-gray-100 p-2 rounded-full flex-shrink-0">
                       {getMethodIcon(selectedFavorite.method)}
                     </div>
-                    <div>
-                      <div className="text-sm text-gray-700">{selectedFavorite.recipient_identifier}</div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm text-gray-700 truncate">{selectedFavorite.recipient_identifier}</div>
                       <div className="text-xs text-gray-500">{getMethodName(selectedFavorite.method)}</div>
                     </div>
                   </div>
@@ -338,16 +342,18 @@ const ManageFavorites = () => {
                     />
                   </div>
                 </div>
-                <DialogFooter>
+                <DialogFooter className="flex-col sm:flex-row gap-2">
                   <Button 
                     variant="outline" 
                     onClick={() => setShowEditDialog(false)}
+                    className="w-full sm:w-auto"
                   >
                     Cancel
                   </Button>
                   <Button 
                     onClick={handleEditFavorite}
                     disabled={isEditing}
+                    className="w-full sm:w-auto"
                   >
                     {isEditing ? 'Saving...' : 'Save Changes'}
                   </Button>
@@ -359,7 +365,7 @@ const ManageFavorites = () => {
 
         {/* Delete Confirmation Dialog */}
         <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-          <DialogContent>
+          <DialogContent className="sm:max-w-md max-w-[calc(100%-2rem)]">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-red-500" />
@@ -372,26 +378,27 @@ const ManageFavorites = () => {
             
             {favoriteToDelete && (
               <div className="py-4">
-                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-md">
-                  <div className="bg-gray-100 p-2 rounded-full">
+                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-md overflow-hidden">
+                  <div className="bg-gray-100 p-2 rounded-full flex-shrink-0">
                     {getMethodIcon(favoriteToDelete.method)}
                   </div>
-                  <div>
-                    <div className="font-medium">{favoriteToDelete.recipient_name}</div>
-                    <div className="text-sm text-gray-500">{favoriteToDelete.recipient_identifier}</div>
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium truncate">{favoriteToDelete.recipient_name}</div>
+                    <div className="text-sm text-gray-500 truncate">{favoriteToDelete.recipient_identifier}</div>
                     <div className="text-xs text-gray-500">{getMethodName(favoriteToDelete.method)}</div>
                   </div>
                 </div>
               </div>
             )}
             
-            <DialogFooter>
+            <DialogFooter className="flex-col sm:flex-row gap-2">
               <Button 
                 variant="outline" 
                 onClick={() => {
                   setShowDeleteDialog(false);
                   setFavoriteToDelete(null);
                 }}
+                className="w-full sm:w-auto"
               >
                 Cancel
               </Button>
@@ -399,6 +406,7 @@ const ManageFavorites = () => {
                 variant="destructive"
                 onClick={() => favoriteToDelete && handleDeleteFavorite(favoriteToDelete.favorite_id)}
                 disabled={isDeleting}
+                className="w-full sm:w-auto"
               >
                 {isDeleting ? 'Deleting...' : 'Delete Favorite'}
               </Button>

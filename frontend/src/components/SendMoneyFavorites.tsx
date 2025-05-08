@@ -240,7 +240,7 @@ const SendMoneyFavorites = ({
   };
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       {/* Only show Add to Favorites when recipient is validated */}
       {currentRecipient && recipientValidated && (
         <TooltipProvider>
@@ -251,6 +251,7 @@ const SendMoneyFavorites = ({
                 size="icon"
                 onClick={handleOpenAddDialog}
                 disabled={isSaving || isCurrentRecipientInFavorites()}
+                className="h-9 w-9"
               >
                 {isCurrentRecipientInFavorites() ? (
                   <StarOff className="h-4 w-4 text-yellow-500" />
@@ -271,17 +272,17 @@ const SendMoneyFavorites = ({
       {showOnlyFavoriteButton === false && (
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="outline" size="sm" className="flex items-center gap-2">
-              <Star className="h-4 w-4" />
-              <span>Favorites</span>
+            <Button variant="outline" size="sm" className="flex items-center gap-2 text-xs sm:text-sm h-9">
+              <Star className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
+              <span className="whitespace-nowrap">Favorites</span>
               {favorites.length > 0 && (
-                <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                <Badge variant="secondary" className="ml-1 h-4 sm:h-5 px-1 sm:px-1.5 text-xs">
                   {favorites.length}
                 </Badge>
               )}
             </Button>
           </SheetTrigger>
-          <SheetContent side="right">
+          <SheetContent side="right" className="w-full sm:w-[400px] max-w-full">
             <SheetHeader>
               <SheetTitle>Your Favorite Recipients</SheetTitle>
               <SheetDescription>
@@ -289,7 +290,7 @@ const SendMoneyFavorites = ({
               </SheetDescription>
             </SheetHeader>
             
-            <div className="mt-6">
+            <div className="mt-6 overflow-y-auto max-h-[calc(100vh-180px)]">
               {isLoading ? (
                 <div className="flex justify-center py-8">
                   <div className="loader">Loading...</div>
@@ -303,22 +304,22 @@ const SendMoneyFavorites = ({
                   </p>
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-3 pb-2">
                   {favorites.map((favorite) => (
                     <div 
                       key={favorite.favorite_id}
                       className="border rounded-lg p-3 cursor-pointer hover:bg-gray-50 transition-colors flex justify-between items-center"
                       onClick={() => onSelectFavorite(favorite)}
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="bg-gray-100 p-2 rounded-full">
+                      <div className="flex items-center gap-2 sm:gap-3 overflow-hidden">
+                        <div className="bg-gray-100 p-2 rounded-full flex-shrink-0">
                           {getMethodIcon(favorite.method)}
                         </div>
-                        <div>
-                          <div className="font-medium">{favorite.recipient_name}</div>
-                          <div className="text-sm text-gray-500">{favorite.recipient_identifier}</div>
+                        <div className="min-w-0">
+                          <div className="font-medium text-sm sm:text-base truncate">{favorite.recipient_name}</div>
+                          <div className="text-xs sm:text-sm text-gray-500 truncate">{favorite.recipient_identifier}</div>
                           {favorite.bank_name && (
-                            <div className="text-xs text-gray-400">{favorite.bank_name}</div>
+                            <div className="text-xs text-gray-400 truncate">{favorite.bank_name}</div>
                           )}
                         </div>
                       </div>
@@ -327,6 +328,7 @@ const SendMoneyFavorites = ({
                         size="icon"
                         onClick={(e) => handleOpenDeleteDialog(favorite, e)}
                         disabled={isDeleting}
+                        className="h-8 w-8 flex-shrink-0 ml-1"
                       >
                         <Trash2 className="h-4 w-4 text-gray-400 hover:text-red-500" />
                       </Button>
@@ -336,10 +338,10 @@ const SendMoneyFavorites = ({
               )}
             </div>
 
-            <SheetFooter className="mt-6 flex-col items-start sm:items-end gap-2">
-              <Button asChild variant="outline" size="sm" className="w-full">
+            <SheetFooter className="mt-6 flex-col items-stretch sm:items-end gap-2">
+              <Button asChild variant="outline" size="sm" className="w-full h-9">
                 <Link to="/manage-favorites">
-                  <Settings className="h-4 w-4 mr-2" />
+                  <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-2" />
                   Manage Favorites
                 </Link>
               </Button>
@@ -350,7 +352,7 @@ const SendMoneyFavorites = ({
 
       {/* Add to Favorites Dialog */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md max-w-[calc(100%-2rem)]">
           <DialogHeader>
             <DialogTitle>Add to Favorites</DialogTitle>
             <DialogDescription>
@@ -361,13 +363,13 @@ const SendMoneyFavorites = ({
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="recipient-info">Recipient Information</Label>
-              <div className="flex items-center p-3 bg-gray-50 rounded-md">
-                <div className="bg-gray-100 p-2 rounded-full mr-3">
+              <div className="flex items-center p-3 bg-gray-50 rounded-md overflow-hidden">
+                <div className="bg-gray-100 p-2 rounded-full mr-3 flex-shrink-0">
                   {getMethodIcon(method)}
                 </div>
-                <div>
-                  <div>{currentRecipient?.name}</div>
-                  <div className="text-sm text-gray-500">{currentRecipient?.identifier}</div>
+                <div className="min-w-0">
+                  <div className="truncate">{currentRecipient?.name}</div>
+                  <div className="text-sm text-gray-500 truncate">{currentRecipient?.identifier}</div>
                 </div>
               </div>
             </div>
@@ -386,16 +388,18 @@ const SendMoneyFavorites = ({
             </div>
           </div>
           
-          <DialogFooter>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
             <Button 
               variant="outline" 
               onClick={() => setShowAddDialog(false)}
+              className="w-full sm:w-auto"
             >
               Cancel
             </Button>
             <Button 
               onClick={handleAddToFavorites}
               disabled={isSaving || !customName.trim()}
+              className="w-full sm:w-auto"
             >
               {isSaving ? "Saving..." : "Save to Favorites"}
             </Button>
@@ -405,7 +409,7 @@ const SendMoneyFavorites = ({
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md max-w-[calc(100%-2rem)]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-red-500" />
@@ -418,28 +422,29 @@ const SendMoneyFavorites = ({
           
           {favoriteToDelete && (
             <div className="py-4">
-              <div className="flex items-center p-3 bg-gray-50 rounded-md">
-                <div className="bg-gray-100 p-2 rounded-full mr-3">
+              <div className="flex items-center p-3 bg-gray-50 rounded-md overflow-hidden">
+                <div className="bg-gray-100 p-2 rounded-full mr-3 flex-shrink-0">
                   {getMethodIcon(favoriteToDelete.method)}
                 </div>
-                <div>
-                  <div className="font-medium">{favoriteToDelete.recipient_name}</div>
-                  <div className="text-sm text-gray-500">{favoriteToDelete.recipient_identifier}</div>
+                <div className="min-w-0">
+                  <div className="font-medium truncate">{favoriteToDelete.recipient_name}</div>
+                  <div className="text-sm text-gray-500 truncate">{favoriteToDelete.recipient_identifier}</div>
                   {favoriteToDelete.bank_name && (
-                    <div className="text-xs text-gray-400">{favoriteToDelete.bank_name}</div>
+                    <div className="text-xs text-gray-400 truncate">{favoriteToDelete.bank_name}</div>
                   )}
                 </div>
               </div>
             </div>
           )}
           
-          <DialogFooter>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
             <Button 
               variant="outline" 
               onClick={() => {
                 setShowDeleteDialog(false);
                 setFavoriteToDelete(null);
               }}
+              className="w-full sm:w-auto"
             >
               Cancel
             </Button>
@@ -447,6 +452,7 @@ const SendMoneyFavorites = ({
               variant="destructive"
               onClick={() => favoriteToDelete && handleRemoveFavorite(favoriteToDelete.favorite_id)}
               disabled={isDeleting}
+              className="w-full sm:w-auto"
             >
               {isDeleting ? "Removing..." : "Remove"}
             </Button>

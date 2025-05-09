@@ -30,7 +30,7 @@
       overflow: hidden;
       position: relative;
     }
-    
+
     .container {
       text-align: center;
       z-index: 10;
@@ -60,14 +60,14 @@
       z-index: -1;
       animation: pulse 3s infinite alternate;
     }
-    
+
     .message {
       font-size: 1.8rem;
       margin-bottom: 2rem;
       opacity: 0;
       animation: slideUp 0.8s ease-out 0.3s forwards;
     }
-    
+
     .back-button {
       background-color: var(--primary);
       color: var(--text);
@@ -93,7 +93,7 @@
       transform: translateY(0);
       box-shadow: 0 4px 12px rgba(255, 0, 0, 0.3);
     }
-    
+
     .particles {
       position: absolute;
       top: 0;
@@ -142,12 +142,12 @@
         text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
       }
     }
-    
+
     @media (max-width: 768px) {
       .error-code {
         font-size: 6rem;
       }
-      
+
       .message {
         font-size: 1.4rem;
       }
@@ -156,11 +156,11 @@
 </head>
 <body>
   <div class="particles" id="particles"></div>
-  <div class="container">
+<div class="container">
     <div class="error-code">404</div>
     <p class="message">Oops! The page you're looking for seems to have vanished.</p>
     <button class="back-button" onclick="window.location.href='/api'">Return to Falsopay</button>
-  </div>
+</div>
 
   <script>
     // Create animated particles

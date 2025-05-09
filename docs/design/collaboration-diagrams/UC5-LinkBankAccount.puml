@@ -1,0 +1,66 @@
+@startuml CollaborationDiagram_UC5_LinkBankAccount
+
+' Define participants with strategic positioning to minimize intersections
+object "Registered User" as User #FFFFFF
+object "FalsoPay App" as App #FFFFFF
+object "API Gateway" as Gateway #FFFFFF
+object "Banking Service" as BankService #FFFFFF
+object "External Banking API" as ExtBank #FFFFFF
+object "Notification Service" as NotifService #FFFFFF
+object "Database" as DB #FFFFFF
+
+' Position objects to minimize crossing lines
+User -[hidden]right- App
+App -[hidden]right- Gateway
+Gateway -[hidden]right- BankService
+BankService -[hidden]right- ExtBank
+BankService -[hidden]down- NotifService
+BankService -[hidden]down- DB
+
+' Messages (using message numbers to indicate order)
+User -> App : 1. Select "Link Bank Account"
+App -> App : 2. Display bank account form
+User -> App : 3. Enter bank account details
+App -> App : 4. Validate input format
+App -> Gateway : 5. POST /api/banking/link
+Gateway -> BankService : 6. Link bank account
+BankService -> BankService : 7. Validate bank details format
+BankService -> ExtBank : 8. Verify account existence
+
+ExtBank --> BankService : 9a. Invalid account details
+BankService --> Gateway : 10a. 400 Bad Request
+Gateway --> App : 11a. 400 Bad Request
+App --> User : 12a. Display error message
+
+ExtBank --> BankService : 9b. Account exists
+BankService -> ExtBank : 10b. Request account verification
+ExtBank -> ExtBank : 11b. Initiate micro-deposits
+ExtBank --> BankService : 12b. Verification initiated
+BankService -> DB : 13b. Store pending bank account
+DB --> BankService : 14b. Success
+BankService -> NotifService : 15b. Send verification instructions
+NotifService --> BankService : 16b. Notification queued
+BankService --> Gateway : 17b. 202 Accepted
+Gateway --> App : 18b. 202 Accepted with verification details
+App --> User : 19b. Display verification instructions
+
+User -> App : 20b. Enter verification amounts
+App -> Gateway : 21. POST /api/banking/verify
+Gateway -> BankService : 22. Verify amounts
+BankService -> ExtBank : 23. Validate verification amounts
+
+ExtBank --> BankService : 24b1. Verification failed
+BankService --> Gateway : 25b1. 400 Bad Request
+Gateway --> App : 26b1. 400 Bad Request
+App --> User : 27b1. Display verification error
+
+ExtBank --> BankService : 24b2. Verification successful
+BankService -> DB : 25b2. Update bank account status to verified
+DB --> BankService : 26b2. Success
+BankService -> NotifService : 27b2. Send confirmation
+NotifService --> BankService : 28b2. Notification queued
+BankService --> Gateway : 29b2. 200 OK
+Gateway --> App : 30b2. 200 OK
+App --> User : 31b2. Display confirmation
+
+@enduml 

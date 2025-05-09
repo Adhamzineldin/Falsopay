@@ -1,0 +1,51 @@
+@startuml CollaborationDiagram_UC12_RequestMoney
+
+' Define participants with strategic positioning to minimize intersections
+object "Registered User" as User #FFFFFF
+object "FalsoPay App" as App #FFFFFF
+object "API Gateway" as Gateway #FFFFFF
+object "Transaction Service" as TransService #FFFFFF
+object "User Service" as UserService #FFFFFF
+object "Notification Service" as NotifService #FFFFFF
+object "Database" as DB #FFFFFF
+
+' Position objects to minimize crossing lines
+User -[hidden]right- App
+App -[hidden]right- Gateway
+Gateway -[hidden]right- TransService
+TransService -[hidden]down- UserService
+TransService -[hidden]right- NotifService
+NotifService -[hidden]right- DB
+
+' Messages (using message numbers to indicate order)
+User -> App : 1. Select request money option
+App -> App : 2. Display request form
+User -> App : 3. Enter recipient, amount, and reason
+App -> App : 4. Validate input format
+App -> Gateway : 5. POST /api/money-requests
+Gateway -> TransService : 6. Create money request
+TransService -> UserService : 7. Verify recipient exists
+UserService -> DB : 8. Check recipient
+DB --> UserService : 9. Recipient data
+
+UserService --> TransService : 10a. Recipient not found
+TransService --> Gateway : 11a. 404 Not Found
+Gateway --> App : 12a. 404 Not Found
+App --> User : 13a. Recipient not found error
+
+UserService --> TransService : 10b. Recipient exists
+TransService -> TransService : 11b. Validate amount
+TransService --> Gateway : 12b. 400 Bad Request
+Gateway --> App : 13b. 400 Bad Request
+App --> User : 14b. Invalid amount error
+
+UserService --> TransService : 10c. Recipient exists
+TransService -> DB : 11c. Create money request record
+DB --> TransService : 12c. Success
+TransService -> NotifService : 13c. Send request notification to recipient
+NotifService --> TransService : 14c. Notification queued
+TransService --> Gateway : 15c. Request created
+Gateway --> App : 16c. 201 Created
+App --> User : 17c. Display confirmation
+
+@enduml 

@@ -1,0 +1,52 @@
+@startuml CollaborationDiagram_UC1_Register
+
+' Define participants with strategic positioning to minimize intersections
+object "Potential User" as User #FFFFFF
+object "FalsoPay App" as App #FFFFFF
+object "API Gateway" as Gateway #FFFFFF
+object "User Service" as UserService #FFFFFF
+object "Database" as DB #FFFFFF
+object "Notification Service" as NotifService #FFFFFF
+
+' Position objects to minimize crossing lines
+User -[hidden]right- App
+App -[hidden]right- Gateway
+Gateway -[hidden]right- UserService
+UserService -[hidden]right- DB
+UserService -[hidden]down- NotifService
+
+' Messages (using message numbers to indicate order)
+User -> App : 1. Enter registration information
+App -> App : 2. Validate input format
+App -> Gateway : 3. POST /api/register
+Gateway -> UserService : 4. Create user account
+UserService -> UserService : 5. Validate user data
+UserService -> DB : 6. Check if email/phone exists
+DB --> UserService : 7. Response (exists/not exists)
+
+UserService --> Gateway : 8a. Error: Account exists
+Gateway --> App : 9a. 409 Conflict
+App --> User : 10a. Display error message
+
+UserService --> Gateway : 8b. Error: Invalid data
+Gateway --> App : 9b. 400 Bad Request
+App --> User : 10b. Display validation errors
+
+UserService -> DB : 8c. Create user record
+DB --> UserService : 9c. Success
+UserService -> NotifService : 10c. Send verification email/SMS
+NotifService --> UserService : 11c. Notification queued
+UserService --> Gateway : 12c. User created successfully
+Gateway --> App : 13c. 201 Created with user data
+App --> User : 14c. Display success & verification instructions
+
+User -> App : 15c. Submit verification code
+App -> Gateway : 16. POST /api/verify
+Gateway -> UserService : 17. Verify user
+UserService -> DB : 18. Update verification status
+DB --> UserService : 19. Success
+UserService --> Gateway : 20. Verification successful
+Gateway --> App : 21. 200 OK
+App --> User : 22. Display registration confirmation
+
+@enduml 

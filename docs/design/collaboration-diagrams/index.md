@@ -1,24 +1,36 @@
 # FalsoPay Collaboration Diagrams
 
-This directory contains collaboration diagrams for the main business processes of the FalsoPay payment system. These diagrams show the interactions between objects in the system, focusing on the relationships between objects and the messages they exchange.
+This directory contains collaboration diagrams for key use cases in the FalsoPay system. Collaboration diagrams show the interactions between objects in the system, focusing on the relationships between objects rather than the sequence of interactions.
 
 ## Available Diagrams
 
-1. [User Registration](UC1-Register.puml) - Shows the process of a new user registering for a FalsoPay account
-2. [User Login](UC2-LogIn.puml) - Illustrates the process of a registered user logging into the system
-3. [Check Balance](UC3-CheckBalance.puml) - Shows the process of a user checking their account balance
-4. [Link Bank Account](UC5-LinkBankAccount.puml) - Depicts the process of linking a bank account to a FalsoPay account
-5. [Send Money](UC9-SendMoney.puml) - Illustrates the process of sending money to another user
-6. [Request Money](UC12-RequestMoney.puml) - Illustrates the process of requesting money from another user
-7. [Contact Customer Support](contact-customer-support.puml) - Depicts the process of contacting customer support
+1. **[UC1-Register](UC1-Register.puml)** - User registration process including validation and verification
+2. **[UC2-LogIn](UC2-LogIn.puml)** - User login process with phone verification and IPA validation
+3. **[UC3-CheckBalance](UC3-CheckBalance.puml)** - Process for checking account balance
+4. **[UC5-LinkBankAccount](UC5-LinkBankAccount.puml)** - Process for linking a bank account to FalsoPay
+5. **[UC9-SendMoney](UC9-SendMoney.puml)** - Process for sending money to another user
+6. **[UC12-RequestMoney](UC12-RequestMoney.puml)** - Process for requesting money from another user
+
+## Diagram Structure
+
+Each collaboration diagram includes:
+
+1. **Participants** - Objects involved in the use case
+2. **Relationships** - Connections between objects
+3. **Messages** - Numbered messages showing the flow of communication
+4. **Alternative Paths** - Different paths through the system based on conditions
 
 ## Viewing the Diagrams
 
-These diagrams are written in PlantUML format. To view them, you can:
+These diagrams are created using PlantUML. To view them:
 
-1. Use the [PlantUML Web Server](http://www.plantuml.com/plantuml/uml/)
-2. Use a PlantUML plugin for your IDE
-3. Use our HTML viewer: [collaboration-viewer.html](collaboration-viewer.html)
+1. Use a PlantUML compatible viewer or IDE plugin
+2. Use the online PlantUML server: http://www.plantuml.com/plantuml/
+3. Generate images using the PlantUML command-line tool
+
+## Diagram Layout
+
+The diagrams are designed to minimize line intersections for better readability. Objects are positioned strategically, and hidden relationships are used to control layout.
 
 ## Diagram Conventions
 

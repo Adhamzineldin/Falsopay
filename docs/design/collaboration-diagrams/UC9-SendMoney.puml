@@ -1,0 +1,81 @@
+@startuml CollaborationDiagram_UC9_SendMoney
+
+' Define participants with strategic positioning to minimize intersections
+object "Registered User" as User #FFFFFF
+object "FalsoPay App" as App #FFFFFF
+object "API Gateway" as Gateway #FFFFFF
+object "Transaction Service" as TransService #FFFFFF
+object "Security Service" as SecService #FFFFFF
+object "Account Service" as AccountService #FFFFFF
+object "Notification Service" as NotifService #FFFFFF
+object "Database" as DB #FFFFFF
+
+' Position objects to minimize crossing lines
+User -[hidden]right- App
+App -[hidden]right- Gateway
+Gateway -[hidden]right- TransService
+TransService -[hidden]down- AccountService
+TransService -[hidden]down- SecService
+TransService -[hidden]right- NotifService
+NotifService -[hidden]right- DB
+
+' Messages (using message numbers to indicate order)
+User -> App : 1. Initiate money transfer
+App -> Gateway : 2. POST /api/transactions/prepare
+Gateway -> TransService : 3. Prepare transaction
+TransService -> AccountService : 4. Check sender balance
+AccountService -> DB : 5. Get account balance
+DB --> AccountService : 6. Balance data
+
+AccountService --> TransService : 7a. Insufficient balance
+TransService --> Gateway : 8a. 400 Bad Request
+Gateway --> App : 9a. 400 Bad Request
+App --> User : 10a. Display insufficient funds error
+
+AccountService --> TransService : 7b. Balance sufficient
+TransService -> TransService : 8b. Create transaction draft
+TransService --> Gateway : 9b. Transaction prepared
+Gateway --> App : 10b. 200 OK with transaction details
+App -> App : 11b. Display transfer method options
+User -> App : 12b. Select transfer method
+
+App -> Gateway : 13b. POST /api/transactions/method
+Gateway -> TransService : 14b. Set transfer method
+TransService -> DB : 15b. Update transaction record
+DB --> TransService : 16b. Success
+TransService --> Gateway : 17b. 200 OK
+Gateway --> App : 18b. 200 OK
+
+App -> App : 19b. Request PIN
+User -> App : 20b. Enter PIN
+App -> Gateway : 21b. POST /api/security/verify-pin
+Gateway -> SecService : 22b. Verify PIN
+SecService -> DB : 23b. Get stored PIN hash
+DB --> SecService : 24b. PIN hash
+SecService -> SecService : 25b. Validate PIN
+
+SecService --> Gateway : 26b1. 401 Unauthorized
+Gateway --> App : 27b1. 401 Unauthorized
+App --> User : 28b1. Display PIN error
+
+SecService --> Gateway : 26b2. 200 OK
+App -> Gateway : 27b2. POST /api/transactions/execute
+Gateway -> TransService : 28b2. Execute transaction
+TransService -> DB : 29b2. Begin transaction
+TransService -> DB : 30b2. Debit sender account
+TransService -> DB : 31b2. Credit recipient account
+TransService -> DB : 32b2. Create transaction record
+DB --> TransService : 33b2. Transaction complete
+
+TransService -> NotifService : 34b2. Send confirmation to sender
+NotifService --> TransService : 35b2. Notification queued
+TransService -> NotifService : 36b2. Send notification to recipient
+NotifService --> TransService : 37b2. Notification queued
+
+TransService -> AccountService : 38b2. Update balances
+AccountService --> TransService : 39b2. Balances updated
+TransService --> Gateway : 40b2. Transaction successful
+Gateway --> App : 41b2. 200 OK with transaction details
+App --> User : 42b2. Display transaction confirmation
+
+@enduml 

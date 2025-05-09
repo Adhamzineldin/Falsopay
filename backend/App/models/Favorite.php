@@ -104,11 +104,15 @@ class Favorite
         $set = [];
         $params = ['id' => $id];
 
-        foreach ($fields as $key => $value) {
-            if (!in_array($key, ['recipient_identifier', 'recipient_name', 'method', 'bank_id'])) {
-                throw new Exception("Invalid column name: $key");
-            }
+        // Filter out favorite_id and user_id from fields to update
+        $allowedFields = ['recipient_identifier', 'recipient_name', 'method', 'bank_id'];
+        $filteredFields = array_intersect_key($fields, array_flip($allowedFields));
 
+        if (empty($filteredFields)) {
+            throw new Exception("No valid fields provided to update.");
+        }
+
+        foreach ($filteredFields as $key => $value) {
             $set[] = "$key = :$key";
             $params[$key] = $value;
         }

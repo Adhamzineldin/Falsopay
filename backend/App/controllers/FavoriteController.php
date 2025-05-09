@@ -215,8 +215,20 @@ class FavoriteController
                 ];
             }
 
+            // Filter out non-updatable fields
+            $allowedFields = ['recipient_identifier', 'recipient_name', 'method', 'bank_id'];
+            $updateData = array_intersect_key($data, array_flip($allowedFields));
+            
+            if (empty($updateData)) {
+                return [
+                    'status' => 'error',
+                    'message' => 'No valid fields provided to update',
+                    'code' => 400
+                ];
+            }
+
             // Update the favorite
-            $result = $this->favoriteModel->updateFavorite($favoriteId, $data);
+            $result = $this->favoriteModel->updateFavorite($favoriteId, $updateData);
 
             if ($result) {
                 // Get the updated favorite

@@ -25,9 +25,6 @@ class ServerStatusRoutes
             ServerStatusController::renderHomePage();
         });
 
-        // API endpoint for system status in JSON format (for admin dashboard)
-        $router->add('GET', '/api/admin/system/status', function () {
-            ServerStatusController::getSystemStatus();
-        });
+       
     }
 } 

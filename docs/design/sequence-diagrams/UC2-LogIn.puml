@@ -4,9 +4,9 @@ actor "User" as User
 participant "FalsoPay App" as App
 participant "API Gateway" as Gateway
 participant "Authentication Service" as AuthService
+participant "Notification Service" as NotifService
 participant "User Service" as UserService
 participant "IPA Service" as IPAService
-participant "Notification Service" as NotifService
 participant "Database" as DB
 
 title UC-2: Log In
@@ -14,57 +14,48 @@ title UC-2: Log In
 User -> App: Enter phone number
 activate App
 
-App -> Gateway: POST /api/auth/verify-phone
+App -> Gateway: POST /api/auth/request-code
 activate Gateway
 
-Gateway -> AuthService: Verify phone number
+Gateway -> AuthService: Request verification code
 activate AuthService
 
-AuthService -> UserService: Check if user exists
-activate UserService
+AuthService -> NotifService: Generate verification code
+activate NotifService
+NotifService -> NotifService: Generate random code
+NotifService -> NotifService: Send SMS with code
+NotifService --> AuthService: Code sent
+deactivate NotifService
 
-UserService -> DB: Query user by phone
-activate DB
-DB --> UserService: User data (or null)
-deactivate DB
+AuthService --> Gateway: 200 OK (Code sent)
+Gateway --> App: 200 OK with code
+App -> App: Store verification code
+App --> User: Enter verification code
 
-alt User not found
-    UserService --> AuthService: User not found
-    AuthService --> Gateway: 404 Not Found
-    Gateway --> App: 404 Not Found
-    App --> User: Redirect to registration
-else User found
-    UserService --> AuthService: User found
+User -> App: Enter verification code
+App -> App: Verify entered code matches stored code
+
+alt Invalid code
+    App --> User: Display error message
+else Valid code
+    App -> Gateway: POST /api/auth/login
+    Gateway -> AuthService: Authenticate user
     
-    AuthService -> NotifService: Generate and send verification code
-    activate NotifService
-    NotifService -> NotifService: Generate verification code
-    NotifService -> DB: Store verification code
-    NotifService -> NotifService: Send SMS with code
-    NotifService --> AuthService: Code sent
-    deactivate NotifService
+    AuthService -> UserService: Check if user exists
+    activate UserService
     
-    AuthService --> Gateway: 200 OK (Code sent)
-    Gateway --> App: 200 OK
-    App --> User: Enter verification code
-    
-    User -> App: Enter verification code
-    App -> Gateway: POST /api/auth/verify-code
-    
-    Gateway -> AuthService: Verify code
-    
-    AuthService -> DB: Check verification code
+    UserService -> DB: Query user by phone
     activate DB
-    DB --> AuthService: Verification result
+    DB --> UserService: User data (or null)
     deactivate DB
     
-    alt Invalid code
-        AuthService --> Gateway: 401 Unauthorized
-        Gateway --> App: 401 Unauthorized
-        App --> User: Display error message
-    else Valid code
-        AuthService --> Gateway: 200 OK
-        Gateway --> App: 200 OK
+    alt User not found
+        UserService --> AuthService: User not found
+        AuthService --> Gateway: 404 Not Found
+        Gateway --> App: 404 Not Found
+        App --> User: Redirect to registration
+    else User found
+        UserService --> AuthService: User found
         
         AuthService -> UserService: Get user details
         UserService -> DB: Get user account status

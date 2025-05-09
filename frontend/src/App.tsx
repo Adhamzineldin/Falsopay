@@ -20,6 +20,7 @@ const MoneyRequests = React.lazy(() => import("@/pages/MoneyRequests"));
 const Profile = React.lazy(() => import("@/pages/Profile"));
 const LinkAccount = React.lazy(() => import("@/pages/LinkAccount"));
 const NotFound = React.lazy(() => import("@/pages/NotFound"));
+const Unauthorized = React.lazy(() => import("@/pages/Unauthorized"));
 const Accounts = React.lazy(() => import("@/pages/Accounts"));
 const Support = React.lazy(() => import("@/pages/Support"));
 const PublicSupport = React.lazy(() => import("@/pages/PublicSupport"));
@@ -56,6 +57,7 @@ const AppContent = () => {
           <Route path="/login" element={<AuthFlow />} />
           <Route path="/register" element={<AuthFlow />} />
           <Route path="/public-support" element={<PublicSupport />} />
+          <Route path="/unauthorized" element={<Unauthorized />} />
 
           {/* Protected Routes */}
           <Route
@@ -170,6 +172,7 @@ const App = () => {
             import("@/pages/Profile");
             import("@/pages/LinkAccount");
             import("@/pages/NotFound");
+            import("@/pages/Unauthorized");
             import("@/pages/Accounts");
             import("@/pages/Landing");
             import("@/pages/Support");

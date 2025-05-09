@@ -4,66 +4,238 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" href="/favicon.ico" type="image/x-icon">
-  <title>Not Found</title>
+  <title>Not Found | Falsopay</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #000;
-      color: #fff;
+    :root {
+      --primary: #ff0000;
+      --primary-dark: #cc0000;
+      --background: #000;
+      --text: #fff;
+    }
+    
+    * {
       margin: 0;
       padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--background);
+      color: var(--text);
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
+      overflow: hidden;
+      position: relative;
     }
-
+    
     .container {
       text-align: center;
+      z-index: 10;
+      padding: 2rem;
+      max-width: 700px;
+      animation: fadeIn 1s ease-out;
     }
-
-    h1 {
-      font-size: 5em;
-      margin-bottom: 20px;
-      color: #ff0000;
+    
+    .error-code {
+      font-size: 12rem;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+      position: relative;
+      text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+      animation: pulse 3s infinite;
     }
-
-    p {
-      font-size: 1.5em;
-      margin-bottom: 30px;
+    
+    .error-code::after {
+      content: '';
+      position: absolute;
+      width: 120%;
+      height: 120%;
+      top: -10%;
+      left: -10%;
+      background: radial-gradient(circle, rgba(255,0,0,0.2) 0%, rgba(0,0,0,0) 70%);
+      z-index: -1;
+      animation: pulse 3s infinite alternate;
     }
-
-    button {
-      background-color: #ff0000;
-      color: #fff;
+    
+    .message {
+      font-size: 1.8rem;
+      margin-bottom: 2rem;
+      opacity: 0;
+      animation: slideUp 0.8s ease-out 0.3s forwards;
+    }
+    
+    .back-button {
+      background-color: var(--primary);
+      color: var(--text);
       border: none;
-      padding: 10px 20px;
-      font-size: 1.2em;
+      padding: 12px 30px;
+      font-size: 1.2rem;
       cursor: pointer;
-      transition: background-color 0.3s ease;
+      border-radius: 50px;
+      font-weight: bold;
+      transition: all 0.3s ease;
+      box-shadow: 0 5px 15px rgba(255, 0, 0, 0.3);
+      opacity: 0;
+      animation: slideUp 0.8s ease-out 0.6s forwards;
     }
-
-    button:hover {
-      background-color: #cc0000;
+    
+    .back-button:hover {
+      background-color: var(--primary-dark);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(255, 0, 0, 0.4);
     }
-
-    @media (max-width: 768px) {
-      h1 {
-        font-size: 3em;
+    
+    .back-button:active {
+      transform: translateY(0);
+      box-shadow: 0 4px 12px rgba(255, 0, 0, 0.3);
+    }
+    
+    .particles {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+    
+    .particle {
+      position: absolute;
+      width: 5px;
+      height: 5px;
+      background-color: var(--primary);
+      border-radius: 50%;
+      opacity: 0.5;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+      from { 
+        opacity: 0;
+        transform: translateY(40px);
       }
-
-      p {
-        font-size: 1.2em;
+      to { 
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    @keyframes pulse {
+      0% { 
+        transform: scale(1);
+        text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+      }
+      50% { 
+        transform: scale(1.05);
+        text-shadow: 0 0 20px rgba(255, 0, 0, 0.8);
+      }
+      100% { 
+        transform: scale(1);
+        text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .error-code {
+        font-size: 6rem;
+      }
+      
+      .message {
+        font-size: 1.4rem;
       }
     }
   </style>
 </head>
 <body>
-<div class="container">
-  <h1>404</h1>
-  <p>Oops! The page you're looking for could not be found.</p>
-  <button onclick="window.location.href='/api'">Return to Main Screen</button>
-</div>
-</body>
+  <div class="particles" id="particles"></div>
+  <div class="container">
+    <div class="error-code">404</div>
+    <p class="message">Oops! The page you're looking for seems to have vanished.</p>
+    <button class="back-button" onclick="window.location.href='/api'">Return to Falsopay</button>
+  </div>
 
+  <script>
+    // Create animated particles
+    const particlesContainer = document.getElementById('particles');
+    const particleCount = 50;
+    
+    for (let i = 0; i < particleCount; i++) {
+      createParticle();
+    }
+    
+    function createParticle() {
+      const particle = document.createElement('div');
+      particle.classList.add('particle');
+      
+      // Random position
+      const x = Math.random() * 100;
+      const y = Math.random() * 100;
+      
+      // Random size
+      const size = Math.random() * 4 + 1;
+      
+      // Random animation duration
+      const duration = Math.random() * 20 + 10;
+      
+      // Set styles
+      particle.style.left = `${x}%`;
+      particle.style.top = `${y}%`;
+      particle.style.width = `${size}px`;
+      particle.style.height = `${size}px`;
+      particle.style.opacity = Math.random() * 0.5 + 0.1;
+      
+      // Set animation
+      particle.style.animation = `
+        moveParticle ${duration}s linear infinite,
+        pulseOpacity ${Math.random() * 4 + 2}s ease-in-out infinite alternate
+      `;
+      
+      // Random animation delay
+      particle.style.animationDelay = `${Math.random() * 5}s`;
+      
+      // Add keyframes dynamically
+      const styleSheet = document.styleSheets[0];
+      const keyframes = `
+        @keyframes moveParticle {
+          0% { transform: translate(0, 0); }
+          25% { transform: translate(${Math.random() * 200 - 100}px, ${Math.random() * 200 - 100}px); }
+          50% { transform: translate(${Math.random() * 200 - 100}px, ${Math.random() * 200 - 100}px); }
+          75% { transform: translate(${Math.random() * 200 - 100}px, ${Math.random() * 200 - 100}px); }
+          100% { transform: translate(0, 0); }
+        }
+        
+        @keyframes pulseOpacity {
+          0% { opacity: ${Math.random() * 0.3 + 0.1}; }
+          100% { opacity: ${Math.random() * 0.7 + 0.3}; }
+        }
+      `;
+      
+      try {
+        styleSheet.insertRule(keyframes, styleSheet.cssRules.length);
+      } catch (e) {
+        // Some browsers don't support insertRule with multiple rules
+        const keyframesArray = keyframes.split('}');
+        keyframesArray.forEach(rule => {
+          if (rule.trim().length) {
+            try {
+              styleSheet.insertRule(rule + '}', styleSheet.cssRules.length);
+            } catch (e) {
+              console.error(e);
+            }
+          }
+        });
+      }
+      
+      particlesContainer.appendChild(particle);
+    }
+  </script>
+</body>
 </html>

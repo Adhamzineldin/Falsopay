@@ -19,8 +19,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, adminOnly = f
   }
 
   if (adminOnly && !isAdmin) {
-    // Redirect to dashboard if the route requires admin role but user isn't admin
-    return <Navigate to="/dashboard" replace />;
+    // Redirect to the Unauthorized page if the route requires admin role but user isn't admin
+    return <Navigate to="/unauthorized" replace />;
   }
 
   return children;

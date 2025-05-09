@@ -13,82 +13,65 @@ participant "Account\nService" as accountService
 participant "Banking\nPartner API" as bankingAPI
 database "Database" as db
 
-== Main Success Scenario ==
-
-note over app, accountService: User has provided bank account information
-
+user -> app: Submit bank details
+activate user
 app -> gateway: Verify bank account request
 activate app
 activate gateway
+
 gateway -> accountService: Forward verification request
 activate accountService
+
 accountService -> accountService: Validate input data
 accountService -> bankingAPI: Send verification request
 activate bankingAPI
 
-bankingAPI -> bankingAPI: Validate account details
-bankingAPI -> bankingAPI: Verify account ownership
-bankingAPI --> accountService: Verification successful
-deactivate bankingAPI
+alt Verification successful
+    bankingAPI -> bankingAPI: Validate & verify ownership
+    bankingAPI --> accountService: Success
+    deactivate bankingAPI
 
-accountService -> db: Mark account as verified
-activate db
-db --> accountService: Update successful
-deactivate db
-accountService --> gateway: Verification result
-deactivate accountService
-gateway --> app: Verification successful
-deactivate gateway
-activate user
-app --> user: Display success message
-deactivate app
-deactivate user
+    accountService -> db: Mark account as verified
+    activate db
+    db --> accountService: Updated
+    deactivate db
 
-== Alternative Scenario: Verification Fails ==
+    accountService --> gateway: Verification successful
+    deactivate accountService
+    gateway --> app: Success
+    deactivate gateway
 
-app -> gateway: Verify bank account request
-activate app
-activate gateway
-gateway -> accountService: Forward verification request
-activate accountService
-accountService -> accountService: Validate input data
-accountService -> bankingAPI: Send verification request
-activate bankingAPI
+    app --> user: Display success message
+    deactivate app
+    deactivate user
 
-bankingAPI -> bankingAPI: Validate account details
-bankingAPI -> bankingAPI: Verification fails
-bankingAPI --> accountService: Verification failed (reason)
-deactivate bankingAPI
+else Verification failed
+    bankingAPI -> bankingAPI: Validate & fail verification
+    bankingAPI --> accountService: Failed (e.g. invalid data)
+    deactivate bankingAPI
 
-accountService --> gateway: Verification failed
-deactivate accountService
-gateway --> app: Verification failed with reason
-deactivate gateway
-activate user
-app --> user: Display failure message\nSuggest alternative method
-deactivate user
-deactivate app
+    accountService --> gateway: Verification failed
+    deactivate accountService
+    gateway --> app: Failure with reason
+    deactivate gateway
 
-== Alternative Scenario: Timeout ==
+    app --> user: Display failure message\nSuggest alternative
+    deactivate app
+    deactivate user
 
-app -> gateway: Verify bank account request
-activate app
-activate gateway
-gateway -> accountService: Forward verification request
-activate accountService
-accountService -> bankingAPI: Send verification request
-activate bankingAPI
+else Verification timeout
+    note over accountService, bankingAPI: Timeout occurs
+    deactivate bankingAPI
 
-note over accountService, bankingAPI: Response timeout occurs
+    accountService --> gateway: Timeout
+    deactivate accountService
+    gateway --> app: Timeout
+    deactivate gateway
 
-deactivate bankingAPI
-accountService --> gateway: Verification timeout
-deactivate accountService
-gateway --> app: Verification timeout
-deactivate gateway
-app --> user: Display timeout message\nOffer retry option
-activate user
-deactivate user
-deactivate app
+    app --> user: Display timeout message\nOffer retry
+    deactivate app
+    deactivate user
+
+end
 
 @enduml

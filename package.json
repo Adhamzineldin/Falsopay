@@ -1,4 +1,12 @@
 {
+  "name": "falsopay",
+  "version": "1.0.0",
+  "description": "FalsoPay Payment System",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "next dev"
+  },
   "devDependencies": {
     "concurrently": "^9.1.2"
   },
@@ -7,6 +15,7 @@
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "mysql2": "^3.14.1",
+    "pdf-merger-js": "^4.3.0",
     "ws": "^8.18.2"
   }
 }

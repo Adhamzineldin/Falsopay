@@ -54,10 +54,10 @@
 - **36 total functions designed** (30 user + 6 system)
 - **30 total functions implemented** (24 user + 6 system)
 - Prioritized using **MoSCoW scheme** with successful implementation of:
-    - 100% of Must Have requirements
-    - 92% of Should Have requirements
-    - 83% of Could Have requirements
-    - 0% of Won't Have requirements (as expected)
+  - 100% of Must Have requirements
+  - 92% of Should Have requirements 
+  - 83% of Could Have requirements
+  - 0% of Won't Have requirements (as expected)
 
 ## 2.2 Non-Functional Requirements
 

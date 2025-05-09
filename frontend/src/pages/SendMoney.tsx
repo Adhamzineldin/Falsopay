@@ -65,6 +65,8 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 type TransferMethod = 'ipa' | 'mobile' | 'card' | 'account' | 'iban';
 
@@ -697,573 +699,742 @@ const SendMoney = () => {
 
     return (
         <MainLayout>
-            {/* Responsive container - Adjusted for multiple screen sizes */}
+            {/* Responsive container - Improved with animations and better spacing */}
             <div className="w-full max-w-lg mx-auto px-4 sm:px-0">
-                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-8">Send Money</h1>
+                <motion.h1 
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-xl sm:text-2xl font-bold text-gray-900 mb-6 sm:mb-8"
+                >
+                    Send Money
+                </motion.h1>
 
-                <Card className="shadow-md">
-                    {step === 1 && (
-                        <>
-                            <CardHeader className="p-4 sm:p-6">
-                                <CardTitle className="text-lg sm:text-xl">Find Recipient</CardTitle>
-                                <CardDescription>Select how you want to send money</CardDescription>
-                            </CardHeader>
-
-                            <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-                                {linkedAccounts.length === 0 && !isLoadingAccounts ? (
-                                    <div className="p-3 sm:p-4 bg-amber-50 text-amber-800 rounded-md text-sm sm:text-base">
-                                        You don't have any linked accounts. Please link an account first to send money.
-                                    </div>
-                                ) : (
-                                    <Form {...form}>
-                                        <form onSubmit={form.handleSubmit(searchRecipient)} className="space-y-4">
-                                            <FormField
-                                                control={form.control}
-                                                name="sourceIpaAddress"
-                                                render={({field}) => (
-                                                    <FormItem>
-                                                        <FormLabel className="text-sm sm:text-base">Send from</FormLabel>
-                                                        <Select
-                                                            onValueChange={(value) => {
-                                                                field.onChange(value);
-                                                                handleAccountChange(value);
-                                                            }}
-                                                            defaultValue={field.value}
-                                                            disabled={isLoadingAccounts}
-                                                        >
-                                                            <FormControl>
-                                                                <SelectTrigger className="text-sm sm:text-base">
-                                                                    <SelectValue
-                                                                        placeholder={isLoadingAccounts ? "Loading accounts..." : "Select account"}/>
-                                                                </SelectTrigger>
-                                                            </FormControl>
-                                                            <SelectContent>
-                                                                {linkedAccounts.map((account) => (
-                                                                    <SelectItem
-                                                                        key={account.ipa_address}
-                                                                        value={account.ipa_address}
-                                                                        className="text-sm sm:text-base"
-                                                                    >
-                                                                        {account.ipa_address}
-                                                                    </SelectItem>
-                                                                ))}
-                                                            </SelectContent>
-                                                        </Select>
-                                                        <FormMessage className="text-xs sm:text-sm"/>
-                                                    </FormItem>
-                                                )}
-                                            />
-
-                                            {/* Display account balance information */}
-                                            {selectedAccount && (
-                                                <div className="p-3 sm:p-4 bg-gray-50 rounded-lg border border-gray-200 mb-4">
-                                                    <h3 className="font-medium text-gray-900 mb-1 text-sm sm:text-base">Account Details</h3>
-                                                    <div className="flex justify-between items-center">
-                                                        <span className="text-xs sm:text-sm text-gray-600">Available balance</span>
-                                                        <span className="text-base sm:text-lg font-bold text-gray-900">
-                                                          {formatCurrency(selectedAccount.balance, selectedAccount.currency)}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            <FormField
-                                                control={form.control}
-                                                name="method"
-                                                render={({field}) => (
-                                                    <FormItem className="space-y-2 sm:space-y-3">
-                                                        <FormLabel className="text-sm sm:text-base">Send using</FormLabel>
-                                                        <FormControl>
-                                                            <RadioGroup
-                                                                onValueChange={field.onChange}
-                                                                defaultValue={field.value}
-                                                                className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3"
-                                                            >
-                                                                {[
-                                                                    {
-                                                                        value: 'ipa',
-                                                                        label: 'IPA Address',
-                                                                        icon: <User className="h-4 w-4 sm:h-5 sm:w-5"/>
-                                                                    },
-                                                                    {
-                                                                        value: 'mobile',
-                                                                        label: 'Mobile Number',
-                                                                        icon: <Phone className="h-4 w-4 sm:h-5 sm:w-5"/>
-                                                                    },
-                                                                    {
-                                                                        value: 'card',
-                                                                        label: 'Card Number',
-                                                                        icon: <CreditCard className="h-4 w-4 sm:h-5 sm:w-5"/>
-                                                                    },
-                                                                    {
-                                                                        value: 'account',
-                                                                        label: 'Account Number',
-                                                                        icon: <Banknote className="h-4 w-4 sm:h-5 sm:w-5"/>
-                                                                    },
-                                                                    {
-                                                                        value: 'iban',
-                                                                        label: 'IBAN',
-                                                                        icon: <Banknote className="h-4 w-4 sm:h-5 sm:w-5"/>
-                                                                    },
-                                                                ].map((option) => (
-                                                                    <div key={option.value} className="relative">
-                                                                        <RadioGroupItem
-                                                                            value={option.value}
-                                                                            id={option.value}
-                                                                            className="peer sr-only"
-                                                                        />
-                                                                        <Label
-                                                                            htmlFor={option.value}
-                                                                            className={`flex flex-col items-center justify-center rounded-md border-2 border-muted bg-white p-2 sm:p-4 hover:bg-gray-50 hover:border-gray-300 
-                                                                              ${field.value === option.value ? 'border-falsopay-primary bg-falsopay-primary/5' : ''}
-                                                                              peer-focus:ring-1 peer-focus:ring-falsopay-primary peer-focus:border-falsopay-primary
-                                                                              cursor-pointer text-center h-full transition-all`}
-                                                                        >
-                                                                            <div
-                                                                                className={`mb-1 sm:mb-2 rounded-full p-1 sm:p-2 ${field.value === option.value ? 'bg-falsopay-primary text-white' : 'bg-gray-100 text-gray-500'}`}>
-                                                                                {option.icon}
-                                                                            </div>
-                                                                            <span
-                                                                                className="font-medium text-xs sm:text-sm">{option.label}</span>
-                                                                        </Label>
-                                                                    </div>
-                                                                ))}
-                                                            </RadioGroup>
-                                                        </FormControl>
-                                                        <FormMessage className="text-xs sm:text-sm"/>
-                                                    </FormItem>
-                                                )}
-                                            />
-
-                                            {(form.watch("method") === "account" || form.watch("method") === "card") && (
-                                                <FormField
-                                                    control={form.control}
-                                                    name="bank_id"
-                                                    render={({field}) => (
-                                                        <FormItem>
-                                                            <FormLabel className="text-sm sm:text-base">Bank</FormLabel>
-                                                            <FormControl>
-                                                                <BankSelect
-                                                                    value={field.value}
-                                                                    onChange={field.onChange}
-                                                                    disabled={searchLoading}
-                                                                />
-                                                            </FormControl>
-                                                            <FormMessage className="text-xs sm:text-sm"/>
-                                                        </FormItem>
-                                                    )}
-                                                />
-                                            )}
-
-                                            <FormField
-                                                control={form.control}
-                                                name="identifier"
-                                                render={({field}) => (
-                                                    <FormItem>
-                                                        <FormLabel className="text-sm sm:text-base">{getMethodName(form.watch("method") as TransferMethod)}</FormLabel>
-                                                        <div className="flex">
-                                                            <FormControl>
-                                                                <Input
-                                                                    placeholder={`Enter ${getMethodName(form.watch("method") as TransferMethod).toLowerCase()}`}
-                                                                    {...field}
-                                                                    className="rounded-r-none text-sm sm:text-base"
-                                                                />
-                                                            </FormControl>
-                                                            <Button
-                                                                type="submit"
-                                                                disabled={searchLoading || !field.value || !form.getValues("sourceIpaAddress") || (form.watch("method") === "account" && !form.getValues("bank_id"))}
-                                                                className="rounded-l-none"
-                                                            >
-                                                                {searchLoading ? 'Searching...' :
-                                                                    <Search className="h-4 w-4"/>}
-                                                            </Button>
-                                                        </div>
-                                                        <FormMessage className="text-xs sm:text-sm"/>
-                                                    </FormItem>
-                                                )}
-                                            />
-                                        </form>
-                                    </Form>
-                                )}
-                                
-                                {/* Add the Favorites list in step 1 for selecting contacts */}
-                                {user && (
-                                    <div className="flex justify-end mt-4">
-                                        <SendMoneyFavorites 
-                                            userId={user.user_id} 
-                                            method={form.getValues('method')}
-                                            onSelectFavorite={handleSelectFavorite}
-                                            recipientValidated={false}
-                                            showOnlyFavoriteButton={false}
-                                        />
-                                    </div>
-                                )}
-                            </CardContent>
-                        </>
-                    )}
-
-                    {step === 2 && recipient && selectedAccount && (
-                        <>
-                            <CardHeader className="p-4 sm:p-6">
-                                <CardTitle className="text-lg sm:text-xl">Enter Amount</CardTitle>
-                                <CardDescription className="text-sm sm:text-base">You're sending money to {recipient.name}</CardDescription>
-                            </CardHeader>
-
-                            <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-                                {/* System status alerts */}
-                                {systemStatus && !systemStatus.transactions_enabled && (
-                                    <Alert variant="destructive">
-                                        <AlertTriangle className="h-4 w-4" />
-                                        <AlertTitle>Transactions Temporarily Blocked</AlertTitle>
-                                        <AlertDescription>
-                                            {systemStatus.message || "Money transfers are currently disabled by the administrator."}
-                                        </AlertDescription>
-                                    </Alert>
-                                )}
-                                
-                                {systemStatus && systemStatus.transfer_limit && (
-                                    <Alert variant="default" className="bg-blue-50 text-blue-700 border-blue-200">
-                                        <Info className="h-4 w-4" />
-                                        <AlertTitle>Transfer Limit: {formatCurrency(systemStatus.transfer_limit)}</AlertTitle>
-                                        <AlertDescription>
-                                            The maximum amount you can transfer in a single transaction is {formatCurrency(systemStatus.transfer_limit)}.
-                                        </AlertDescription>
-                                    </Alert>
-                                )}
-
-                                <div
-                                    className="flex items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-lg border border-dashed border-gray-200"
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                >
+                    <Card className="shadow-lg border border-gray-200/60 overflow-hidden">
+                        <AnimatePresence mode="wait">
+                            {step === 1 && (
+                                <motion.div
+                                    key="step1"
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -20 }}
+                                    transition={{ duration: 0.3 }}
                                 >
-                                    <div className="flex items-center space-x-3 sm:space-x-4">
-                                        <div
-                                            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-falsopay-primary flex items-center justify-center text-white">
-                                            <User className="h-5 w-5 sm:h-6 sm:w-6"/>
-                                        </div>
-                                        <div>
-                                            <h3 className="font-medium text-sm sm:text-base">{recipient.name}</h3>
-                                            <p className="text-xs sm:text-sm text-gray-500 flex items-center">
-                                                {getMethodIcon(form.getValues("method") as TransferMethod)}
-                                                <span className="ml-1">{recipient.identifier}</span>
-                                            </p>
+                                    <CardHeader className="p-5 sm:p-6 bg-gradient-to-r from-falsopay-primary/5 to-falsopay-primary/10 border-b border-gray-100">
+                                        <CardTitle className="text-lg sm:text-xl flex items-center">
+                                            <Send className="h-5 w-5 mr-2 text-falsopay-primary" />
+                                            Find Recipient
+                                        </CardTitle>
+                                        <CardDescription>Select how you want to send money</CardDescription>
+                                    </CardHeader>
+
+                                    <CardContent className="p-5 sm:p-6 space-y-5 sm:space-y-6">
+                                        {linkedAccounts.length === 0 && !isLoadingAccounts ? (
+                                            <motion.div 
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                className="p-4 sm:p-5 bg-amber-50 text-amber-800 rounded-md text-sm sm:text-base border border-amber-200"
+                                            >
+                                                <div className="flex items-center">
+                                                    <AlertTriangle className="w-5 h-5 mr-2 text-amber-600" />
+                                                    <span>You don't have any linked accounts. Please link an account first to send money.</span>
+                                                </div>
+                                            </motion.div>
+                                        ) : (
+                                            <Form {...form}>
+                                                <form onSubmit={form.handleSubmit(searchRecipient)} className="space-y-5">
+                                                    <motion.div 
+                                                        initial={{ opacity: 0 }}
+                                                        animate={{ opacity: 1 }}
+                                                        transition={{ delay: 0.1 }}
+                                                    >
+                                                        <FormField
+                                                            control={form.control}
+                                                            name="sourceIpaAddress"
+                                                            render={({field}) => (
+                                                                <FormItem>
+                                                                    <FormLabel className="text-sm sm:text-base font-medium">Send from</FormLabel>
+                                                                    <Select
+                                                                        onValueChange={(value) => {
+                                                                            field.onChange(value);
+                                                                            handleAccountChange(value);
+                                                                        }}
+                                                                        defaultValue={field.value}
+                                                                        disabled={isLoadingAccounts}
+                                                                    >
+                                                                        <FormControl>
+                                                                            <SelectTrigger className="text-sm sm:text-base h-11 bg-white transition-all hover:border-falsopay-primary/50 focus:border-falsopay-primary focus:ring-1 focus:ring-falsopay-primary/20">
+                                                                                <SelectValue
+                                                                                    placeholder={isLoadingAccounts ? "Loading accounts..." : "Select account"}/>
+                                                                            </SelectTrigger>
+                                                                        </FormControl>
+                                                                        <SelectContent>
+                                                                            {linkedAccounts.map((account) => (
+                                                                                <SelectItem
+                                                                                    key={account.ipa_address}
+                                                                                    value={account.ipa_address}
+                                                                                    className="text-sm sm:text-base"
+                                                                                >
+                                                                                    {account.ipa_address}
+                                                                                </SelectItem>
+                                                                            ))}
+                                                                        </SelectContent>
+                                                                    </Select>
+                                                                    <FormMessage className="text-xs sm:text-sm"/>
+                                                                </FormItem>
+                                                            )}
+                                                        />
+                                                    </motion.div>
+
+                                                    {/* Display account balance information */}
+                                                    {selectedAccount && (
+                                                        <motion.div 
+                                                            initial={{ opacity: 0, y: 10 }}
+                                                            animate={{ opacity: 1, y: 0 }}
+                                                            className="p-4 sm:p-5 bg-white rounded-lg border border-gray-200 shadow-sm mb-4 transition-all hover:border-falsopay-primary/30 hover:shadow-md"
+                                                        >
+                                                            <h3 className="font-medium text-gray-900 mb-2 text-sm sm:text-base">Account Details</h3>
+                                                            <div className="flex justify-between items-center">
+                                                                <span className="text-xs sm:text-sm text-gray-600">Available balance</span>
+                                                                <span className="text-base sm:text-lg font-bold text-falsopay-primary">
+                                                                  {formatCurrency(selectedAccount.balance, selectedAccount.currency)}
+                                                                </span>
+                                                            </div>
+                                                        </motion.div>
+                                                    )}
+
+                                                    <motion.div 
+                                                        initial={{ opacity: 0 }}
+                                                        animate={{ opacity: 1 }}
+                                                        transition={{ delay: 0.2 }}
+                                                    >
+                                                        <FormField
+                                                            control={form.control}
+                                                            name="method"
+                                                            render={({field}) => (
+                                                                <FormItem className="space-y-3 sm:space-y-4">
+                                                                    <FormLabel className="text-sm sm:text-base font-medium">Send using</FormLabel>
+                                                                    <FormControl>
+                                                                        <RadioGroup
+                                                                            onValueChange={field.onChange}
+                                                                            defaultValue={field.value}
+                                                                            className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4"
+                                                                        >
+                                                                            {[
+                                                                                {
+                                                                                    value: 'ipa',
+                                                                                    label: 'IPA Address',
+                                                                                    icon: <User className="h-4 w-4 sm:h-5 sm:w-5"/>
+                                                                                },
+                                                                                {
+                                                                                    value: 'mobile',
+                                                                                    label: 'Mobile Number',
+                                                                                    icon: <Phone className="h-4 w-4 sm:h-5 sm:w-5"/>
+                                                                                },
+                                                                                {
+                                                                                    value: 'card',
+                                                                                    label: 'Card Number',
+                                                                                    icon: <CreditCard className="h-4 w-4 sm:h-5 sm:w-5"/>
+                                                                                },
+                                                                                {
+                                                                                    value: 'account',
+                                                                                    label: 'Account Number',
+                                                                                    icon: <Banknote className="h-4 w-4 sm:h-5 sm:w-5"/>
+                                                                                },
+                                                                                {
+                                                                                    value: 'iban',
+                                                                                    label: 'IBAN',
+                                                                                    icon: <Banknote className="h-4 w-4 sm:h-5 sm:w-5"/>
+                                                                                },
+                                                                            ].map((option) => (
+                                                                                <div key={option.value} className="relative">
+                                                                                    <RadioGroupItem
+                                                                                        value={option.value}
+                                                                                        id={option.value}
+                                                                                        className="peer sr-only"
+                                                                                    />
+                                                                                    <Label
+                                                                                        htmlFor={option.value}
+                                                                                        className={`flex flex-col items-center justify-center rounded-md border-2 border-muted bg-white p-3 sm:p-4 
+                                                                                          hover:bg-gray-50 hover:border-gray-300 
+                                                                                          ${field.value === option.value ? 'border-falsopay-primary bg-falsopay-primary/5' : ''}
+                                                                                          peer-focus:ring-1 peer-focus:ring-falsopay-primary peer-focus:border-falsopay-primary
+                                                                                          cursor-pointer text-center h-full transition-all`}
+                                                                                    >
+                                                                                        <div
+                                                                                            className={`mb-2 sm:mb-3 rounded-full p-2 sm:p-2.5 
+                                                                                            ${field.value === option.value ? 'bg-falsopay-primary text-white' : 'bg-gray-100 text-gray-500'} 
+                                                                                            transition-all duration-200`}
+                                                                                        >
+                                                                                            {option.icon}
+                                                                                        </div>
+                                                                                        <span
+                                                                                            className="font-medium text-xs sm:text-sm">{option.label}</span>
+                                                                                    </Label>
+                                                                                </div>
+                                                                            ))}
+                                                                        </RadioGroup>
+                                                                    </FormControl>
+                                                                    <FormMessage className="text-xs sm:text-sm"/>
+                                                                </FormItem>
+                                                            )}
+                                                        />
+                                                    </motion.div>
+
+                                                    {(form.watch("method") === "account" || form.watch("method") === "card") && (
+                                                        <motion.div 
+                                                            initial={{ opacity: 0, y: 5 }}
+                                                            animate={{ opacity: 1, y: 0 }}
+                                                            transition={{ delay: 0.3 }}
+                                                        >
+                                                            <FormField
+                                                                control={form.control}
+                                                                name="bank_id"
+                                                                render={({field}) => (
+                                                                    <FormItem>
+                                                                        <FormLabel className="text-sm sm:text-base font-medium">Bank</FormLabel>
+                                                                        <FormControl>
+                                                                            <BankSelect
+                                                                                value={field.value}
+                                                                                onChange={field.onChange}
+                                                                                disabled={searchLoading}
+                                                                            />
+                                                                        </FormControl>
+                                                                        <FormMessage className="text-xs sm:text-sm"/>
+                                                                    </FormItem>
+                                                                )}
+                                                            />
+                                                        </motion.div>
+                                                    )}
+
+                                                    <motion.div 
+                                                        initial={{ opacity: 0 }}
+                                                        animate={{ opacity: 1 }}
+                                                        transition={{ delay: 0.4 }}
+                                                    >
+                                                        <FormField
+                                                            control={form.control}
+                                                            name="identifier"
+                                                            render={({field}) => (
+                                                                <FormItem>
+                                                                    <FormLabel className="text-sm sm:text-base font-medium">{getMethodName(form.watch("method") as TransferMethod)}</FormLabel>
+                                                                    <div className="flex">
+                                                                        <FormControl>
+                                                                            <Input
+                                                                                placeholder={`Enter ${getMethodName(form.watch("method") as TransferMethod).toLowerCase()}`}
+                                                                                {...field}
+                                                                                className="rounded-r-none text-sm sm:text-base h-11 focus:border-falsopay-primary focus:ring-1 focus:ring-falsopay-primary/20"
+                                                                            />
+                                                                        </FormControl>
+                                                                        <Button
+                                                                            type="submit"
+                                                                            disabled={searchLoading || !field.value || !form.getValues("sourceIpaAddress") || (form.watch("method") === "account" && !form.getValues("bank_id"))}
+                                                                            className="rounded-l-none bg-falsopay-primary hover:bg-falsopay-primary/90 transition-all disabled:bg-gray-300"
+                                                                        >
+                                                                            {searchLoading ? 
+                                                                                <div className="flex items-center">
+                                                                                    <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-1"></div>
+                                                                                    <span>Searching</span>
+                                                                                </div> 
+                                                                                : <Search className="h-4 w-4"/>
+                                                                            }
+                                                                        </Button>
+                                                                    </div>
+                                                                    <FormMessage className="text-xs sm:text-sm"/>
+                                                                </FormItem>
+                                                            )}
+                                                        />
+                                                    </motion.div>
+                                                </form>
+                                            </Form>
+                                        )}
+                                        
+                                        {/* Add the Favorites list in step 1 for selecting contacts */}
+                                        {user && (
+                                            <div className="flex justify-end mt-5">
+                                                <SendMoneyFavorites 
+                                                    userId={user.user_id} 
+                                                    method={form.getValues('method')}
+                                                    onSelectFavorite={handleSelectFavorite}
+                                                    recipientValidated={false}
+                                                    showOnlyFavoriteButton={false}
+                                                />
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                </motion.div>
+                            )}
+
+                            {step === 2 && recipient && selectedAccount && (
+                                <motion.div
+                                    key="step2"
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: 20 }}
+                                    transition={{ duration: 0.3 }}
+                                >
+                                    <CardHeader className="p-5 sm:p-6 bg-gradient-to-r from-falsopay-primary/5 to-falsopay-primary/10 border-b border-gray-100">
+                                        <CardTitle className="text-lg sm:text-xl flex items-center">
+                                            <Banknote className="h-5 w-5 mr-2 text-falsopay-primary" />
+                                            Enter Amount
+                                        </CardTitle>
+                                        <CardDescription className="text-sm sm:text-base">You're sending money to {recipient.name}</CardDescription>
+                                    </CardHeader>
+
+                                    <CardContent className="p-5 sm:p-6 space-y-5 sm:space-y-6">
+                                        {/* System status alerts */}
+                                        {systemStatus && !systemStatus.transactions_enabled && (
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: 0.1 }}
+                                            >
+                                                <Alert variant="destructive" className="bg-red-50 border border-red-200">
+                                                    <AlertTriangle className="h-4 w-4" />
+                                                    <AlertTitle>Transactions Temporarily Blocked</AlertTitle>
+                                                    <AlertDescription>
+                                                        {systemStatus.message || "Money transfers are currently disabled by the administrator."}
+                                                    </AlertDescription>
+                                                </Alert>
+                                            </motion.div>
+                                        )}
+                                        
+                                        {systemStatus && systemStatus.transfer_limit && (
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: 0.2 }}
+                                            >
+                                                <Alert variant="default" className="bg-blue-50 text-blue-700 border border-blue-200">
+                                                    <Info className="h-4 w-4" />
+                                                    <AlertTitle>Transfer Limit: {formatCurrency(systemStatus.transfer_limit)}</AlertTitle>
+                                                    <AlertDescription>
+                                                        The maximum amount you can transfer in a single transaction is {formatCurrency(systemStatus.transfer_limit)}.
+                                                    </AlertDescription>
+                                                </Alert>
+                                            </motion.div>
+                                        )}
+
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: 0.3 }}
+                                            className="flex items-center justify-between p-4 sm:p-5 bg-white rounded-lg border border-gray-200 shadow-sm hover:border-falsopay-primary/30 hover:shadow-md transition-all"
+                                        >
+                                            <div className="flex items-center space-x-3 sm:space-x-4">
+                                                <div
+                                                    className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-falsopay-primary to-falsopay-secondary flex items-center justify-center text-white shadow-md">
+                                                    <User className="h-5 w-5 sm:h-6 sm:w-6"/>
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-medium text-sm sm:text-base">{recipient.name}</h3>
+                                                    <p className="text-xs sm:text-sm text-gray-500 flex items-center">
+                                                        {getMethodIcon(form.getValues("method") as TransferMethod)}
+                                                        <span className="ml-1">{recipient.identifier}</span>
+                                                    </p>
                                                     {recipient.bank_name && (
                                                         <p className="text-xs sm:text-sm text-gray-500">
                                                             {recipient.bank_name}
                                                         </p>
                                                     )}
-                                        </div>
-                                    </div>
-                                    
-                                    {/* Add ONLY Favorite button in recipient card */}
-                                    {user && (
-                                        <TooltipProvider>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <Button
-                                                        variant="outline"
-                                                        size="icon"
-                                                        onClick={(e) => {
-                                                            // Prevent default to avoid form submission
-                                                            e.preventDefault();
-                                                            
-                                                            const isInFavorites = favorites.some(fav => 
-                                                                fav.recipient_identifier === recipient.identifier && 
-                                                                fav.method === form.getValues("method")
-                                                            );
-                                                            
-                                                            if (isInFavorites) {
-                                                                // Find the favorite ID
-                                                                const favorite = favorites.find(fav => 
+                                                </div>
+                                            </div>
+                                            
+                                            {/* Favorite button positioned on the right */}
+                                            {user && (
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="icon"
+                                                                onClick={(e) => {
+                                                                    // Prevent default to avoid form submission
+                                                                    e.preventDefault();
+                                                                    
+                                                                    const isInFavorites = favorites.some(fav => 
+                                                                        fav.recipient_identifier === recipient.identifier && 
+                                                                        fav.method === form.getValues("method")
+                                                                    );
+                                                                    
+                                                                    if (isInFavorites) {
+                                                                        // Find the favorite ID
+                                                                        const favorite = favorites.find(fav => 
+                                                                            fav.recipient_identifier === recipient.identifier && 
+                                                                            fav.method === form.getValues("method")
+                                                                        );
+                                                                        
+                                                                        if (favorite) {
+                                                                            // Set the favorite to remove and open the dialog
+                                                                            setFavoriteToRemove(favorite);
+                                                                            setShowRemoveDialog(true);
+                                                                            return;
+                                                                        }
+                                                                        return;
+                                                                    }
+                                                                    
+                                                                    // Show dialog to add to favorites
+                                                                    setShowAddFavoriteDialog(true);
+                                                                }}
+                                                                className="h-9 w-9 transition-all hover:bg-gray-100 hover:text-falsopay-primary hover:border-falsopay-primary/50"
+                                                            >
+                                                                {favorites.some(fav => 
                                                                     fav.recipient_identifier === recipient.identifier && 
                                                                     fav.method === form.getValues("method")
-                                                                );
-                                                                
-                                                                if (favorite) {
-                                                                    // Set the favorite to remove and open the dialog
-                                                                    setFavoriteToRemove(favorite);
-                                                                    setShowRemoveDialog(true);
-                                                                    return;
-                                                                }
-                                                                return;
+                                                                ) ? (
+                                                                    <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
+                                                                ) : (
+                                                                    <Star className="h-4 w-4" />
+                                                                )}
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            {favorites.some(fav => 
+                                                                fav.recipient_identifier === recipient.identifier && 
+                                                                fav.method === form.getValues("method")
+                                                            )
+                                                                ? "Remove from favorites" 
+                                                                : "Add to favorites"
                                                             }
-                                                            
-                                                            // Show dialog to add to favorites
-                                                            setShowAddFavoriteDialog(true);
-                                                        }}
-                                                    >
-                                                        {favorites.some(fav => 
-                                                            fav.recipient_identifier === recipient.identifier && 
-                                                            fav.method === form.getValues("method")
-                                                        ) ? (
-                                                            <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
-                                                        ) : (
-                                                            <Star className="h-4 w-4" />
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
+                                            )}
+                                        </motion.div>
+
+                                        {/* Account Balance Card */}
+                                        <motion.div 
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: 0.4 }}
+                                            className="p-4 sm:p-5 bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all"
+                                        >
+                                            <h3 className="font-medium text-gray-900 mb-2 text-sm sm:text-base">Source Account</h3>
+                                            <div className="flex justify-between items-center flex-wrap">
+                                                <div className="text-xs sm:text-sm">
+                                                    <p className="text-gray-600">{selectedAccount.ipa_address}</p>
+                                                    <p className="text-gray-600">Bank ID: {selectedAccount.bank_id}</p>
+                                                </div>
+                                                <div className="text-right mt-1 sm:mt-0">
+                                                    <p className="text-xs sm:text-sm text-gray-500">Available Balance</p>
+                                                    <p className="font-bold text-sm sm:text-base text-falsopay-primary">{formatCurrency(selectedAccount.balance, selectedAccount.currency)}</p>
+                                                </div>
+                                            </div>
+                                        </motion.div>
+
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: 0.5 }}
+                                        >
+                                            <Form {...form}>
+                                                <form onSubmit={form.handleSubmit(handleAmountSubmit)} className="space-y-5">
+                                                    <FormField
+                                                        control={form.control}
+                                                        name="amount"
+                                                        render={({field}) => (
+                                                            <FormItem>
+                                                                <FormLabel className="text-sm sm:text-base font-medium">Amount (£)</FormLabel>
+                                                                <FormControl>
+                                                                    <Input
+                                                                        type="number"
+                                                                        placeholder="0.00"
+                                                                        {...field}
+                                                                        min="0"
+                                                                        step="0.01"
+                                                                        className="text-sm sm:text-base h-12 text-lg focus:border-falsopay-primary focus:ring-1 focus:ring-falsopay-primary/20"
+                                                                        onChange={(e) => {
+                                                                            field.onChange(e);
+                                                                            // Show warning if amount exceeds balance
+                                                                            const amount = parseFloat(e.target.value);
+                                                                            if (amount > selectedAccount.balance) {
+                                                                                toast({
+                                                                                    title: "Warning",
+                                                                                    description: "The amount exceeds your available balance",
+                                                                                    variant: "destructive",
+                                                                                });
+                                                                            }
+                                                                        }}
+                                                                    />
+                                                                </FormControl>
+                                                                {parseFloat(field.value) > selectedAccount.balance && (
+                                                                    <div className="flex items-center mt-2 text-red-500 text-xs sm:text-sm">
+                                                                        <AlertCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1"/>
+                                                                        Insufficient funds. Your maximum available amount
+                                                                        is {formatCurrency(selectedAccount.balance, selectedAccount.currency)}
+                                                                    </div>
+                                                                )}
+                                                                <FormMessage className="text-xs sm:text-sm"/>
+                                                            </FormItem>
                                                         )}
-                                                    </Button>
-                                                </TooltipTrigger>
-                                                <TooltipContent>
-                                                    {favorites.some(fav => 
-                                                        fav.recipient_identifier === recipient.identifier && 
-                                                        fav.method === form.getValues("method")
-                                                    )
-                                                        ? "Remove from favorites" 
-                                                        : "Add to favorites"
-                                                    }
-                                                </TooltipContent>
-                                            </Tooltip>
-                                        </TooltipProvider>
-                                    )}
-                                </div>
+                                                    />
 
-                                {/* Account Balance Card */}
-                                <div className="p-3 sm:p-4 bg-gray-50 rounded-lg border border-gray-200">
-                                    <h3 className="font-medium text-gray-900 mb-1 text-sm sm:text-base">Source Account</h3>
-                                    <div className="flex justify-between items-center flex-wrap">
-                                        <div className="text-xs sm:text-sm">
-                                            <p className="text-gray-500">{selectedAccount.ipa_address}</p>
-                                            <p className="text-gray-500">Bank ID: {selectedAccount.bank_id}</p>
-                                        </div>
-                                        <div className="text-right mt-1 sm:mt-0">
-                                            <p className="text-xs sm:text-sm text-gray-500">Available Balance</p>
-                                            <p className="font-bold text-sm sm:text-base">{formatCurrency(selectedAccount.balance, selectedAccount.currency)}</p>
-                                        </div>
-                                    </div>
-                                </div>
+                                                    <div className="flex justify-between mt-6 pt-2">
+                                                        <Button 
+                                                            variant="outline" 
+                                                            onClick={() => setStep(1)} 
+                                                            className="text-xs sm:text-sm hover:bg-gray-100 hover:border-gray-300 transition-all"
+                                                        >
+                                                            Back
+                                                        </Button>
+                                                        <Button
+                                                            type="submit"
+                                                            disabled={
+                                                                !form.getValues("amount") ||
+                                                                parseFloat(form.getValues("amount")) <= 0 ||
+                                                                parseFloat(form.getValues("amount")) > selectedAccount.balance
+                                                            }
+                                                            className="text-xs sm:text-sm bg-falsopay-primary hover:bg-falsopay-primary/90 transition-all"
+                                                        >
+                                                            Continue <ArrowRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4"/>
+                                                        </Button>
+                                                    </div>
+                                                </form>
+                                            </Form>
+                                        </motion.div>
+                                    </CardContent>
+                                </motion.div>
+                            )}
 
-                                <Form {...form}>
-                                    <form onSubmit={form.handleSubmit(handleAmountSubmit)} className="space-y-4">
-                                        <FormField
-                                            control={form.control}
-                                            name="amount"
-                                            render={({field}) => (
-                                                <FormItem>
-                                                    <FormLabel className="text-sm sm:text-base">Amount (£)</FormLabel>
-                                                    <FormControl>
-                                                        <Input
-                                                            type="number"
-                                                            placeholder="0.00"
-                                                            {...field}
-                                                            min="0"
-                                                            step="0.01"
-                                                            className="text-sm sm:text-base"
-                                                            onChange={(e) => {
-                                                                field.onChange(e);
-                                                                // Show warning if amount exceeds balance
-                                                                const amount = parseFloat(e.target.value);
-                                                                if (amount > selectedAccount.balance) {
-                                                                    toast({
-                                                                        title: "Warning",
-                                                                        description: "The amount exceeds your available balance",
-                                                                        variant: "destructive",
-                                                                    });
-                                                                }
-                                                            }}
-                                                        />
-                                                    </FormControl>
-                                                    {parseFloat(field.value) > selectedAccount.balance && (
-                                                        <div className="flex items-center mt-1 text-red-500 text-xs sm:text-sm">
-                                                            <AlertCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1"/>
-                                                            Insufficient funds. Your maximum available amount
-                                                            is {formatCurrency(selectedAccount.balance, selectedAccount.currency)}
-                                                        </div>
+                            {step === 3 && recipient && selectedAccount && (
+                                <motion.div
+                                    key="step3"
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: 20 }}
+                                    transition={{ duration: 0.3 }}
+                                >
+                                    <CardHeader className="p-5 sm:p-6 bg-gradient-to-r from-falsopay-primary/5 to-falsopay-primary/10 border-b border-gray-100">
+                                        <CardTitle className="text-lg sm:text-xl flex items-center">
+                                            <CheckCircle className="h-5 w-5 mr-2 text-falsopay-primary" />
+                                            Verify PIN
+                                        </CardTitle>
+                                        <CardDescription className="text-sm sm:text-base">Enter your IPA PIN to complete the transfer</CardDescription>
+                                    </CardHeader>
+
+                                    <CardContent className="p-5 sm:p-6 space-y-5 sm:space-y-6">
+                                        <motion.div 
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: 0.1 }}
+                                            className="p-4 sm:p-5 bg-white rounded-lg border border-gray-200 space-y-3 sm:space-y-4 shadow-sm"
+                                        >
+                                            <div className="flex justify-between flex-wrap">
+                                                <div>
+                                                    <p className="text-xs sm:text-sm text-gray-500">Sending from</p>
+                                                    <p className="text-sm sm:text-base font-medium text-gray-800">{selectedAccount.ipa_address}</p>
+                                                </div>
+                                                <div className="mt-1 sm:mt-0">
+                                                    <p className="text-xs sm:text-sm text-gray-500">Available Balance</p>
+                                                    <p className="text-sm sm:text-base font-medium text-right text-falsopay-primary">{formatCurrency(selectedAccount.balance, selectedAccount.currency)}</p>
+                                                </div>
+                                            </div>
+                                            <div className="border-t border-gray-200 pt-3 sm:pt-4 flex justify-between flex-wrap">
+                                                <div>
+                                                    <p className="text-xs sm:text-sm text-gray-500">Sending to</p>
+                                                    <p className="text-sm sm:text-base font-medium text-gray-800">{recipient.name}</p>
+                                                    {form.getValues("method") === "account" && recipient.bank_name && (
+                                                        <p className="text-xs sm:text-sm text-gray-500">{recipient.bank_name}</p>
                                                     )}
-                                                    <FormMessage className="text-xs sm:text-sm"/>
-                                                </FormItem>
-                                            )}
-                                        />
+                                                </div>
+                                                <div className="mt-1 sm:mt-0">
+                                                    <p className="text-xs sm:text-sm text-gray-500">Amount</p>
+                                                    <p className="text-sm sm:text-base font-medium text-right text-falsopay-primary">{formatCurrency(parseFloat(form.getValues("amount")))}</p>
+                                                </div>
+                                            </div>
+                                        </motion.div>
 
-                                        <div className="flex justify-between mt-4 pt-2">
-                                            <Button variant="outline" onClick={() => setStep(1)} className="text-xs sm:text-sm">Back</Button>
-                                            <Button
-                                                type="submit"
-                                                disabled={
-                                                    !form.getValues("amount") ||
-                                                    parseFloat(form.getValues("amount")) <= 0 ||
-                                                    parseFloat(form.getValues("amount")) > selectedAccount.balance
-                                                }
-                                                className="text-xs sm:text-sm"
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: 0.2 }}
+                                        >
+                                            <PinVerification
+                                                ipaAddress={form.getValues("sourceIpaAddress")}
+                                                onPinSubmit={handlePinSubmit}
+                                                isLoading={sendLoading}
+                                                title="Enter Your IPA PIN"
+                                                maxLength={6}
+                                            />
+                                        </motion.div>
+                                    </CardContent>
+
+                                    <CardFooter className="px-5 pb-5 sm:px-6 sm:pb-6">
+                                        <Button 
+                                            variant="outline" 
+                                            onClick={() => setStep(2)} 
+                                            className="w-full text-xs sm:text-sm hover:bg-gray-100 hover:border-gray-300 transition-all"
+                                        >
+                                            Back
+                                        </Button>
+                                    </CardFooter>
+                                </motion.div>
+                            )}
+
+                            {step === 4 && success && recipient && selectedAccount && (
+                                <motion.div
+                                    key="step4"
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ duration: 0.4 }}
+                                >
+                                    <CardHeader className="text-center p-5 sm:p-6 bg-gradient-to-r from-green-50 to-green-100 border-b border-green-200">
+                                        <motion.div 
+                                            initial={{ scale: 0.8, opacity: 0 }}
+                                            animate={{ scale: 1, opacity: 1 }}
+                                            transition={{ delay: 0.2, duration: 0.5 }}
+                                            className="flex justify-center mb-4 sm:mb-5"
+                                        >
+                                            <div
+                                                className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-r from-green-500 to-green-600 flex items-center justify-center shadow-lg">
+                                                <CheckCircle className="h-7 w-7 sm:h-8 sm:w-8 text-white"/>
+                                            </div>
+                                        </motion.div>
+                                        <motion.div
+                                            initial={{ y: 10, opacity: 0 }}
+                                            animate={{ y: 0, opacity: 1 }}
+                                            transition={{ delay: 0.3 }}
+                                        >
+                                            <CardTitle className="text-xl sm:text-2xl text-green-700">Transfer Complete!</CardTitle>
+                                            <CardDescription className="text-sm sm:text-base text-green-600 mt-1">
+                                                You've successfully
+                                                sent {formatCurrency(parseFloat(form.getValues("amount")))} to {recipient.name}
+                                            </CardDescription>
+                                        </motion.div>
+                                    </CardHeader>
+
+                                    <CardContent className="p-5 sm:p-6 space-y-5 sm:space-y-6">
+                                        <motion.div 
+                                            initial={{ y: 10, opacity: 0 }}
+                                            animate={{ y: 0, opacity: 1 }}
+                                            transition={{ delay: 0.4 }}
+                                            className="bg-white p-4 sm:p-5 rounded-lg border border-gray-200 space-y-3 sm:space-y-4 shadow-sm"
+                                        >
+                                            <div className="flex justify-between">
+                                                <span className="text-xs sm:text-sm text-gray-500">From Account</span>
+                                                <span className="text-xs sm:text-sm font-medium text-gray-800">{selectedAccount.ipa_address}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-xs sm:text-sm text-gray-500">Amount</span>
+                                                <span
+                                                    className="text-xs sm:text-sm font-medium text-falsopay-primary">{formatCurrency(parseFloat(form.getValues("amount")))}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-xs sm:text-sm text-gray-500">Recipient</span>
+                                                <span className="text-xs sm:text-sm font-medium text-gray-800">{recipient.name}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span
+                                                    className="text-xs sm:text-sm text-gray-500">{getMethodName(form.getValues("method") as TransferMethod)}</span>
+                                                <span className="text-xs sm:text-sm font-medium text-gray-800">{recipient.identifier}</span>
+                                            </div>
+                                            {recipient.bank_name && (
+                                                <div className="flex justify-between">
+                                                    <span className="text-xs sm:text-sm text-gray-500">Bank</span>
+                                                    <span className="text-xs sm:text-sm font-medium text-gray-800">{recipient.bank_name}</span>
+                                                </div>
+                                            )}
+                                            <div className="flex justify-between">
+                                                <span className="text-xs sm:text-sm text-gray-500">Date</span>
+                                                <span className="text-xs sm:text-sm font-medium text-gray-800">{new Date().toLocaleDateString()}</span>
+                                            </div>
+                                        </motion.div>
+                                    </CardContent>
+
+                                    <CardFooter className="flex justify-between px-5 pb-5 sm:px-6 sm:pb-6">
+                                        <motion.div
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            transition={{ delay: 0.5 }}
+                                            className="w-full flex flex-col sm:flex-row gap-3 sm:justify-between"
+                                        >
+                                            <Button 
+                                                variant="outline" 
+                                                onClick={resetForm} 
+                                                className="text-xs sm:text-sm hover:bg-gray-100 hover:border-gray-300 transition-all sm:flex-1"
                                             >
-                                                Continue <ArrowRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4"/>
+                                                Send Another
                                             </Button>
-                                        </div>
-                                    </form>
-                                </Form>
-                            </CardContent>
-                        </>
-                    )}
-
-                    {step === 3 && recipient && selectedAccount && (
-                        <>
-                            <CardHeader className="p-4 sm:p-6">
-                                <CardTitle className="text-lg sm:text-xl">Verify PIN</CardTitle>
-                                <CardDescription className="text-sm sm:text-base">Enter your IPA PIN to complete the transfer</CardDescription>
-                            </CardHeader>
-
-                            <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-                                <div className="p-3 sm:p-4 bg-gray-50 rounded-lg border border-gray-200 space-y-2 sm:space-y-3">
-                                    <div className="flex justify-between flex-wrap">
-                                        <div>
-                                            <p className="text-xs sm:text-sm text-gray-500">Sending from</p>
-                                            <p className="text-sm sm:text-base font-medium">{selectedAccount.ipa_address}</p>
-                                        </div>
-                                        <div className="mt-1 sm:mt-0">
-                                            <p className="text-xs sm:text-sm text-gray-500">Available Balance</p>
-                                            <p className="text-sm sm:text-base font-medium text-right">{formatCurrency(selectedAccount.balance, selectedAccount.currency)}</p>
-                                        </div>
-                                    </div>
-                                    <div className="border-t border-gray-200 pt-2 sm:pt-3 flex justify-between flex-wrap">
-                                        <div>
-                                            <p className="text-xs sm:text-sm text-gray-500">Sending to</p>
-                                            <p className="text-sm sm:text-base font-medium">{recipient.name}</p>
-                                            {form.getValues("method") === "account" && recipient.bank_name && (
-                                                <p className="text-xs sm:text-sm text-gray-500">{recipient.bank_name}</p>
-                                            )}
-                                        </div>
-                                        <div className="mt-1 sm:mt-0">
-                                            <p className="text-xs sm:text-sm text-gray-500">Amount</p>
-                                            <p className="text-sm sm:text-base font-medium text-right">{formatCurrency(parseFloat(form.getValues("amount")))}</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <PinVerification
-                                    ipaAddress={form.getValues("sourceIpaAddress")}
-                                    onPinSubmit={handlePinSubmit}
-                                    isLoading={sendLoading}
-                                    title="Enter Your IPA PIN"
-                                    maxLength={6}
-                                />
-                            </CardContent>
-
-                            <CardFooter className="px-4 pb-4 sm:px-6 sm:pb-6">
-                                <Button variant="outline" onClick={() => setStep(2)} className="w-full text-xs sm:text-sm">
-                                    Back
-                                </Button>
-                            </CardFooter>
-                        </>
-                    )}
-
-                    {step === 4 && success && recipient && selectedAccount && (
-                        <>
-                            <CardHeader className="text-center p-4 sm:p-6">
-                                <div className="flex justify-center mb-3 sm:mb-4">
-                                    <div
-                                        className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-green-100 flex items-center justify-center">
-                                        <CheckCircle className="h-6 w-6 sm:h-8 sm:w-8 text-green-600"/>
-                                    </div>
-                                </div>
-                                <CardTitle className="text-lg sm:text-xl">Transfer Complete!</CardTitle>
-                                <CardDescription className="text-sm sm:text-base">
-                                    You've successfully
-                                    sent {formatCurrency(parseFloat(form.getValues("amount")))} to {recipient.name}
-                                </CardDescription>
-                            </CardHeader>
-
-                            <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-                                <div className="bg-gray-50 p-3 sm:p-4 rounded-lg space-y-2 sm:space-y-3">
-                                    <div className="flex justify-between">
-                                        <span className="text-xs sm:text-sm text-gray-500">From Account</span>
-                                        <span className="text-xs sm:text-sm font-medium">{selectedAccount.ipa_address}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-xs sm:text-sm text-gray-500">Amount</span>
-                                        <span
-                                            className="text-xs sm:text-sm font-medium">{formatCurrency(parseFloat(form.getValues("amount")))}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-xs sm:text-sm text-gray-500">Recipient</span>
-                                        <span className="text-xs sm:text-sm font-medium">{recipient.name}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span
-                                            className="text-xs sm:text-sm text-gray-500">{getMethodName(form.getValues("method") as TransferMethod)}</span>
-                                        <span className="text-xs sm:text-sm font-medium">{recipient.identifier}</span>
-                                    </div>
-                                    {recipient.bank_name && (
-                                        <div className="flex justify-between">
-                                            <span className="text-xs sm:text-sm text-gray-500">Bank</span>
-                                            <span className="text-xs sm:text-sm font-medium">{recipient.bank_name}</span>
-                                        </div>
-                                    )}
-                                    <div className="flex justify-between">
-                                        <span className="text-xs sm:text-sm text-gray-500">Date</span>
-                                        <span className="text-xs sm:text-sm font-medium">{new Date().toLocaleDateString()}</span>
-                                    </div>
-                                </div>
-                            </CardContent>
-
-                            <CardFooter className="flex justify-between px-4 pb-4 sm:px-6 sm:pb-6">
-                                <Button variant="outline" onClick={resetForm} className="text-xs sm:text-sm">Send Another</Button>
-                                <Button onClick={() => navigate('/dashboard')} className="text-xs sm:text-sm">
-                                    Back to Dashboard <ArrowRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4"/>
-                                </Button>
-                            </CardFooter>
-                        </>
-                    )}
-                </Card>
+                                            <Button 
+                                                onClick={() => navigate('/dashboard')} 
+                                                className="text-xs sm:text-sm bg-falsopay-primary hover:bg-falsopay-primary/90 transition-all sm:flex-1"
+                                            >
+                                                Back to Dashboard <ArrowRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4"/>
+                                            </Button>
+                                        </motion.div>
+                                    </CardFooter>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </Card>
+                </motion.div>
             </div>
             
             {/* Dialog for adding to favorites */}
             <Dialog open={showAddFavoriteDialog} onOpenChange={setShowAddFavoriteDialog}>
-                <DialogContent>
+                <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle>Add to Favorites</DialogTitle>
                         <DialogDescription>
-                            Save this recipient to your favorites for quick access
+                            Save this recipient to your favorites list for quick access.
                         </DialogDescription>
                     </DialogHeader>
                     
-                    <div className="grid gap-4 py-4">
-                        {recipient && (
-                            <>
-                                <div className="space-y-2">
-                                    <Label htmlFor="recipient-info">Recipient Information</Label>
-                                    <div className="flex items-center p-3 bg-gray-50 rounded-md">
-                                        <div className="bg-gray-100 p-2 rounded-full mr-3">
-                                            {getMethodIcon(form.getValues("method") as TransferMethod)}
-                                        </div>
-                                        <div>
-                                            <div>{recipient.name}</div>
-                                            <div className="text-sm text-gray-500">{recipient.identifier}</div>
-                                        </div>
-                                    </div>
+                    {recipient && (
+                        <div className="space-y-4 py-2">
+                            <div className="space-y-2">
+                                <Label htmlFor="favoriteName" className="text-sm">Favorite Name</Label>
+                                <Input 
+                                    id="favoriteName" 
+                                    value={customFavoriteName}
+                                    onChange={(e) => setCustomFavoriteName(e.target.value)}
+                                    placeholder="Enter a name for this favorite"
+                                    className="text-sm"
+                                />
+                            </div>
+                            
+                            <div className="p-3 bg-gray-50 rounded border border-gray-200 text-sm">
+                                <div className="flex items-center mb-2">
+                                    <span className="text-gray-500 w-24">Method:</span>
+                                    <span className="font-medium">{getMethodName(form.getValues("method") as TransferMethod)}</span>
                                 </div>
-                                
-                                <div className="space-y-2">
-                                    <Label htmlFor="display-name">Display Name</Label>
-                                    <Input
-                                        id="display-name"
-                                        value={customFavoriteName}
-                                        onChange={(e) => setCustomFavoriteName(e.target.value)}
-                                        placeholder="Enter a display name for this favorite"
-                                    />
-                                    <p className="text-xs text-gray-500">
-                                        Choose a memorable name to easily identify this recipient
-                                    </p>
+                                <div className="flex items-center">
+                                    <span className="text-gray-500 w-24">Identifier:</span>
+                                    <span className="font-medium">{recipient.identifier}</span>
                                 </div>
-                            </>
-                        )}
-                    </div>
+                            </div>
+                        </div>
+                    )}
                     
-                    <DialogFooter>
-                        <Button 
-                            variant="outline" 
-                            onClick={() => setShowAddFavoriteDialog(false)}
-                        >
+                    <DialogFooter className="sm:justify-between">
+                        <Button variant="outline" onClick={() => setShowAddFavoriteDialog(false)}>
                             Cancel
                         </Button>
                         <Button 
                             onClick={handleAddToFavorites}
-                            disabled={isSavingFavorite || !customFavoriteName.trim()}
+                            disabled={isSavingFavorite || !customFavoriteName}
+                            className="bg-falsopay-primary hover:bg-falsopay-primary/90"
                         >
-                            {isSavingFavorite ? "Saving..." : "Save to Favorites"}
+                            {isSavingFavorite ? (
+                                <>
+                                    <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-1"></div>
+                                    Saving...
+                                </>
+                            ) : (
+                                <>Add to Favorites</>
+                            )}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-
+            
             {/* Dialog for removing favorites */}
             <Dialog open={showRemoveDialog} onOpenChange={setShowRemoveDialog}>
-                <DialogContent>
+                <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle>Remove from Favorites</DialogTitle>
                         <DialogDescription>
@@ -1271,38 +1442,37 @@ const SendMoney = () => {
                         </DialogDescription>
                     </DialogHeader>
                     
-                    <div className="py-4">
-                        {favoriteToRemove && (
-                            <div className="flex items-center p-3 bg-gray-50 rounded-md">
-                                <div className="bg-gray-100 p-2 rounded-full mr-3">
-                                    {favoriteToRemove.method === 'ipa' && <User className="h-4 w-4"/>}
-                                    {favoriteToRemove.method === 'mobile' && <Phone className="h-4 w-4"/>}
-                                    {favoriteToRemove.method === 'card' && <CreditCard className="h-4 w-4"/>}
-                                    {(favoriteToRemove.method === 'account' || favoriteToRemove.method === 'iban') && <Banknote className="h-4 w-4"/>}
-                                </div>
-                                <div>
-                                    <div>{favoriteToRemove.recipient_name}</div>
-                                    <div className="text-sm text-gray-500">{favoriteToRemove.recipient_identifier}</div>
-                                </div>
+                    {favoriteToRemove && (
+                        <div className="p-3 bg-gray-50 rounded border border-gray-200 text-sm my-2">
+                            <div className="flex items-center mb-2">
+                                <span className="text-gray-500 w-24">Name:</span>
+                                <span className="font-medium">{favoriteToRemove.recipient_name}</span>
                             </div>
-                        )}
-                    </div>
+                            <div className="flex items-center mb-2">
+                                <span className="text-gray-500 w-24">Method:</span>
+                                <span className="font-medium">{getMethodName(favoriteToRemove.method as TransferMethod)}</span>
+                            </div>
+                            <div className="flex items-center">
+                                <span className="text-gray-500 w-24">Identifier:</span>
+                                <span className="font-medium">{favoriteToRemove.recipient_identifier}</span>
+                            </div>
+                        </div>
+                    )}
                     
-                    <DialogFooter>
-                        <Button 
-                            variant="outline" 
-                            onClick={() => {
-                                setShowRemoveDialog(false);
-                                setFavoriteToRemove(null);
-                            }}
-                        >
+                    <DialogFooter className="sm:justify-between">
+                        <Button variant="outline" onClick={() => setShowRemoveDialog(false)}>
                             Cancel
                         </Button>
                         <Button 
                             variant="destructive"
-                            onClick={() => favoriteToRemove && handleRemoveFavorite(favoriteToRemove.favorite_id)}
+                            onClick={() => {
+                                if (favoriteToRemove) {
+                                    handleRemoveFavorite(favoriteToRemove.favorite_id);
+                                }
+                            }}
+                            disabled={isSavingFavorite}
                         >
-                            Remove
+                            {isSavingFavorite ? 'Removing...' : 'Remove'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

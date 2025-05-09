@@ -1,0 +1,93 @@
+@startuml CollaborationDiagram_UC2_LogIn
+
+' Define participants
+object "User" as User
+object "FalsoPay App" as App
+object "API Gateway" as Gateway
+object "Authentication Service" as AuthService
+object "Notification Service" as NotifService
+object "User Service" as UserService
+object "IPA Service" as IPAService
+object "Database" as DB
+
+' Messages (using message numbers to indicate order)
+User -> App : 1. Enter phone number
+App -> Gateway : 2. POST /api/auth/request-code
+Gateway -> AuthService : 3. Request verification code
+AuthService -> NotifService : 4. Generate verification code
+NotifService -> NotifService : 5. Generate random code
+NotifService -> NotifService : 6. Send SMS with code
+NotifService --> AuthService : 7. Code sent
+AuthService --> Gateway : 8. 200 OK (Code sent)
+Gateway --> App : 9. 200 OK with code
+App -> App : 10. Store verification code
+App --> User : 11. Enter verification code
+
+User -> App : 12. Enter verification code
+App -> App : 13. Verify entered code matches stored code
+
+App --> User : 14a. Display error message (if invalid code)
+
+App -> Gateway : 14b. POST /api/auth/login (if valid code)
+Gateway -> AuthService : 15b. Authenticate user
+AuthService -> UserService : 16b. Check if user exists
+UserService -> DB : 17b. Query user by phone
+DB --> UserService : 18b. User data (or null)
+
+UserService --> AuthService : 19b1. User not found
+AuthService --> Gateway : 20b1. 404 Not Found
+Gateway --> App : 21b1. 404 Not Found
+App --> User : 22b1. Redirect to registration
+
+UserService --> AuthService : 19b2. User found
+AuthService -> UserService : 20b2. Get user details
+UserService -> DB : 21b2. Get user account status
+DB --> UserService : 22b2. User account details
+UserService --> AuthService : 23b2. User details
+
+AuthService -> IPAService : 24b2. Check for default account
+IPAService -> DB : 25b2. Query default IPA account
+DB --> IPAService : 26b2. Default account (or null)
+
+IPAService --> AuthService : 27b2a. No default account
+AuthService -> AuthService : 28b2a. Generate access token
+AuthService --> Gateway : 29b2a. 200 OK with token
+Gateway --> App : 30b2a. 200 OK with token
+App -> App : 31b2a. Store token
+App --> User : 32b2a. Display dashboard
+
+IPAService --> AuthService : 27b2b. Default account exists
+AuthService --> Gateway : 28b2b. 200 OK with prompt
+Gateway --> App : 29b2b. 200 OK with prompt
+App --> User : 30b2b. Enter IPA address for verification
+
+User -> App : 31b2b1. Select "Reset Account"
+App -> Gateway : 32b2b1. POST /api/auth/reset-account
+Gateway -> AuthService : 33b2b1. Reset account request
+AuthService -> UserService : 34b2b1. Mark account for reset
+UserService -> DB : 35b2b1. Update user status
+UserService --> AuthService : 36b2b1. Account marked for reset
+AuthService --> Gateway : 37b2b1. 200 OK
+Gateway --> App : 38b2b1. 200 OK
+App --> User : 39b2b1. Redirect to registration
+
+User -> App : 31b2b2. Enter IPA address
+App -> Gateway : 32b2b2. POST /api/auth/verify-ipa
+Gateway -> AuthService : 33b2b2. Verify IPA
+AuthService -> IPAService : 34b2b2. Verify IPA belongs to user
+IPAService -> DB : 35b2b2. Check IPA ownership
+DB --> IPAService : 36b2b2. Verification result
+
+IPAService --> AuthService : 37b2b2a. IPA verification failed
+AuthService --> Gateway : 38b2b2a. 401 Unauthorized
+Gateway --> App : 39b2b2a. 401 Unauthorized
+App --> User : 40b2b2a. Display error message
+
+IPAService --> AuthService : 37b2b2b. IPA verified
+AuthService -> AuthService : 38b2b2b. Generate access token
+AuthService --> Gateway : 39b2b2b. 200 OK with token
+Gateway --> App : 40b2b2b. 200 OK with token
+App -> App : 41b2b2b. Store token
+App --> User : 42b2b2b. Display dashboard
+
+@enduml 

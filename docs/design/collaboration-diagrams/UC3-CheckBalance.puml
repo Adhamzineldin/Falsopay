@@ -1,0 +1,31 @@
+@startuml CollaborationDiagram_UC3_CheckBalance
+
+' Define participants with strategic positioning to minimize intersections
+object "Registered User" as User #FFFFFF
+object "FalsoPay App" as App #FFFFFF
+object "API Gateway" as Gateway #FFFFFF
+object "Account Service" as AccountService #FFFFFF
+object "Database" as DB #FFFFFF
+
+' Position objects to minimize crossing lines
+User -[hidden]right- App
+App -[hidden]right- Gateway
+Gateway -[hidden]right- AccountService
+AccountService -[hidden]right- DB
+
+' Messages (using message numbers to indicate order)
+User -> App : 1. Request to view balance
+App -> Gateway : 2. GET /api/accounts/balance
+Gateway -> AccountService : 3. Retrieve balance
+AccountService -> DB : 4. Query account balance
+DB --> AccountService : 5. Balance data
+
+AccountService --> Gateway : 6a. 500 Internal Server Error
+Gateway --> App : 7a. 500 Internal Server Error
+App --> User : 8a. Display error message and retry option
+
+AccountService --> Gateway : 6b. Balance information
+Gateway --> App : 7b. 200 OK with balance data
+App --> User : 8b. Display current balance
+
+@enduml 

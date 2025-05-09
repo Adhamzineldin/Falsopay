@@ -1,0 +1,119 @@
+@startuml Block-Transactions-Precondition
+
+!define OBJECT_STYLE_FILL #E8F5E9
+!define OBJECT_STYLE_BORDER #4CAF50
+!define OBJECT_STYLE_TEXT #000000
+
+skinparam object {
+    backgroundColor OBJECT_STYLE_FILL
+    borderColor OBJECT_STYLE_BORDER
+    fontColor OBJECT_STYLE_TEXT
+}
+
+skinparam note {
+    backgroundColor #FFFDE7
+    borderColor #FFC107
+    fontColor #000000
+}
+
+title "FalsoPay: Block App Transactions - Precondition"
+
+object "user : User" as user {
+    userId = 1001
+    firstName = "John"
+    lastName = "Doe"
+    email = "john.doe@example.com"
+    phoneNumber = "+1234567890"
+    role = "USER"
+    status = "ACTIVE"
+    defaultAccount = 5001
+}
+
+object "userAccount : BankAccount" as userAccount {
+    accountId = 5001
+    bankId = 101
+    accountNumber = "123456789"
+    bankUserId = 2001
+    iban = "US12345678901234567890"
+    type = "CHECKING"
+    status = "ACTIVE"
+    balance = 1000.00
+}
+
+object "securitySettings : SecuritySettings" as securitySettings {
+    userId = 1001
+    transactionsBlocked = false
+    transferLimit = 500.00
+    twoFactorEnabled = true
+    lastUpdated = "2023-05-14 10:30:00"
+}
+
+object "userDevice : Device" as userDevice {
+    deviceId = 4001
+    userId = 1001
+    deviceName = "iPhone 13"
+    deviceType = "MOBILE"
+    isAuthorized = true
+    lastLogin = "2023-05-15 09:45:00"
+}
+
+object "userSession : Session" as userSession {
+    sessionId = 6001
+    userId = 1001
+    deviceId = 4001
+    startTime = "2023-05-15 09:45:00"
+    expiryTime = "2023-05-15 21:45:00"
+    status = "ACTIVE"
+    ipAddress = "192.168.1.100"
+}
+
+object "pendingTransaction : Transaction" as pendingTransaction {
+    transactionId = 7001
+    senderUserId = 1001
+    receiverUserId = 1002
+    senderName = "John Doe"
+    receiverName = "Jane Smith"
+    amount = 75.00
+    status = "PENDING"
+    transactionTime = "2023-05-15 15:30:00"
+    transferMethod = "IPA"
+}
+
+object "securityService : SecurityService" as securityService {
+}
+
+object "notificationService : NotificationService" as notificationService {
+}
+
+object "transactionService : TransactionService" as transactionService {
+}
+
+object "database : Database" as database {
+    users = [User(1001)]
+    accounts = [BankAccount(5001)]
+    securitySettings = [SecuritySettings(1001)]
+    devices = [Device(4001)]
+    sessions = [Session(6001)]
+    pendingTransactions = [Transaction(7001)]
+}
+
+note bottom of securitySettings
+  Transactions are currently enabled
+  (transactionsBlocked = false)
+end note
+
+note bottom of pendingTransaction
+  There is a pending transaction
+  that might be affected by blocking
+end note
+
+user --> userAccount : has
+user --> securitySettings : has
+user --> userDevice : uses
+userDevice --> userSession : has
+user --> pendingTransaction : initiated
+securityService --> database : connects to
+notificationService --> database : connects to
+transactionService --> database : connects to
+
+@enduml 

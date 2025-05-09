@@ -1,0 +1,169 @@
+@startuml Block-Transactions-Postcondition
+
+!define OBJECT_STYLE_FILL #E8F5E9
+!define OBJECT_STYLE_BORDER #4CAF50
+!define OBJECT_STYLE_TEXT #000000
+
+skinparam object {
+    backgroundColor OBJECT_STYLE_FILL
+    borderColor OBJECT_STYLE_BORDER
+    fontColor OBJECT_STYLE_TEXT
+}
+
+skinparam note {
+    backgroundColor #FFFDE7
+    borderColor #FFC107
+    fontColor #000000
+}
+
+title "FalsoPay: Block App Transactions - Postcondition"
+
+object "user : User" as user {
+    userId = 1001
+    firstName = "John"
+    lastName = "Doe"
+    email = "john.doe@example.com"
+    phoneNumber = "+1234567890"
+    role = "USER"
+    status = "ACTIVE"
+    defaultAccount = 5001
+}
+
+object "userAccount : BankAccount" as userAccount {
+    accountId = 5001
+    bankId = 101
+    accountNumber = "123456789"
+    bankUserId = 2001
+    iban = "US12345678901234567890"
+    type = "CHECKING"
+    status = "ACTIVE"
+    balance = 1000.00
+}
+
+object "securitySettings : SecuritySettings" as securitySettings {
+    userId = 1001
+    transactionsBlocked = true
+    transferLimit = 500.00
+    twoFactorEnabled = true
+    lastUpdated = "2023-05-15 15:45:00"
+}
+
+object "userDevice : Device" as userDevice {
+    deviceId = 4001
+    userId = 1001
+    deviceName = "iPhone 13"
+    deviceType = "MOBILE"
+    isAuthorized = true
+    lastLogin = "2023-05-15 09:45:00"
+}
+
+object "userSession : Session" as userSession {
+    sessionId = 6001
+    userId = 1001
+    deviceId = 4001
+    startTime = "2023-05-15 09:45:00"
+    expiryTime = "2023-05-15 21:45:00"
+    status = "ACTIVE"
+    ipAddress = "192.168.1.100"
+}
+
+object "cancelledTransaction : Transaction" as cancelledTransaction {
+    transactionId = 7001
+    senderUserId = 1001
+    receiverUserId = 1002
+    senderName = "John Doe"
+    receiverName = "Jane Smith"
+    amount = 75.00
+    status = "CANCELLED"
+    transactionTime = "2023-05-15 15:30:00"
+    cancelledTime = "2023-05-15 15:45:05"
+    transferMethod = "IPA"
+    cancellationReason = "ACCOUNT_BLOCKED"
+}
+
+object "blockTransactionLog : SecurityLog" as blockTransactionLog {
+    logId = 8001
+    userId = 1001
+    action = "BLOCK_TRANSACTIONS"
+    timestamp = "2023-05-15 15:45:00"
+    ipAddress = "192.168.1.100"
+    deviceId = 4001
+    status = "SUCCESS"
+}
+
+object "transactionCancelLog : SecurityLog" as transactionCancelLog {
+    logId = 8002
+    userId = 1001
+    action = "CANCEL_PENDING_TRANSACTION"
+    timestamp = "2023-05-15 15:45:05"
+    relatedId = "7001"
+    status = "SUCCESS"
+}
+
+object "userNotification : Notification" as userNotification {
+    notificationId = 9001
+    userId = 1001
+    type = "SECURITY"
+    message = "Transaction blocking enabled on your account"
+    status = "SENT"
+    createdAt = "2023-05-15 15:45:10"
+    priority = "HIGH"
+}
+
+object "recipientNotification : Notification" as recipientNotification {
+    notificationId = 9002
+    userId = 1002
+    type = "TRANSACTION"
+    message = "A pending transaction from John Doe has been cancelled"
+    status = "SENT"
+    createdAt = "2023-05-15 15:45:15"
+}
+
+object "securityService : SecurityService" as securityService {
+}
+
+object "notificationService : NotificationService" as notificationService {
+}
+
+object "transactionService : TransactionService" as transactionService {
+}
+
+object "database : Database" as database {
+    users = [User(1001)]
+    accounts = [BankAccount(5001)]
+    securitySettings = [SecuritySettings(1001)]
+    devices = [Device(4001)]
+    sessions = [Session(6001)]
+    transactions = [Transaction(7001)]
+    securityLogs = [SecurityLog(8001), SecurityLog(8002)]
+    notifications = [Notification(9001), Notification(9002)]
+}
+
+note bottom of securitySettings
+  Transactions are now blocked
+  (transactionsBlocked = true)
+end note
+
+note bottom of cancelledTransaction
+  Pending transaction was automatically
+  cancelled due to account blocking
+end note
+
+note bottom of blockTransactionLog
+  Security log entry for the
+  transaction blocking action
+end note
+
+user --> userAccount : has
+user --> securitySettings : has
+user --> userDevice : uses
+userDevice --> userSession : has
+user --> cancelledTransaction : initiated
+user --> userNotification : receives
+blockTransactionLog --> user : references
+transactionCancelLog --> cancelledTransaction : references
+securityService --> database : connects to
+notificationService --> database : connects to
+transactionService --> database : connects to
+
+@enduml 

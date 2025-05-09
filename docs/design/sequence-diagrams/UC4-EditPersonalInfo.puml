@@ -30,8 +30,8 @@ deactivate Gateway
 
 App --> User: Display current information
 
-User --> App: Modify desired fields
-User --> App: Submit changes
+User -> App: Modify desired fields
+User -> App: Submit changes
 
 
 App -> App: Validate input format

@@ -13,48 +13,47 @@ participant "Notification\nService" as notifService
 participant "Transaction\nService" as txnService
 database "Database" as db
 
-== Main Success Scenario ==
-
-note over app, txnService: An action requiring confirmation has completed
-
 txnService -> txnService: Generate confirmation message
 activate txnService
+
 txnService -> db: Store confirmation record
 activate db
 db --> txnService: Record stored
 deactivate db
-txnService -> gateway: Send confirmation details
-activate gateway
-gateway -> notifService: Request notification delivery
-activate notifService
-notifService -> app: Push confirmation notification
-deactivate notifService
-activate app
-app -> user: Display confirmation
-activate user
-app -> app: Store confirmation locally
-deactivate user
-deactivate app
-deactivate gateway
-deactivate txnService
-
-== Alternative Scenario: Delivery Failure ==
 
 txnService -> gateway: Send confirmation details
 activate gateway
-activate txnService
+
 gateway -> notifService: Request notification delivery
 activate notifService
-notifService -> notifService: Delivery attempt fails
-notifService -> gateway: Report delivery failure
-deactivate notifService
-gateway -> txnService: Notification failed
-txnService -> db: Mark for retry
-activate db
-db --> txnService: Record updated
-deactivate db
 deactivate gateway
-deactivate txnService
-note over txnService, gateway: System will retry delivery \nlater or during next user login
+
+alt Delivery succeeds
+    notifService -> app: Push confirmation notification
+    deactivate notifService
+    activate app
+
+    app -> user: Display confirmation
+    activate user
+    app -> app: Store confirmation locally
+    deactivate user
+    deactivate app
+    deactivate gateway
+    deactivate txnService
+
+else Delivery fails
+    notifService -> notifService: Delivery attempt fails
+    notifService -> gateway: Report delivery failure
+    deactivate notifService
+
+    gateway -> txnService: Notification failed
+    txnService -> db: Mark for retry
+    activate db
+    db --> txnService: Record updated
+    deactivate db
+    deactivate gateway
+    deactivate txnService
+
+end
 
 @enduml

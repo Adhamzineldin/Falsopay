@@ -9,7 +9,7 @@ participant "Notification Service" as NotifService
 
 title UC-1: Register
 
-User --> App: Enter registration information
+User -> App: Enter registration information
 activate App
 
 App -> App: Validate input format

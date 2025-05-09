@@ -1,5 +1,6 @@
-const userId = 1;
+const userId = 100;
 const socket = new WebSocket(`wss://app4100.maayn.me?userId=${userId}`);
+
 
 socket.onopen = () => {
     console.log("Connected to WebSocket");

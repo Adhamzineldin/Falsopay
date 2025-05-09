@@ -11,7 +11,7 @@ participant "Database" as DB
 
 title UC-2: Log In
 
-User --> App: Enter phone number
+User -> App: Enter phone number
 activate App
 
 App -> Gateway: POST /api/auth/request-code
@@ -30,13 +30,13 @@ deactivate NotifService
 AuthService --> Gateway: 200 OK (Code sent)
 Gateway --> App: 200 OK with code
 App -> App: Store verification code
-App -> User: Enter verification code
+App --> User: Prompt user to enter verification code
 
-User --> App: Enter verification code
+User -> App: Enter verification code
 App -> App: Verify entered code matches stored code
 
 alt Invalid code
-    App --> User: Display error message
+    App --> User: Display error message: "Invalid code"
 else Valid code
     App -> Gateway: POST /api/auth/login
     Gateway -> AuthService: Authenticate user
@@ -53,7 +53,7 @@ else Valid code
         UserService --> AuthService: User not found
         AuthService --> Gateway: 404 Not Found
         Gateway --> App: 404 Not Found
-        App --> User: Redirect to registration
+        App -> User: Redirect to registration
     else User found
         UserService --> AuthService: User found
         

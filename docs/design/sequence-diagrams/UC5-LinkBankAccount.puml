@@ -13,8 +13,8 @@ title UC-5: Link Bank Account
 User -> App: Select "Link Bank Account"
 activate App
 
-App -> App: Display bank account form
-User --> App: Enter bank account details
+App --> App: Display bank account form
+User -> App: Enter bank account details
 App -> App: Validate input format
 
 App -> Gateway: POST /api/banking/link

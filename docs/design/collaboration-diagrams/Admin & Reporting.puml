@@ -1,0 +1,37 @@
+@startuml CollaborationDiagram_Admin
+
+title "Collaboration Diagram: Admin & Reporting\n(UC33, UC35–UC40)"
+
+' Define system components
+object Admin
+object "Admin Portal" as Portal
+object Gateway
+object "User Mgmt" as UserService
+object "Reporting Service" as ReportService
+object Database
+
+' UC33 - Generate Report
+Admin --> Portal : 1. Generate Report
+Portal --> Gateway : 2. GET /reports
+Gateway --> ReportService : 3. generate()
+ReportService --> Database : 4. queryData()
+ReportService --> Gateway : 5. return CSV
+Gateway --> Portal : 6. download
+
+' UC36 - Deactivate User
+Admin --> Portal : 7. Deactivate User
+Portal --> Gateway : 8. DELETE /users/{id}
+Gateway --> UserService : 9. deactivate()
+UserService --> Database : 10. updateStatus()
+UserService --> Gateway : 11. 200 OK
+Gateway --> Portal : 12. refresh
+
+' UC38 & UC40 - View Tickets
+Admin --> Portal : 13. View Tickets
+Portal --> Gateway : 14. GET /tickets
+Gateway --> ReportService : 15. getTickets()
+ReportService --> Database : 16. queryTickets()
+ReportService --> Gateway : 17. 200 OK
+Gateway --> Portal : 18. display
+
+@enduml

@@ -1,0 +1,29 @@
+@startuml CollaborationDiagram_Notifications
+
+title "Collaboration Diagram: Notifications & Balances\n(UC15, UC17, UC24, UC31)"
+
+' Define system participants
+object User
+object App
+object Gateway
+object "Notification Service" as NotifService
+object "Account Service" as AccountService
+object Database
+
+' UC31 - Balance Update & Notification
+AccountService --> AccountService : 1. Balance Update
+AccountService --> Database : 2. adjustBalance()
+AccountService --> NotifService : 3. notify()
+NotifService --> Database : 4. getPrefs()
+NotifService --> App : 5. push
+App --> User : 6. display
+
+' UC24 - Create Support Ticket
+User --> App : 7. Submit Support Ticket
+App --> Gateway : 8. POST /support
+Gateway --> NotifService : 9. createTicket()
+NotifService --> Database : 10. storeTicket()
+NotifService --> Gateway : 11. 201 Created
+Gateway --> App : 12. confirmation
+
+@enduml

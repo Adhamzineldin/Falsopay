@@ -1,0 +1,66 @@
+@startuml CollaborationDiagram_Auth
+
+title "Collaboration Diagram: User Authentication & Profile Management\n(UC1, UC2, UC16, UC22)"
+
+' Define objects (participants)
+object User
+object App
+object Gateway
+object UserService
+object AuthService
+object NotifService
+object Database
+
+' UC1 - Register
+User : 1. Register
+User --> App
+App : 2. POST /register
+App --> Gateway
+Gateway : 3. createUser()
+Gateway --> UserService
+UserService : 4. checkEmailUniqueness()
+UserService --> Database
+UserService : 5. sendVerification()
+UserService --> NotifService
+NotifService : 6. queued
+UserService : 7. 201 Created
+Gateway : 8. show success
+
+' UC2 - Login
+User : 9. Login
+User --> App
+App : 10. POST /login
+App --> Gateway
+Gateway : 11. authenticate()
+Gateway --> AuthService
+AuthService : 12. verifyCredentials()
+AuthService : 13. storeSession()
+AuthService --> Database
+AuthService : 14. 200 OK
+Gateway : 15. grant access
+
+' UC16 - Change PIN
+User : 16. Change PIN
+User --> App
+App : 17. PUT /security/pin
+App --> Gateway
+Gateway : 18. updatePIN()
+Gateway --> AuthService
+AuthService : 19. hashAndStore()
+AuthService --> Database
+AuthService : 20. 200 OK
+Gateway : 21. confirm update
+
+' UC22 - Delete Account
+User : 22. Delete Account
+User --> App
+App : 23. DELETE /account
+App --> Gateway
+Gateway : 24. deactivate()
+Gateway --> UserService
+UserService : 25. softDelete()
+UserService --> Database
+UserService : 26. 200 OK
+Gateway : 27. logout
+
+@enduml

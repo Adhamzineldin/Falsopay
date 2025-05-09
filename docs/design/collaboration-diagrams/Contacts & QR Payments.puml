@@ -1,0 +1,31 @@
+@startuml CollaborationDiagram_Contacts
+
+title "Collaboration Diagram: Contacts & QR Payments\n(UC6, UC11, UC13–14, UC20–21, UC25–27)"
+
+' Define components
+object User
+object App
+object Gateway
+object "Contact Service" as ContactService
+object "QR Service" as QRService
+object Database
+
+' UC13-14 - Add Favorite Contact
+User --> App : 1. Add Favorite
+App --> Gateway : 2. POST /favorites
+Gateway --> ContactService : 3. addFavorite()
+ContactService --> Database : 4. storeContact()
+ContactService --> Gateway : 5. 201 Created
+Gateway --> App : 6. update UI
+
+' UC26-27 - Scan QR for Payment
+User --> App : 7. Scan QR
+App --> QRService : 8. decodeQR()
+QRService --> App : 9. payment details
+App --> Gateway : 10. POST /payments/qr
+Gateway --> QRService : 11. verify()
+QRService --> Database : 12. logPayment()
+QRService --> Gateway : 13. 201 OK
+Gateway --> App : 14. receipt
+
+@enduml

@@ -1,0 +1,40 @@
+@startuml CollaborationDiagram_Transactions
+
+title "Collaboration Diagram (with Flow Arrows): Financial Transactions Core\n(UC5, UC8–UC9, UC12)"
+
+' Define participants as objects
+object User
+object App
+object Gateway
+object "Transaction Service" as TxnService
+object "Banking Service" as BankService
+object "Security Service" as SecService
+object Database
+
+' UC5 - Link Bank
+User --> App : 1. Link Bank
+App --> Gateway : 2. POST /bank/link
+Gateway --> BankService : 3. verifyAccount()
+BankService --> Database : 4. storeConnection()
+BankService --> Gateway : 5. 202 Accepted
+Gateway --> App : 6. verification pending
+
+' UC8-9 - Send Money
+User --> App : 7. Send Money
+App --> Gateway : 8. POST /transactions
+Gateway --> TxnService : 9. validate()
+TxnService --> SecService : 10. authorize()
+SecService --> Database : 11. checkLimits()
+TxnService --> Database : 12. executeTransfer()
+TxnService --> Gateway : 13. 201 Created
+Gateway --> App : 14. show receipt
+
+' UC12 - Request Money
+User --> App : 15. Request Money
+App --> Gateway : 16. POST /requests
+Gateway --> TxnService : 17. createRequest()
+TxnService --> Database : 18. logRequest()
+TxnService --> Gateway : 19. 201 Created
+Gateway --> App : 20. confirmation
+
+@enduml

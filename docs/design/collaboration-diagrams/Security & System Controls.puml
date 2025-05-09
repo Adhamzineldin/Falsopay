@@ -1,0 +1,35 @@
+@startuml CollaborationDiagram_Security
+
+title "Collaboration Diagram: Security & System Controls\n(UC19, UC23, UC28–30, UC32, UC34)"
+
+' Define system participants as objects
+object User
+object App
+object Gateway
+object "Security Service" as SecService
+object "Fraud Detection" as FraudService
+object Database
+
+' UC29 - Block App
+User --> App : 1. Block App
+App --> Gateway : 2. POST /block
+Gateway --> SecService : 3. blockUser()
+SecService --> Database : 4. setBlockFlag()
+SecService --> Gateway : 5. 200 OK
+Gateway --> App : 6. confirm
+
+' UC28 - Detect Fraud (system triggered)
+FraudService --> FraudService : 7. Detect Fraud
+FraudService --> Database : 8. analyzePatterns()
+FraudService --> SecService : 9. alert()
+SecService --> Database : 10. flagTransaction()
+
+' UC34 - Set Limits
+User --> App : 11. Set Limits
+App --> Gateway : 12. PUT /limits
+Gateway --> SecService : 13. updateLimits()
+SecService --> Database : 14. storeNewLimit()
+SecService --> Gateway : 15. 200 OK
+Gateway --> App : 16. refresh UI
+
+@enduml

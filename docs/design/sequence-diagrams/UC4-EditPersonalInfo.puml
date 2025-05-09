@@ -30,9 +30,9 @@ deactivate Gateway
 
 App --> User: Display current information
 
-User -> App: Modify desired fields
-User -> App: Submit changes
-activate App
+User --> App: Modify desired fields
+User --> App: Submit changes
+
 
 App -> App: Validate input format
 App -> Gateway: PUT /api/users/profile

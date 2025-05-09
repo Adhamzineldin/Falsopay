@@ -10,6 +10,7 @@ title UC-10: Choose Transfer Method
 
 User -> App: In process of sending money
 activate App
+activate User
 
 App -> Gateway: GET /api/transactions/methods
 activate Gateway
@@ -31,8 +32,8 @@ deactivate Gateway
 
 App --> User: Display transfer method options
 
-User -> App: Select desired method
-activate App
+User --> App: Select desired method
+
 
 App -> Gateway: POST /api/transactions/{id}/method
 activate Gateway
@@ -60,6 +61,7 @@ else Success
     
     App --> User: Display confirmation and continue transaction flow
     deactivate App
+    deactivate User
 end
 
 @enduml 

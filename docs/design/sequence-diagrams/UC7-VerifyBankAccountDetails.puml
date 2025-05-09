@@ -18,45 +18,77 @@ database "Database" as db
 note over app, accountService: User has provided bank account information
 
 app -> gateway: Verify bank account request
+activate app
+activate gateway
 gateway -> accountService: Forward verification request
+activate accountService
 accountService -> accountService: Validate input data
 accountService -> bankingAPI: Send verification request
+activate bankingAPI
 
 bankingAPI -> bankingAPI: Validate account details
 bankingAPI -> bankingAPI: Verify account ownership
 bankingAPI --> accountService: Verification successful
+deactivate bankingAPI
 
 accountService -> db: Mark account as verified
+activate db
 db --> accountService: Update successful
-accountService -> gateway: Verification result
-gateway -> app: Verification successful
-app -> user: Display success message
+deactivate db
+accountService --> gateway: Verification result
+deactivate accountService
+gateway --> app: Verification successful
+deactivate gateway
+activate user
+app --> user: Display success message
+deactivate app
+deactivate user
 
 == Alternative Scenario: Verification Fails ==
 
 app -> gateway: Verify bank account request
+activate app
+activate gateway
 gateway -> accountService: Forward verification request
+activate accountService
 accountService -> accountService: Validate input data
 accountService -> bankingAPI: Send verification request
+activate bankingAPI
 
 bankingAPI -> bankingAPI: Validate account details
 bankingAPI -> bankingAPI: Verification fails
 bankingAPI --> accountService: Verification failed (reason)
+deactivate bankingAPI
 
-accountService -> gateway: Verification failed
-gateway -> app: Verification failed with reason
-app -> user: Display failure message\nSuggest alternative method
+accountService --> gateway: Verification failed
+deactivate accountService
+gateway --> app: Verification failed with reason
+deactivate gateway
+activate user
+app --> user: Display failure message\nSuggest alternative method
+deactivate user
+deactivate app
 
 == Alternative Scenario: Timeout ==
 
 app -> gateway: Verify bank account request
+activate app
+activate gateway
 gateway -> accountService: Forward verification request
+activate accountService
 accountService -> bankingAPI: Send verification request
+activate bankingAPI
 
 note over accountService, bankingAPI: Response timeout occurs
 
-accountService -> gateway: Verification timeout
-gateway -> app: Verification timeout
-app -> user: Display timeout message\nOffer retry option
+deactivate bankingAPI
+accountService --> gateway: Verification timeout
+deactivate accountService
+gateway --> app: Verification timeout
+deactivate gateway
+app --> user: Display timeout message\nOffer retry option
+activate user
+deactivate user
+deactivate app
 
-@enduml 
+@enduml

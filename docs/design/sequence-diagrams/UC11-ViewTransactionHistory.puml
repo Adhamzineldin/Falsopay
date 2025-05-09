@@ -10,6 +10,7 @@ title UC-11: View Transaction History
 
 User -> App: Request transaction history
 activate App
+activate User
 
 App -> Gateway: GET /api/transactions/history
 activate Gateway
@@ -43,8 +44,8 @@ else Transactions exist
     
     App --> User: Display transactions chronologically
     
-    User -> App: Select filter option
-    activate App
+    User --> App: Select filter option
+    
     
     App -> App: Include Filter Transaction use case
     
@@ -67,6 +68,7 @@ else Transactions exist
     
     App --> User: Display filtered transactions
     deactivate App
+    deactivate User
 end
 
 @enduml 

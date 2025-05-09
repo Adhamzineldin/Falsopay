@@ -14,7 +14,7 @@ User -> App: Select "Link Bank Account"
 activate App
 
 App -> App: Display bank account form
-User -> App: Enter bank account details
+User --> App: Enter bank account details
 App -> App: Validate input format
 
 App -> Gateway: POST /api/banking/link
@@ -66,7 +66,7 @@ else Account exists
     end note
     
     User -> App: Enter verification amounts
-    activate App
+    
     
     App -> Gateway: POST /api/banking/verify
     activate Gateway

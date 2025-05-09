@@ -13,6 +13,7 @@ title UC-9: Send Money
 
 User -> App: Initiate money transfer
 activate App
+activate User
 
 App -> Gateway: POST /api/transactions/prepare
 activate Gateway
@@ -42,17 +43,19 @@ else Success
     Gateway --> App: 200 OK with transaction details
     
     App -> App: Display transfer method options
-    User -> App: Select transfer method
+    User --> App: Select transfer method
     
     App -> Gateway: POST /api/transactions/method
     Gateway -> TransService: Set transfer method
     TransService -> DB: Update transaction record
+    activate DB
     DB --> TransService: Success
+    deactivate DB
     TransService --> Gateway: 200 OK
     Gateway --> App: 200 OK
     
     App -> App: Request PIN
-    User -> App: Enter PIN
+    User --> App: Enter PIN
     
     App -> Gateway: POST /api/security/verify-pin
     Gateway -> SecService: Verify PIN
@@ -109,6 +112,7 @@ else Success
         
         App --> User: Display transaction confirmation
         deactivate App
+        deactivate User
     end
 end
 

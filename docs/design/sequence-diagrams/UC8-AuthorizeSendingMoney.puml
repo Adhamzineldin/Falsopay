@@ -12,7 +12,7 @@ title UC-8: Authorize Sending Money
 
 User -> App: Input recipient and amount
 activate App
-
+activate User
 App -> App: Validate input format
 App -> Gateway: POST /api/transactions/authorize
 activate Gateway
@@ -40,7 +40,7 @@ else Balance sufficient
     TransService -> TransService: Create transaction draft
     
     App -> User: Request authorization (PIN/biometric)
-    User -> App: Provide authorization
+    User --> App: Provide authorization
     
     App -> Gateway: POST /api/security/authorize
     Gateway -> SecService: Validate authorization
@@ -69,6 +69,7 @@ else Balance sufficient
         
         App --> User: Display confirmation and proceed to sending
         deactivate App
+        deactivate User
     end
 end
 

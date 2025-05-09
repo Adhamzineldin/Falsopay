@@ -90,7 +90,8 @@ $router = new Router();
 AuthRoutes::define($router);
 SystemRoutes::define($router);
 
-$routes = [
+// Make sure all route classes are properly loaded
+$routeClasses = [
     UsersRoute::class,
     BanksRoute::class,
     BankAccountsRoute::class,
@@ -108,8 +109,13 @@ $routes = [
 
 $middleware = [[AuthMiddleware::class, 'ensureAuthenticated']];
 
-foreach ($routes as $routeClass) {
-    $routeClass::define($router, $middleware);
+// Ensure each route class exists before trying to use it
+foreach ($routeClasses as $routeClass) {
+    if (class_exists($routeClass)) {
+        $routeClass::define($router, $middleware);
+    } else {
+        $logger->error("Route class not found: $routeClass");
+    }
 }
 
 // Handle all requests

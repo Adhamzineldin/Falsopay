@@ -255,28 +255,59 @@ class SystemController
     #[NoReturn]
     public static function getSystemStatus(): void
     {
-        // Get status information with caching
-        $dbStatusInfo = self::getCachedStatus('db', 60);
-        $wsStatusInfo = self::getCachedStatus('ws', 120);
-        
-        header('Content-Type: application/json');
-        header('Access-Control-Allow-Origin: *'); // Ensure CORS is enabled
-        echo json_encode([
-            'status' => 'success',
-            'code' => 200,
-            'data' => [
-                'database' => $dbStatusInfo,
-                'websocket' => $wsStatusInfo,
-                'timestamp' => date('Y-m-d H:i:s'),
-                'server' => [
-                    'status' => 'operational',
-                    'label' => 'Operational',
-                    'message' => 'API server is running normally',
-                    'php_version' => PHP_VERSION,
-                    'memory_usage' => round(memory_get_usage() / 1024 / 1024, 2) . ' MB'
+        try {
+            // Get status information with caching
+            $dbStatusInfo = self::getCachedStatus('db', 60);
+            $wsStatusInfo = self::getCachedStatus('ws', 120);
+            
+            // Ensure proper headers
+            header('Content-Type: application/json');
+            header('Access-Control-Allow-Origin: *'); // Ensure CORS is enabled
+            
+            // Explicitly flush output buffers to ensure response is sent
+            if (ob_get_level()) ob_end_clean();
+            
+            // Build and echo the response
+            $response = json_encode([
+                'status' => 'success',
+                'code' => 200,
+                'data' => [
+                    'database' => $dbStatusInfo,
+                    'websocket' => $wsStatusInfo,
+                    'timestamp' => date('Y-m-d H:i:s'),
+                    'server' => [
+                        'status' => 'operational',
+                        'label' => 'Operational',
+                        'message' => 'API server is running normally',
+                        'php_version' => PHP_VERSION,
+                        'memory_usage' => round(memory_get_usage() / 1024 / 1024, 2) . ' MB'
+                    ]
                 ]
-            ]
-        ]);
-        exit();
+            ]);
+            
+            // Log the response for debugging
+            $logger = ErrorLogger::getInstance();
+            $logger->info("System status response: " . substr($response, 0, 100) . "...");
+            
+            echo $response;
+            exit();
+        } catch (\Exception $e) {
+            // Log the error
+            $logger = ErrorLogger::getInstance();
+            $logger->error("Error in getSystemStatus: " . $e->getMessage());
+            
+            // Ensure proper headers
+            header('Content-Type: application/json');
+            header('Access-Control-Allow-Origin: *');
+            
+            // Send error response
+            echo json_encode([
+                'status' => 'error',
+                'code' => 500,
+                'message' => 'Internal server error while fetching system status',
+                'debug' => $e->getMessage()
+            ]);
+            exit();
+        }
     }
 } 

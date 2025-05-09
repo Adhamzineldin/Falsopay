@@ -32,7 +32,7 @@ const Unauthorized = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white overflow-hidden relative">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-falsopay-dark text-white overflow-hidden relative">
       {/* Security grid background */}
       <motion.div
         className="absolute inset-0 z-0"
@@ -41,8 +41,8 @@ const Unauthorized = () => {
         animate="visible"
         style={{
           backgroundImage: `
-            linear-gradient(to right, rgba(255, 0, 0, 0.05) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(255, 0, 0, 0.05) 1px, transparent 1px)
+            linear-gradient(to right, rgba(155, 135, 245, 0.1) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(155, 135, 245, 0.1) 1px, transparent 1px)
           `,
           backgroundSize: '20px 20px',
         }}
@@ -50,7 +50,7 @@ const Unauthorized = () => {
 
       {/* Scanning line */}
       <motion.div 
-        className="absolute w-full h-[2px] bg-gradient-to-r from-transparent via-red-600 to-transparent z-10"
+        className="absolute w-full h-[2px] bg-gradient-to-r from-transparent via-falsopay-accent to-transparent z-10"
         initial={{ top: 0, opacity: 0.7 }}
         animate={{ 
           top: ['0%', '100%', '0%'],
@@ -74,12 +74,12 @@ const Unauthorized = () => {
           variants={childVariants}
         >
           <motion.h1 
-            className="text-7xl font-bold text-red-600"
+            className="text-7xl font-bold text-falsopay-accent"
             animate={{ 
               textShadow: [
-                "0 0 10px rgba(255, 0, 0, 0.5)", 
-                "0 0 20px rgba(255, 0, 0, 0.8)", 
-                "0 0 10px rgba(255, 0, 0, 0.5)"
+                "0 0 10px rgba(255, 113, 154, 0.5)", 
+                "0 0 20px rgba(255, 113, 154, 0.8)", 
+                "0 0 10px rgba(255, 113, 154, 0.5)"
               ],
             }}
             transition={{ 
@@ -98,7 +98,7 @@ const Unauthorized = () => {
           variants={childVariants}
         >
           <motion.div
-            className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-14 border-4 border-red-600 rounded-t-full"
+            className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-14 border-4 border-falsopay-secondary rounded-t-full"
             style={{ borderBottom: 'none' }}
             animate={{ 
               rotate: [-5, 5, -5, 0, 0, 0, 0, 0, 0, 0],
@@ -111,12 +111,12 @@ const Unauthorized = () => {
             }}
           />
           <motion.div
-            className="absolute bottom-0 left-1/2 -translate-x-1/2 w-16 h-16 bg-red-600 rounded-md"
+            className="absolute bottom-0 left-1/2 -translate-x-1/2 w-16 h-16 bg-falsopay-primary rounded-md"
             animate={{ 
               boxShadow: [
-                "0 0 10px rgba(255, 0, 0, 0.5)", 
-                "0 0 20px rgba(255, 0, 0, 0.8)", 
-                "0 0 10px rgba(255, 0, 0, 0.5)"
+                "0 0 10px rgba(110, 89, 165, 0.5)", 
+                "0 0 20px rgba(110, 89, 165, 0.8)", 
+                "0 0 10px rgba(110, 89, 165, 0.5)"
               ],
             }}
             transition={{ 
@@ -126,7 +126,7 @@ const Unauthorized = () => {
             }}
           >
             <motion.div
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 bg-black rounded-full"
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 bg-falsopay-dark rounded-full"
             />
           </motion.div>
         </motion.div>
@@ -143,7 +143,7 @@ const Unauthorized = () => {
         >
           <Link 
             to="/" 
-            className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-full font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 inline-block"
+            className="px-6 py-3 bg-falsopay-primary hover:bg-falsopay-secondary text-white rounded-full font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 inline-block"
           >
             Return to Falsopay
           </Link>
@@ -180,7 +180,7 @@ const SecurityNotification = ({ delay }: { delay: number }) => {
 
   return (
     <motion.div
-      className="absolute px-3 py-2 bg-black border border-red-600 rounded text-xs text-white z-30"
+      className="absolute px-3 py-2 bg-falsopay-dark border border-falsopay-accent rounded text-xs text-white z-30"
       style={randomPosition}
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ 

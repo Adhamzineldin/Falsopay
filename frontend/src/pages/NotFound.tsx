@@ -31,13 +31,18 @@ const NotFound = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white overflow-hidden relative">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-falsopay-dark text-white overflow-hidden relative">
       {/* Animated background particles */}
       <div className="absolute inset-0 overflow-hidden">
         {Array.from({ length: 50 }).map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-1 h-1 rounded-full bg-red-500"
+            className="absolute rounded-full"
+            style={{
+              backgroundColor: i % 3 === 0 ? '#9B87F5' : i % 3 === 1 ? '#FF719A' : '#6E59A5',
+              width: `${Math.random() * 6 + 2}px`,
+              height: `${Math.random() * 6 + 2}px`,
+            }}
             initial={{ 
               x: Math.random() * window.innerWidth, 
               y: Math.random() * window.innerHeight,
@@ -67,10 +72,6 @@ const NotFound = () => {
               repeat: Infinity,
               ease: "linear" 
             }}
-            style={{
-              width: `${Math.random() * 4 + 1}px`,
-              height: `${Math.random() * 4 + 1}px`,
-            }}
           />
         ))}
       </div>
@@ -86,12 +87,12 @@ const NotFound = () => {
           variants={childVariants}
         >
           <motion.h1 
-            className="text-9xl font-bold mb-4 text-red-600"
+            className="text-9xl font-bold mb-4 text-falsopay-accent"
             animate={{ 
               textShadow: [
-                "0 0 10px rgba(255, 0, 0, 0.5)", 
-                "0 0 20px rgba(255, 0, 0, 0.8)", 
-                "0 0 10px rgba(255, 0, 0, 0.5)"
+                "0 0 10px rgba(255, 113, 154, 0.5)", 
+                "0 0 20px rgba(255, 113, 154, 0.8)", 
+                "0 0 10px rgba(255, 113, 154, 0.5)"
               ],
               scale: [1, 1.05, 1]
             }}
@@ -108,9 +109,9 @@ const NotFound = () => {
             className="absolute inset-0 -z-10 rounded-full"
             animate={{
               boxShadow: [
-                "0 0 40px rgba(255, 0, 0, 0.2)", 
-                "0 0 80px rgba(255, 0, 0, 0.4)", 
-                "0 0 40px rgba(255, 0, 0, 0.2)"
+                "0 0 40px rgba(255, 113, 154, 0.2)", 
+                "0 0 80px rgba(255, 113, 154, 0.4)", 
+                "0 0 40px rgba(255, 113, 154, 0.2)"
               ],
             }}
             transition={{ 
@@ -133,7 +134,7 @@ const NotFound = () => {
         >
           <Link 
             to="/" 
-            className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-full font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 inline-block"
+            className="px-6 py-3 bg-falsopay-primary hover:bg-falsopay-secondary text-white rounded-full font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 inline-block"
           >
             Return to Falsopay
           </Link>

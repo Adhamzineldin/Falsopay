@@ -24,6 +24,10 @@ This directory contains object diagrams for the FalsoPay payment system. Object 
 1. [Support Ticket - Precondition](support-ticket-precondition.puml) - System state before creating support ticket
 2. [Support Ticket - Postcondition](support-ticket-postcondition.puml) - System state after successful support ticket creation
 
+### Security Operations Process
+1. [Block Transactions - Precondition](block-transactions-precondition.puml) - System state before blocking account transactions
+2. [Block Transactions - Postcondition](block-transactions-postcondition.puml) - System state after successfully blocking transactions
+
 ## Understanding Object Diagrams
 
 Object diagrams differ from class diagrams in that they show specific instances rather than general structures. Each object is an instance of a class with specific attribute values. The diagrams in this directory illustrate:

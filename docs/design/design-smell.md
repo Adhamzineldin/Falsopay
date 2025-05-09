@@ -18,7 +18,7 @@ Common categories of design smells include:
 
 ### Description
 
-In the FalsoPay system, a design smell can be identified in the `TransactionService` class, which exhibits characteristics of a "God Class" or "Bloated Service." This class handles multiple responsibilities related to transactions:
+In the FalsoPay system, a design smell can be identified in the `TransactionService` class, which exhibits characteristics of a "Bloated Service." This class handles multiple responsibilities related to transactions:
 
 1. Transaction creation and execution
 2. Balance verification

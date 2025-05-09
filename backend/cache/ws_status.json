@@ -1,0 +1,1 @@
+{"status":"warning","label":"Degraded","message":"WebSocket is reachable but responding slower than expected.","response_time":"2043ms"}

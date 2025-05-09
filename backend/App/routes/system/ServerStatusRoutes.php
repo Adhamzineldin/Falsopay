@@ -2,10 +2,10 @@
 
 namespace App\routes\system;
 
-use App\controllers\system\SystemController;
+use App\controllers\system\ServerStatusController;
 use core\Router;
 
-class SystemRoutes
+class ServerStatusRoutes
 {
     /**
      * Define system routes
@@ -17,17 +17,17 @@ class SystemRoutes
     {
         // Fallback API route to serve the status page
         $router->add('GET', '/', function () {
-            SystemController::renderHomePage();
+            ServerStatusController::renderHomePage();
         });
 
         // API route for the root
         $router->add('GET', '/api', function () {
-            SystemController::renderHomePage();
+            ServerStatusController::renderHomePage();
         });
 
         // API endpoint for system status in JSON format (for admin dashboard)
         $router->add('GET', '/api/admin/system/status', function () {
-            SystemController::getSystemStatus();
+            ServerStatusController::getSystemStatus();
         });
     }
 } 

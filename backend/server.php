@@ -6,8 +6,8 @@ require_once __DIR__ . '/App/routes/api/UsersRoute.php';
 require_once __DIR__ . '/App/routes/api/MoneyRequestsRoute.php';
 require_once __DIR__ . '/App/routes/api/PublicRoute.php';
 require_once __DIR__ . '/App/config/ErrorLogger.php';
-require_once __DIR__ . '/App/routes/system/SystemRoutes.php';
-require_once __DIR__ . '/App/controllers/system/SystemController.php';
+require_once __DIR__ . '/App/routes/system/ServerStatusRoutes.php';
+require_once __DIR__ . '/App/controllers/system/ServerStatusController.php';
 
 use App\config\ErrorLogger;
 use App\middleware\AuthMiddleware;
@@ -25,7 +25,7 @@ use App\routes\api\UserAdminRoutes;
 use App\routes\api\MoneyRequestsRoute;
 use App\routes\api\PublicRoute;
 use App\routes\auth\AuthRoutes;
-use App\routes\system\SystemRoutes;
+use App\routes\system\ServerStatusRoutes;
 use core\Router;
 
 // Initialize our custom error logger
@@ -88,7 +88,7 @@ $router = new Router();
 
 // Define all routes
 AuthRoutes::define($router);
-SystemRoutes::define($router);
+ServerStatusRoutes::define($router);
 
 // Make sure all route classes are properly loaded
 $routeClasses = [

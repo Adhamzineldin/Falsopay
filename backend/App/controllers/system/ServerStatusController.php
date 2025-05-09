@@ -6,7 +6,7 @@ use App\database\Database;
 use App\config\ErrorLogger;
 use JetBrains\PhpStorm\NoReturn;
 
-class SystemController
+class ServerStatusController
 {
     private static ?string $homeTemplate = null;
     private static string $cacheDir;

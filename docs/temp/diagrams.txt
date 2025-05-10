@@ -1,0 +1,76 @@
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/class-diagrams/falsopay_class_diagram_final.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/class-diagrams/falsopay_class_diagram_initial.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/class-diagrams/falsopay_class_diagram_intermediate.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/class-diagrams/package-diagram.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/collaboration-diagrams/Admin & Reporting.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/collaboration-diagrams/Contacts & QR Payments.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/collaboration-diagrams/Financial Transactions Core.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/collaboration-diagrams/Notifications & Balances.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/collaboration-diagrams/Security & System Controls.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/collaboration-diagrams/UC1-Register.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/collaboration-diagrams/UC12-RequestMoney.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/collaboration-diagrams/UC2-LogIn.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/collaboration-diagrams/UC3-CheckBalance.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/collaboration-diagrams/UC5-LinkBankAccount.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/collaboration-diagrams/UC9-SendMoney.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/collaboration-diagrams/User Authentication & Profile Management.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/database/falsopay_db_diagram.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/database/ERD/falsopay_db_diagram.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/object-diagrams/block-transactions-postcondition.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/object-diagrams/block-transactions-precondition.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/object-diagrams/link-bank-account-postcondition.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/object-diagrams/link-bank-account-precondition.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/object-diagrams/request-money-postcondition.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/object-diagrams/request-money-precondition.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/object-diagrams/send-money-postcondition.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/object-diagrams/send-money-precondition.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/object-diagrams/support-ticket-postcondition.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/object-diagrams/support-ticket-precondition.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/object-diagrams/user-registration-postcondition.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/object-diagrams/user-registration-precondition.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/sequence-diagrams/UC1-Register.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/sequence-diagrams/UC10-ChooseTransferMethod.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/sequence-diagrams/UC11-ViewTransactionHistory.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/sequence-diagrams/UC12-RequestMoney.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/sequence-diagrams/UC13-14-AddDeleteFavorites.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/sequence-diagrams/UC15-ChangeDisplayName.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/sequence-diagrams/UC16-ChangePin.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/sequence-diagrams/UC17-ChangeDefaultIPA.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/sequence-diagrams/UC18-DeleteLinkedBankAccount.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/sequence-diagrams/UC19-EnableDisableNotifications.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/sequence-diagrams/UC2-LogIn.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/sequence-diagrams/UC20-FilterTransaction.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/sequence-diagrams/UC21-ViewIPAAddresses.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/sequence-diagrams/UC22-DeleteAccount.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/sequence-diagrams/UC23-PINForTransaction.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/sequence-diagrams/UC24-ContactCustomerSupport.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/sequence-diagrams/UC25-Search.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/sequence-diagrams/UC26-SendMoneyViaQRCode.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/sequence-diagrams/UC27-ScanQRCode.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/sequence-diagrams/UC28-HandleFailedTransactions.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/sequence-diagrams/UC29-BlockAppTransactions.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/sequence-diagrams/UC3-CheckBalance.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/sequence-diagrams/UC30-UnblockAppTransactions.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/sequence-diagrams/UC31-UpdateBalance.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/sequence-diagrams/UC32-AuthorizeRealTimeTransactions.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/sequence-diagrams/UC33-ViewUserReports.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/sequence-diagrams/UC34-SetTransferLimit.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/sequence-diagrams/UC35-CheckSystemStatus.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/sequence-diagrams/UC36-DeactivateUserAccount.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/sequence-diagrams/UC37-ManageRoles.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/sequence-diagrams/UC38-SetTicketStatus.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/sequence-diagrams/UC39-SendNotification.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/sequence-diagrams/UC4-EditPersonalInfo.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/sequence-diagrams/UC40-RefreshTickets.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/sequence-diagrams/UC5-LinkBankAccount.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/sequence-diagrams/UC6-ReceiveConfirmation.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/sequence-diagrams/UC7-VerifyBankAccountDetails.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/sequence-diagrams/UC8-AuthorizeSendingMoney.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/sequence-diagrams/UC9-SendMoney.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/system-sequence-diagrams/contact-customer-support-ssd.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/system-sequence-diagrams/dispute-transaction-ssd.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/system-sequence-diagrams/link-bank-account-ssd.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/system-sequence-diagrams/request-money-ssd.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/system-sequence-diagrams/send-money-ssd.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/system-sequence-diagrams/user-registration-ssd.puml
+G:/University/Second Year Term 2/Software Engineering 1/Falsopay/docs/design/use-cases/package-diagram.puml

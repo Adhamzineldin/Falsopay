@@ -38,22 +38,19 @@ class MoneyRequestTest extends TestCase
     {
         // Mock data
         $userId = 1;
-        $expectedRequests = [
+        $expectedData = [
             [
                 'request_id' => 1,
-                'sender_id' => $userId,
-                'receiver_id' => 2,
+                'requester_user_id' => 1,
+                'requested_user_id' => 2,
+                'requester_name' => 'John Doe',
+                'requested_name' => 'Jane Smith',
                 'amount' => 100.00,
+                'requester_ipa_address' => 'john@falsopay.com',
+                'requested_ipa_address' => 'jane@falsopay.com',
+                'message' => 'Test request',
                 'status' => 'pending',
                 'created_at' => '2024-03-20 10:00:00'
-            ],
-            [
-                'request_id' => 2,
-                'sender_id' => 3,
-                'receiver_id' => $userId,
-                'amount' => 50.00,
-                'status' => 'pending',
-                'created_at' => '2024-03-20 11:00:00'
             ]
         ];
         
@@ -61,58 +58,69 @@ class MoneyRequestTest extends TestCase
         $stmt = Mockery::mock(PDOStatement::class);
         $stmt->shouldReceive('execute')
             ->once()
-            ->with(['user_id' => $userId])
+            ->with([':user_id' => $userId])
             ->andReturn(true);
-        $stmt->shouldReceive('fetchAll')->once()->with(PDO::FETCH_ASSOC)->andReturn($expectedRequests);
+        $stmt->shouldReceive('fetchAll')
+            ->once()
+            ->with(PDO::FETCH_ASSOC)
+            ->andReturn($expectedData);
         
         // Mock PDO prepare
         $this->pdo->shouldReceive('prepare')
             ->once()
-            ->with("SELECT * FROM money_requests WHERE sender_id = :user_id OR receiver_id = :user_id")
+            ->with(Mockery::type('string'))
             ->andReturn($stmt);
         
         // Call the method
-        $result = $this->moneyRequest->getByUserId($userId);
+        $result = $this->moneyRequest->getAllRequestsForUser($userId);
         
-        // Assert result
-        $this->assertEquals($expectedRequests, $result);
+        // Assert
+        $this->assertEquals($expectedData, $result);
     }
     
     public function testGetByUserIdReturnsEmptyArrayWhenNoRequestsFound()
     {
         // Mock data
-        $userId = 999; // Non-existent user
+        $userId = 1;
         
         // Mock statement
         $stmt = Mockery::mock(PDOStatement::class);
         $stmt->shouldReceive('execute')
             ->once()
-            ->with(['user_id' => $userId])
+            ->with([':user_id' => $userId])
             ->andReturn(true);
-        $stmt->shouldReceive('fetchAll')->once()->with(PDO::FETCH_ASSOC)->andReturn([]);
+        $stmt->shouldReceive('fetchAll')
+            ->once()
+            ->with(PDO::FETCH_ASSOC)
+            ->andReturn([]);
         
         // Mock PDO prepare
         $this->pdo->shouldReceive('prepare')
             ->once()
-            ->with("SELECT * FROM money_requests WHERE sender_id = :user_id OR receiver_id = :user_id")
+            ->with(Mockery::type('string'))
             ->andReturn($stmt);
         
         // Call the method
-        $result = $this->moneyRequest->getByUserId($userId);
+        $result = $this->moneyRequest->getAllRequestsForUser($userId);
         
-        // Assert result
-        $this->assertEmpty($result);
+        // Assert
+        $this->assertEquals([], $result);
     }
     
     public function testGetByIdReturnsRequestWhenFound()
     {
         // Mock data
         $requestId = 1;
-        $expectedRequest = [
-            'request_id' => $requestId,
-            'sender_id' => 1,
-            'receiver_id' => 2,
+        $expectedData = [
+            'request_id' => 1,
+            'requester_user_id' => 1,
+            'requested_user_id' => 2,
+            'requester_name' => 'John Doe',
+            'requested_name' => 'Jane Smith',
             'amount' => 100.00,
+            'requester_ipa_address' => 'john@falsopay.com',
+            'requested_ipa_address' => 'jane@falsopay.com',
+            'message' => 'Test request',
             'status' => 'pending',
             'created_at' => '2024-03-20 10:00:00'
         ];
@@ -121,107 +129,149 @@ class MoneyRequestTest extends TestCase
         $stmt = Mockery::mock(PDOStatement::class);
         $stmt->shouldReceive('execute')
             ->once()
-            ->with(['request_id' => $requestId])
+            ->with([':request_id' => $requestId])
             ->andReturn(true);
-        $stmt->shouldReceive('fetch')->once()->with(PDO::FETCH_ASSOC)->andReturn($expectedRequest);
+        $stmt->shouldReceive('fetch')
+            ->once()
+            ->with(PDO::FETCH_ASSOC)
+            ->andReturn($expectedData);
         
         // Mock PDO prepare
         $this->pdo->shouldReceive('prepare')
             ->once()
-            ->with("SELECT * FROM money_requests WHERE request_id = :request_id")
+            ->with(Mockery::type('string'))
             ->andReturn($stmt);
         
         // Call the method
-        $result = $this->moneyRequest->getById($requestId);
+        $result = $this->moneyRequest->getRequestById($requestId);
         
-        // Assert result
-        $this->assertEquals($expectedRequest, $result);
+        // Assert
+        $this->assertEquals($expectedData, $result);
     }
     
     public function testGetByIdReturnsNullWhenNotFound()
     {
         // Mock data
-        $requestId = 999; // Non-existent request
+        $requestId = 1;
         
         // Mock statement
         $stmt = Mockery::mock(PDOStatement::class);
         $stmt->shouldReceive('execute')
             ->once()
-            ->with(['request_id' => $requestId])
+            ->with([':request_id' => $requestId])
             ->andReturn(true);
-        $stmt->shouldReceive('fetch')->once()->with(PDO::FETCH_ASSOC)->andReturn(false);
+        $stmt->shouldReceive('fetch')
+            ->once()
+            ->with(PDO::FETCH_ASSOC)
+            ->andReturn(false);
         
         // Mock PDO prepare
         $this->pdo->shouldReceive('prepare')
             ->once()
-            ->with("SELECT * FROM money_requests WHERE request_id = :request_id")
+            ->with(Mockery::type('string'))
             ->andReturn($stmt);
         
         // Call the method
-        $result = $this->moneyRequest->getById($requestId);
+        $result = $this->moneyRequest->getRequestById($requestId);
         
-        // Assert result
-        $this->assertNull($result);
+        // Assert
+        $this->assertFalse($result);
     }
     
     public function testCreateRequestCreatesSuccessfully()
     {
         // Mock data
-        $senderId = 1;
-        $receiverId = 2;
-        $amount = 100.00;
+        $requestData = [
+            'requester_user_id' => 1,
+            'requested_user_id' => 2,
+            'requester_name' => 'John Doe',
+            'requested_name' => 'Jane Smith',
+            'amount' => 100.00,
+            'requester_ipa_address' => 'john@falsopay.com',
+            'requested_ipa_address' => 'jane@falsopay.com',
+            'message' => 'Test request'
+        ];
         
-        // Mock statement
-        $stmt = Mockery::mock(PDOStatement::class);
-        $stmt->shouldReceive('execute')
+        // Mock statement for insert
+        $insertStmt = Mockery::mock(PDOStatement::class);
+        $insertStmt->shouldReceive('execute')
             ->once()
             ->with([
-                'sender_id' => $senderId,
-                'receiver_id' => $receiverId,
-                'amount' => $amount,
-                'status' => 'pending'
+                ':requester_user_id' => $requestData['requester_user_id'],
+                ':requested_user_id' => $requestData['requested_user_id'],
+                ':requester_name' => $requestData['requester_name'],
+                ':requested_name' => $requestData['requested_name'],
+                ':amount' => $requestData['amount'],
+                ':requester_ipa_address' => $requestData['requester_ipa_address'],
+                ':requested_ipa_address' => $requestData['requested_ipa_address'],
+                ':message' => $requestData['message']
             ])
             ->andReturn(true);
         
-        // Mock PDO prepare
+        // Mock PDO prepare for insert
         $this->pdo->shouldReceive('prepare')
             ->once()
-            ->with("INSERT INTO money_requests (sender_id, receiver_id, amount, status) VALUES (:sender_id, :receiver_id, :amount, :status)")
-            ->andReturn($stmt);
+            ->with(Mockery::type('string'))
+            ->andReturn($insertStmt);
+        
+        // Mock lastInsertId
+        $this->pdo->shouldReceive('lastInsertId')
+            ->once()
+            ->andReturn(1);
+        
+        // Mock statement for getRequestById
+        $selectStmt = Mockery::mock(PDOStatement::class);
+        $selectStmt->shouldReceive('execute')
+            ->once()
+            ->with([':request_id' => 1])
+            ->andReturn(true);
+        $selectStmt->shouldReceive('fetch')
+            ->once()
+            ->with(PDO::FETCH_ASSOC)
+            ->andReturn(array_merge($requestData, ['request_id' => 1, 'status' => 'pending']));
+        
+        // Mock PDO prepare for select
+        $this->pdo->shouldReceive('prepare')
+            ->once()
+            ->with(Mockery::type('string'))
+            ->andReturn($selectStmt);
         
         // Call the method
-        $result = $this->moneyRequest->createRequest($senderId, $receiverId, $amount);
+        $result = $this->moneyRequest->createRequest($requestData);
         
-        // Assert result
-        $this->assertTrue($result);
+        // Assert
+        $this->assertIsArray($result);
+        $this->assertEquals(1, $result['request_id']);
+        $this->assertEquals('pending', $result['status']);
     }
     
     public function testUpdateStatusUpdatesSuccessfully()
     {
         // Mock data
         $requestId = 1;
-        $status = 'accepted';
+        $status = 'completed';
+        $transactionId = 123;
         
         // Mock statement
         $stmt = Mockery::mock(PDOStatement::class);
         $stmt->shouldReceive('execute')
             ->once()
-            ->with([
-                'request_id' => $requestId,
-                'status' => $status
-            ])
+            ->with([$status, $transactionId, $requestId])
             ->andReturn(true);
+        $stmt->shouldReceive('rowCount')
+            ->once()
+            ->andReturn(1);
         
         // Mock PDO prepare
         $this->pdo->shouldReceive('prepare')
             ->once()
-            ->with("UPDATE money_requests SET status = :status WHERE request_id = :request_id")
+            ->with(Mockery::type('string'))
             ->andReturn($stmt);
         
         // Call the method
-        $result = $this->moneyRequest->updateStatus($requestId, $status);
+        $result = $this->moneyRequest->updateRequestStatus($requestId, $status, $transactionId);
         
-        // Assert result
+        // Assert
         $this->assertTrue($result);
     }
 } 

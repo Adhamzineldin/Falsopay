@@ -101,28 +101,26 @@ class CardTest extends TestCase
         $bankId = 1;
         $cardNumber = '1234567890123456';
         $pin = '1234';
-        $hashedPin = password_hash($pin, PASSWORD_DEFAULT);
-        
-        $card = [
-            'card_id' => 1,
-            'bank_id' => $bankId,
-            'card_number' => $cardNumber,
-            'bank_user_id' => 1,
-            'pin_hash' => $hashedPin
-        ];
+        $hashedPin = password_hash($pin, PASSWORD_BCRYPT);
         
         // Mock statement
         $stmt = Mockery::mock(PDOStatement::class);
         $stmt->shouldReceive('execute')
             ->once()
-            ->with(['bank_id' => $bankId, 'card_number' => $cardNumber])
+            ->with([
+                'bank_id' => $bankId,
+                'card_number' => $cardNumber
+            ])
             ->andReturn(true);
-        $stmt->shouldReceive('fetch')->once()->with(PDO::FETCH_ASSOC)->andReturn($card);
+        $stmt->shouldReceive('fetch')
+            ->once()
+            ->with(PDO::FETCH_ASSOC)
+            ->andReturn(['pin' => $hashedPin]);
         
         // Mock PDO prepare
         $this->pdo->shouldReceive('prepare')
             ->once()
-            ->with("SELECT * FROM cards WHERE bank_id = :bank_id AND card_number = :card_number")
+            ->with("SELECT pin FROM cards WHERE bank_id = :bank_id AND card_number = :card_number")
             ->andReturn($stmt);
         
         // Call the method
@@ -139,28 +137,26 @@ class CardTest extends TestCase
         $cardNumber = '1234567890123456';
         $correctPin = '1234';
         $incorrectPin = '9999';
-        $hashedPin = password_hash($correctPin, PASSWORD_DEFAULT);
-        
-        $card = [
-            'card_id' => 1,
-            'bank_id' => $bankId,
-            'card_number' => $cardNumber,
-            'bank_user_id' => 1,
-            'pin_hash' => $hashedPin
-        ];
+        $hashedPin = password_hash($correctPin, PASSWORD_BCRYPT);
         
         // Mock statement
         $stmt = Mockery::mock(PDOStatement::class);
         $stmt->shouldReceive('execute')
             ->once()
-            ->with(['bank_id' => $bankId, 'card_number' => $cardNumber])
+            ->with([
+                'bank_id' => $bankId,
+                'card_number' => $cardNumber
+            ])
             ->andReturn(true);
-        $stmt->shouldReceive('fetch')->once()->with(PDO::FETCH_ASSOC)->andReturn($card);
+        $stmt->shouldReceive('fetch')
+            ->once()
+            ->with(PDO::FETCH_ASSOC)
+            ->andReturn(['pin' => $hashedPin]);
         
         // Mock PDO prepare
         $this->pdo->shouldReceive('prepare')
             ->once()
-            ->with("SELECT * FROM cards WHERE bank_id = :bank_id AND card_number = :card_number")
+            ->with("SELECT pin FROM cards WHERE bank_id = :bank_id AND card_number = :card_number")
             ->andReturn($stmt);
         
         // Call the method

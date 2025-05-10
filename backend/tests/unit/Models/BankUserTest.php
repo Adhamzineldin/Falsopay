@@ -40,20 +40,32 @@ class BankUserTest extends TestCase
         $bankUserId = 1;
         $expectedBankUser = [
             'bank_user_id' => $bankUserId,
-            'bank_id' => 1,
+            'first_name' => 'John',
+            'last_name' => 'Doe',
+            'email' => 'john.doe@example.com',
             'phone_number' => '1234567890',
-            'name' => 'John Doe'
+            'date_of_birth' => '1990-01-01',
+            'created_at' => '2024-01-01 00:00:00'
         ];
         
         // Mock statement
         $stmt = Mockery::mock(PDOStatement::class);
-        $stmt->shouldReceive('execute')->once()->with(['bank_user_id' => $bankUserId])->andReturn(true);
-        $stmt->shouldReceive('fetch')->once()->with(PDO::FETCH_ASSOC)->andReturn($expectedBankUser);
+        $stmt->shouldReceive('bindParam')
+            ->once()
+            ->with(':id', $bankUserId)
+            ->andReturn(true);
+        $stmt->shouldReceive('execute')
+            ->once()
+            ->andReturn(true);
+        $stmt->shouldReceive('fetch')
+            ->once()
+            ->with(PDO::FETCH_ASSOC)
+            ->andReturn($expectedBankUser);
         
         // Mock PDO prepare
         $this->pdo->shouldReceive('prepare')
             ->once()
-            ->with("SELECT * FROM bank_users WHERE bank_user_id = :bank_user_id")
+            ->with("SELECT * FROM bank_users WHERE bank_user_id = :id")
             ->andReturn($stmt);
         
         // Call the method
@@ -70,13 +82,22 @@ class BankUserTest extends TestCase
         
         // Mock statement
         $stmt = Mockery::mock(PDOStatement::class);
-        $stmt->shouldReceive('execute')->once()->with(['bank_user_id' => $bankUserId])->andReturn(true);
-        $stmt->shouldReceive('fetch')->once()->with(PDO::FETCH_ASSOC)->andReturn(false);
+        $stmt->shouldReceive('bindParam')
+            ->once()
+            ->with(':id', $bankUserId)
+            ->andReturn(true);
+        $stmt->shouldReceive('execute')
+            ->once()
+            ->andReturn(true);
+        $stmt->shouldReceive('fetch')
+            ->once()
+            ->with(PDO::FETCH_ASSOC)
+            ->andReturn(false);
         
         // Mock PDO prepare
         $this->pdo->shouldReceive('prepare')
             ->once()
-            ->with("SELECT * FROM bank_users WHERE bank_user_id = :bank_user_id")
+            ->with("SELECT * FROM bank_users WHERE bank_user_id = :id")
             ->andReturn($stmt);
         
         // Call the method
@@ -92,20 +113,32 @@ class BankUserTest extends TestCase
         $phoneNumber = '1234567890';
         $expectedBankUser = [
             'bank_user_id' => 1,
-            'bank_id' => 1,
+            'first_name' => 'John',
+            'last_name' => 'Doe',
+            'email' => 'john.doe@example.com',
             'phone_number' => $phoneNumber,
-            'name' => 'John Doe'
+            'date_of_birth' => '1990-01-01',
+            'created_at' => '2024-01-01 00:00:00'
         ];
         
         // Mock statement
         $stmt = Mockery::mock(PDOStatement::class);
-        $stmt->shouldReceive('execute')->once()->with(['phone_number' => $phoneNumber])->andReturn(true);
-        $stmt->shouldReceive('fetch')->once()->with(PDO::FETCH_ASSOC)->andReturn($expectedBankUser);
+        $stmt->shouldReceive('bindParam')
+            ->once()
+            ->with(':phoneNumber', $phoneNumber)
+            ->andReturn(true);
+        $stmt->shouldReceive('execute')
+            ->once()
+            ->andReturn(true);
+        $stmt->shouldReceive('fetch')
+            ->once()
+            ->with(PDO::FETCH_ASSOC)
+            ->andReturn($expectedBankUser);
         
         // Mock PDO prepare
         $this->pdo->shouldReceive('prepare')
             ->once()
-            ->with("SELECT * FROM bank_users WHERE phone_number = :phone_number")
+            ->with("SELECT * FROM bank_users WHERE phone_number = :phoneNumber")
             ->andReturn($stmt);
         
         // Call the method
@@ -122,13 +155,22 @@ class BankUserTest extends TestCase
         
         // Mock statement
         $stmt = Mockery::mock(PDOStatement::class);
-        $stmt->shouldReceive('execute')->once()->with(['phone_number' => $phoneNumber])->andReturn(true);
-        $stmt->shouldReceive('fetch')->once()->with(PDO::FETCH_ASSOC)->andReturn(false);
+        $stmt->shouldReceive('bindParam')
+            ->once()
+            ->with(':phoneNumber', $phoneNumber)
+            ->andReturn(true);
+        $stmt->shouldReceive('execute')
+            ->once()
+            ->andReturn(true);
+        $stmt->shouldReceive('fetch')
+            ->once()
+            ->with(PDO::FETCH_ASSOC)
+            ->andReturn(false);
         
         // Mock PDO prepare
         $this->pdo->shouldReceive('prepare')
             ->once()
-            ->with("SELECT * FROM bank_users WHERE phone_number = :phone_number")
+            ->with("SELECT * FROM bank_users WHERE phone_number = :phoneNumber")
             ->andReturn($stmt);
         
         // Call the method

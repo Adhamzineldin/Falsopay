@@ -38,22 +38,14 @@ class SupportTicketTest extends TestCase
     {
         // Mock data
         $userId = 1;
-        $expectedTickets = [
+        $expectedData = [
             [
                 'ticket_id' => 1,
                 'user_id' => $userId,
-                'subject' => 'Payment Issue',
-                'message' => 'I cannot complete my payment',
+                'subject' => 'Test Ticket',
+                'message' => 'Test message',
                 'status' => 'open',
                 'created_at' => '2024-03-20 10:00:00'
-            ],
-            [
-                'ticket_id' => 2,
-                'user_id' => $userId,
-                'subject' => 'Account Question',
-                'message' => 'How do I change my password?',
-                'status' => 'closed',
-                'created_at' => '2024-03-19 15:00:00'
             ]
         ];
         
@@ -61,59 +53,74 @@ class SupportTicketTest extends TestCase
         $stmt = Mockery::mock(PDOStatement::class);
         $stmt->shouldReceive('execute')
             ->once()
-            ->with(['user_id' => $userId])
+            ->with(Mockery::on(function($params) use ($userId) {
+                return $params[':user_id'] === $userId;
+            }))
             ->andReturn(true);
-        $stmt->shouldReceive('fetchAll')->once()->with(PDO::FETCH_ASSOC)->andReturn($expectedTickets);
+        $stmt->shouldReceive('fetchAll')
+            ->once()
+            ->with(PDO::FETCH_ASSOC)
+            ->andReturn($expectedData);
         
         // Mock PDO prepare
         $this->pdo->shouldReceive('prepare')
             ->once()
-            ->with("SELECT * FROM support_tickets WHERE user_id = :user_id")
+            ->with("SELECT * FROM support_tickets WHERE user_id = :user_id ORDER BY created_at DESC")
             ->andReturn($stmt);
         
         // Call the method
-        $result = $this->supportTicket->getByUserId($userId);
+        $result = $this->supportTicket->getTicketsByUserId($userId);
         
-        // Assert result
-        $this->assertEquals($expectedTickets, $result);
+        // Assert
+        $this->assertEquals($expectedData, $result);
     }
     
     public function testGetByUserIdReturnsEmptyArrayWhenNoTicketsFound()
     {
         // Mock data
-        $userId = 999; // Non-existent user
+        $userId = 1;
         
         // Mock statement
         $stmt = Mockery::mock(PDOStatement::class);
         $stmt->shouldReceive('execute')
             ->once()
-            ->with(['user_id' => $userId])
+            ->with(Mockery::on(function($params) use ($userId) {
+                return $params[':user_id'] === $userId;
+            }))
             ->andReturn(true);
-        $stmt->shouldReceive('fetchAll')->once()->with(PDO::FETCH_ASSOC)->andReturn([]);
+        $stmt->shouldReceive('fetchAll')
+            ->once()
+            ->with(PDO::FETCH_ASSOC)
+            ->andReturn([]);
         
         // Mock PDO prepare
         $this->pdo->shouldReceive('prepare')
             ->once()
-            ->with("SELECT * FROM support_tickets WHERE user_id = :user_id")
+            ->with("SELECT * FROM support_tickets WHERE user_id = :user_id ORDER BY created_at DESC")
             ->andReturn($stmt);
         
         // Call the method
-        $result = $this->supportTicket->getByUserId($userId);
+        $result = $this->supportTicket->getTicketsByUserId($userId);
         
-        // Assert result
-        $this->assertEmpty($result);
+        // Assert
+        $this->assertEquals([], $result);
     }
     
     public function testGetByIdReturnsTicketWhenFound()
     {
         // Mock data
         $ticketId = 1;
-        $expectedTicket = [
-            'ticket_id' => $ticketId,
+        $expectedData = [
+            'ticket_id' => 1,
             'user_id' => 1,
-            'subject' => 'Payment Issue',
-            'message' => 'I cannot complete my payment',
+            'subject' => 'Test Ticket',
+            'message' => 'Test message',
             'status' => 'open',
+            'first_name' => 'John',
+            'last_name' => 'Doe',
+            'email' => 'john@example.com',
+            'phone_number' => '1234567890',
+            'is_public' => 0,
             'created_at' => '2024-03-20 10:00:00'
         ];
         
@@ -121,46 +128,72 @@ class SupportTicketTest extends TestCase
         $stmt = Mockery::mock(PDOStatement::class);
         $stmt->shouldReceive('execute')
             ->once()
-            ->with(['ticket_id' => $ticketId])
+            ->with(Mockery::on(function($params) use ($ticketId) {
+                return $params[':id'] === $ticketId;
+            }))
             ->andReturn(true);
-        $stmt->shouldReceive('fetch')->once()->with(PDO::FETCH_ASSOC)->andReturn($expectedTicket);
+        $stmt->shouldReceive('fetch')
+            ->once()
+            ->with(PDO::FETCH_ASSOC)
+            ->andReturn($expectedData);
         
         // Mock PDO prepare
         $this->pdo->shouldReceive('prepare')
             ->once()
-            ->with("SELECT * FROM support_tickets WHERE ticket_id = :ticket_id")
+            ->with("SELECT t.*,
+                COALESCE(u.first_name, '') as first_name, 
+                COALESCE(u.last_name, '') as last_name, 
+                COALESCE(u.email, t.contact_email) as email, 
+                COALESCE(u.phone_number, t.contact_phone) as phone_number,
+                CASE WHEN t.user_id IS NULL THEN 1 ELSE 0 END as is_public 
+                FROM support_tickets t
+                LEFT JOIN users u ON t.user_id = u.user_id
+                WHERE t.ticket_id = :id")
             ->andReturn($stmt);
         
         // Call the method
-        $result = $this->supportTicket->getById($ticketId);
+        $result = $this->supportTicket->getTicketById($ticketId);
         
-        // Assert result
-        $this->assertEquals($expectedTicket, $result);
+        // Assert
+        $this->assertEquals($expectedData, $result);
     }
     
     public function testGetByIdReturnsNullWhenNotFound()
     {
         // Mock data
-        $ticketId = 999; // Non-existent ticket
+        $ticketId = 1;
         
         // Mock statement
         $stmt = Mockery::mock(PDOStatement::class);
         $stmt->shouldReceive('execute')
             ->once()
-            ->with(['ticket_id' => $ticketId])
+            ->with(Mockery::on(function($params) use ($ticketId) {
+                return $params[':id'] === $ticketId;
+            }))
             ->andReturn(true);
-        $stmt->shouldReceive('fetch')->once()->with(PDO::FETCH_ASSOC)->andReturn(false);
+        $stmt->shouldReceive('fetch')
+            ->once()
+            ->with(PDO::FETCH_ASSOC)
+            ->andReturn(false);
         
         // Mock PDO prepare
         $this->pdo->shouldReceive('prepare')
             ->once()
-            ->with("SELECT * FROM support_tickets WHERE ticket_id = :ticket_id")
+            ->with("SELECT t.*,
+                COALESCE(u.first_name, '') as first_name, 
+                COALESCE(u.last_name, '') as last_name, 
+                COALESCE(u.email, t.contact_email) as email, 
+                COALESCE(u.phone_number, t.contact_phone) as phone_number,
+                CASE WHEN t.user_id IS NULL THEN 1 ELSE 0 END as is_public 
+                FROM support_tickets t
+                LEFT JOIN users u ON t.user_id = u.user_id
+                WHERE t.ticket_id = :id")
             ->andReturn($stmt);
         
         // Call the method
-        $result = $this->supportTicket->getById($ticketId);
+        $result = $this->supportTicket->getTicketById($ticketId);
         
-        // Assert result
+        // Assert
         $this->assertNull($result);
     }
     
@@ -168,100 +201,167 @@ class SupportTicketTest extends TestCase
     {
         // Mock data
         $userId = 1;
-        $subject = 'Payment Issue';
-        $message = 'I cannot complete my payment';
+        $subject = 'Test Ticket';
+        $message = 'Test message';
         
-        // Mock statement
-        $stmt = Mockery::mock(PDOStatement::class);
-        $stmt->shouldReceive('execute')
+        // Mock statement for insert
+        $insertStmt = Mockery::mock(PDOStatement::class);
+        $insertStmt->shouldReceive('execute')
             ->once()
-            ->with([
+            ->with(Mockery::on(function($params) use ($userId, $subject, $message) {
+                return $params['user_id'] === $userId &&
+                       $params['subject'] === $subject &&
+                       $params['message'] === $message;
+            }))
+            ->andReturn(true);
+        
+        // Mock PDO prepare for insert
+        $this->pdo->shouldReceive('prepare')
+            ->once()
+            ->with("INSERT INTO support_tickets (user_id, subject, message)
+                VALUES (:user_id, :subject, :message)")
+            ->andReturn($insertStmt);
+        
+        // Mock lastInsertId
+        $this->pdo->shouldReceive('lastInsertId')
+            ->once()
+            ->andReturn(1);
+        
+        // Mock statement for getTicketById
+        $selectStmt = Mockery::mock(PDOStatement::class);
+        $selectStmt->shouldReceive('execute')
+            ->once()
+            ->with(Mockery::on(function($params) {
+                return $params[':id'] === 1;
+            }))
+            ->andReturn(true);
+        $selectStmt->shouldReceive('fetch')
+            ->once()
+            ->with(PDO::FETCH_ASSOC)
+            ->andReturn([
+                'ticket_id' => 1,
                 'user_id' => $userId,
                 'subject' => $subject,
                 'message' => $message,
-                'status' => 'open'
-            ])
-            ->andReturn(true);
+                'status' => 'open',
+                'created_at' => '2024-03-20 10:00:00'
+            ]);
         
-        // Mock PDO prepare
+        // Mock PDO prepare for select
         $this->pdo->shouldReceive('prepare')
             ->once()
-            ->with("INSERT INTO support_tickets (user_id, subject, message, status) VALUES (:user_id, :subject, :message, :status)")
-            ->andReturn($stmt);
+            ->with("SELECT t.*,
+                COALESCE(u.first_name, '') as first_name, 
+                COALESCE(u.last_name, '') as last_name, 
+                COALESCE(u.email, t.contact_email) as email, 
+                COALESCE(u.phone_number, t.contact_phone) as phone_number,
+                CASE WHEN t.user_id IS NULL THEN 1 ELSE 0 END as is_public 
+                FROM support_tickets t
+                LEFT JOIN users u ON t.user_id = u.user_id
+                WHERE t.ticket_id = :id")
+            ->andReturn($selectStmt);
         
         // Call the method
         $result = $this->supportTicket->createTicket($userId, $subject, $message);
         
-        // Assert result
-        $this->assertTrue($result);
+        // Assert
+        $this->assertIsArray($result);
+        $this->assertEquals(1, $result['ticket_id']);
+        $this->assertEquals('open', $result['status']);
     }
     
     public function testUpdateStatusUpdatesSuccessfully()
     {
         // Mock data
         $ticketId = 1;
-        $status = 'closed';
+        $status = 'in_progress';
         
         // Mock statement
         $stmt = Mockery::mock(PDOStatement::class);
         $stmt->shouldReceive('execute')
             ->once()
-            ->with([
-                'ticket_id' => $ticketId,
-                'status' => $status
-            ])
+            ->with(Mockery::on(function($params) use ($ticketId, $status) {
+                return $params['id'] === $ticketId &&
+                       $params['status'] === $status;
+            }))
             ->andReturn(true);
         
         // Mock PDO prepare
         $this->pdo->shouldReceive('prepare')
             ->once()
-            ->with("UPDATE support_tickets SET status = :status WHERE ticket_id = :ticket_id")
+            ->with("UPDATE support_tickets SET status = :status WHERE ticket_id = :id")
             ->andReturn($stmt);
         
         // Call the method
-        $result = $this->supportTicket->updateStatus($ticketId, $status);
+        $result = $this->supportTicket->updateTicketStatus($ticketId, $status);
         
-        // Assert result
+        // Assert
         $this->assertTrue($result);
     }
     
     public function testGetAllReturnsAllTickets()
     {
         // Mock data
-        $expectedTickets = [
+        $expectedData = [
             [
                 'ticket_id' => 1,
                 'user_id' => 1,
-                'subject' => 'Payment Issue',
-                'message' => 'I cannot complete my payment',
+                'subject' => 'Test Ticket 1',
+                'message' => 'Test message 1',
                 'status' => 'open',
+                'first_name' => 'John',
+                'last_name' => 'Doe',
+                'email' => 'john@example.com',
+                'phone_number' => '1234567890',
+                'is_public' => 0,
                 'created_at' => '2024-03-20 10:00:00'
             ],
             [
                 'ticket_id' => 2,
                 'user_id' => 2,
-                'subject' => 'Account Question',
-                'message' => 'How do I change my password?',
+                'subject' => 'Test Ticket 2',
+                'message' => 'Test message 2',
                 'status' => 'closed',
-                'created_at' => '2024-03-19 15:00:00'
+                'first_name' => 'Jane',
+                'last_name' => 'Smith',
+                'email' => 'jane@example.com',
+                'phone_number' => '0987654321',
+                'is_public' => 0,
+                'created_at' => '2024-03-20 11:00:00'
             ]
         ];
         
         // Mock statement
         $stmt = Mockery::mock(PDOStatement::class);
-        $stmt->shouldReceive('execute')->once()->andReturn(true);
-        $stmt->shouldReceive('fetchAll')->once()->with(PDO::FETCH_ASSOC)->andReturn($expectedTickets);
-        
-        // Mock PDO prepare
-        $this->pdo->shouldReceive('prepare')
+        $stmt->shouldReceive('fetchAll')
             ->once()
-            ->with("SELECT * FROM support_tickets")
+            ->with(PDO::FETCH_ASSOC)
+            ->andReturn($expectedData);
+        
+        // Mock PDO query
+        $this->pdo->shouldReceive('query')
+            ->once()
+            ->with("SELECT t.*, 
+                COALESCE(u.first_name, '') as first_name, 
+                COALESCE(u.last_name, '') as last_name, 
+                COALESCE(u.email, t.contact_email) as email, 
+                COALESCE(u.phone_number, t.contact_phone) as phone_number,
+                CASE WHEN t.user_id IS NULL THEN 1 ELSE 0 END as is_public
+                FROM support_tickets t
+                LEFT JOIN users u ON t.user_id = u.user_id
+                ORDER BY 
+                  CASE 
+                    WHEN t.status = 'open' THEN 1
+                    WHEN t.status = 'in_progress' THEN 2
+                    WHEN t.status = 'closed' THEN 3
+                  END,
+                  t.created_at DESC")
             ->andReturn($stmt);
         
         // Call the method
-        $result = $this->supportTicket->getAll();
+        $result = $this->supportTicket->getAllTickets();
         
-        // Assert result
-        $this->assertEquals($expectedTickets, $result);
+        // Assert
+        $this->assertEquals($expectedData, $result);
     }
 } 

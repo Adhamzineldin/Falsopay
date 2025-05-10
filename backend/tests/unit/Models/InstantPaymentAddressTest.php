@@ -34,22 +34,28 @@ class InstantPaymentAddressTest extends TestCase
         parent::tearDown();
     }
     
-    public function testGetByUserIdReturnsAddressesWhenFound()
+    public function testGetAllByUserIdReturnsAddressesWhenFound()
     {
         // Mock data
         $userId = 1;
         $expectedAddresses = [
             [
                 'ipa_id' => 1,
+                'bank_id' => 1,
+                'account_number' => '1234567890',
+                'ipa_address' => 'user1@falsopay.com',
                 'user_id' => $userId,
-                'address' => 'user1@falsopay.com',
-                'is_active' => true
+                'pin' => 'hashed_pin',
+                'created_at' => '2024-01-01 00:00:00'
             ],
             [
                 'ipa_id' => 2,
+                'bank_id' => 1,
+                'account_number' => '0987654321',
+                'ipa_address' => 'user1.business@falsopay.com',
                 'user_id' => $userId,
-                'address' => 'user1.business@falsopay.com',
-                'is_active' => true
+                'pin' => 'hashed_pin',
+                'created_at' => '2024-01-01 00:00:00'
             ]
         ];
         
@@ -59,7 +65,10 @@ class InstantPaymentAddressTest extends TestCase
             ->once()
             ->with(['user_id' => $userId])
             ->andReturn(true);
-        $stmt->shouldReceive('fetchAll')->once()->with(PDO::FETCH_ASSOC)->andReturn($expectedAddresses);
+        $stmt->shouldReceive('fetchAll')
+            ->once()
+            ->with(PDO::FETCH_ASSOC)
+            ->andReturn($expectedAddresses);
         
         // Mock PDO prepare
         $this->pdo->shouldReceive('prepare')
@@ -68,13 +77,13 @@ class InstantPaymentAddressTest extends TestCase
             ->andReturn($stmt);
         
         // Call the method
-        $result = $this->ipa->getByUserId($userId);
+        $result = $this->ipa->getAllByUserId($userId);
         
         // Assert result
         $this->assertEquals($expectedAddresses, $result);
     }
     
-    public function testGetByUserIdReturnsEmptyArrayWhenNoAddressesFound()
+    public function testGetAllByUserIdReturnsEmptyArrayWhenNoAddressesFound()
     {
         // Mock data
         $userId = 999; // Non-existent user
@@ -85,7 +94,10 @@ class InstantPaymentAddressTest extends TestCase
             ->once()
             ->with(['user_id' => $userId])
             ->andReturn(true);
-        $stmt->shouldReceive('fetchAll')->once()->with(PDO::FETCH_ASSOC)->andReturn([]);
+        $stmt->shouldReceive('fetchAll')
+            ->once()
+            ->with(PDO::FETCH_ASSOC)
+            ->andReturn([]);
         
         // Mock PDO prepare
         $this->pdo->shouldReceive('prepare')
@@ -94,120 +106,137 @@ class InstantPaymentAddressTest extends TestCase
             ->andReturn($stmt);
         
         // Call the method
-        $result = $this->ipa->getByUserId($userId);
+        $result = $this->ipa->getAllByUserId($userId);
         
         // Assert result
         $this->assertEmpty($result);
     }
     
-    public function testGetByAddressReturnsAddressWhenFound()
+    public function testGetHashedPinReturnsPinWhenFound()
     {
         // Mock data
-        $address = 'user1@falsopay.com';
-        $expectedAddress = [
-            'ipa_id' => 1,
-            'user_id' => 1,
-            'address' => $address,
-            'is_active' => true
-        ];
+        $ipaAddress = 'user1@falsopay.com';
+        $hashedPin = password_hash('1234', PASSWORD_BCRYPT);
         
         // Mock statement
         $stmt = Mockery::mock(PDOStatement::class);
         $stmt->shouldReceive('execute')
             ->once()
-            ->with(['address' => $address])
+            ->with(['ipa_address' => $ipaAddress])
             ->andReturn(true);
-        $stmt->shouldReceive('fetch')->once()->with(PDO::FETCH_ASSOC)->andReturn($expectedAddress);
+        $stmt->shouldReceive('fetch')
+            ->once()
+            ->with(PDO::FETCH_ASSOC)
+            ->andReturn(['pin' => $hashedPin]);
         
         // Mock PDO prepare
         $this->pdo->shouldReceive('prepare')
             ->once()
-            ->with("SELECT * FROM instant_payment_addresses WHERE address = :address")
+            ->with("SELECT pin FROM instant_payment_addresses WHERE ipa_address = :ipa_address")
             ->andReturn($stmt);
         
         // Call the method
-        $result = $this->ipa->getByAddress($address);
+        $result = $this->ipa->getHashedPin($ipaAddress);
         
         // Assert result
-        $this->assertEquals($expectedAddress, $result);
+        $this->assertEquals($hashedPin, $result);
     }
     
-    public function testGetByAddressReturnsNullWhenNotFound()
+    public function testGetHashedPinReturnsNullWhenNotFound()
     {
         // Mock data
-        $address = 'nonexistent@falsopay.com';
+        $ipaAddress = 'nonexistent@falsopay.com';
         
         // Mock statement
         $stmt = Mockery::mock(PDOStatement::class);
         $stmt->shouldReceive('execute')
             ->once()
-            ->with(['address' => $address])
+            ->with(['ipa_address' => $ipaAddress])
             ->andReturn(true);
-        $stmt->shouldReceive('fetch')->once()->with(PDO::FETCH_ASSOC)->andReturn(false);
+        $stmt->shouldReceive('fetch')
+            ->once()
+            ->with(PDO::FETCH_ASSOC)
+            ->andReturn(false);
         
         // Mock PDO prepare
         $this->pdo->shouldReceive('prepare')
             ->once()
-            ->with("SELECT * FROM instant_payment_addresses WHERE address = :address")
+            ->with("SELECT pin FROM instant_payment_addresses WHERE ipa_address = :ipa_address")
             ->andReturn($stmt);
         
         // Call the method
-        $result = $this->ipa->getByAddress($address);
+        $result = $this->ipa->getHashedPin($ipaAddress);
         
         // Assert result
         $this->assertNull($result);
     }
     
-    public function testCreateAddressCreatesSuccessfully()
+    public function testCreateCreatesSuccessfully()
     {
         // Mock data
+        $bankId = 1;
+        $accountNumber = '1234567890';
+        $ipaAddress = 'new.user@falsopay.com';
         $userId = 1;
-        $address = 'new.user@falsopay.com';
+        $pin = '1234';
+        
+        // Mock statement
+        $stmt = Mockery::mock(PDOStatement::class);
+        $stmt->shouldReceive('execute')
+            ->once()
+            ->with(Mockery::on(function($params) use ($bankId, $accountNumber, $ipaAddress, $userId, $pin) {
+                // Verify all parameters except pin
+                if ($params['bank_id'] !== $bankId ||
+                    $params['account_number'] !== $accountNumber ||
+                    $params['ipa_address'] !== $ipaAddress ||
+                    $params['user_id'] !== $userId) {
+                    return false;
+                }
+                
+                // Verify that pin is a valid bcrypt hash
+                return password_verify($pin, $params['pin']);
+            }))
+            ->andReturn(true);
+        
+        // Mock PDO prepare
+        $this->pdo->shouldReceive('prepare')
+            ->once()
+            ->with(Mockery::type('string'))
+            ->andReturn($stmt);
+        
+        // Call the method
+        $this->ipa->create($bankId, $accountNumber, $ipaAddress, $userId, $pin);
+        
+        // No assertion needed as method is void
+    }
+    
+    public function testDeleteDeletesSuccessfully()
+    {
+        // Mock data
+        $bankId = 1;
+        $accountNumber = '1234567890';
         
         // Mock statement
         $stmt = Mockery::mock(PDOStatement::class);
         $stmt->shouldReceive('execute')
             ->once()
             ->with([
-                'user_id' => $userId,
-                'address' => $address,
-                'is_active' => true
+                'bank_id' => $bankId,
+                'account_number' => $accountNumber
             ])
             ->andReturn(true);
+        $stmt->shouldReceive('rowCount')
+            ->once()
+            ->andReturn(1);
         
         // Mock PDO prepare
         $this->pdo->shouldReceive('prepare')
             ->once()
-            ->with("INSERT INTO instant_payment_addresses (user_id, address, is_active) VALUES (:user_id, :address, :is_active)")
+            ->with("DELETE FROM instant_payment_addresses WHERE bank_id = :bank_id AND account_number = :account_number")
             ->andReturn($stmt);
         
         // Call the method
-        $result = $this->ipa->createAddress($userId, $address);
-        
-        // Assert result
-        $this->assertTrue($result);
-    }
-    
-    public function testDeactivateAddressDeactivatesSuccessfully()
-    {
-        // Mock data
-        $addressId = 1;
-        
-        // Mock statement
-        $stmt = Mockery::mock(PDOStatement::class);
-        $stmt->shouldReceive('execute')
-            ->once()
-            ->with(['ipa_id' => $addressId])
-            ->andReturn(true);
-        
-        // Mock PDO prepare
-        $this->pdo->shouldReceive('prepare')
-            ->once()
-            ->with("UPDATE instant_payment_addresses SET is_active = false WHERE ipa_id = :ipa_id")
-            ->andReturn($stmt);
-        
-        // Call the method
-        $result = $this->ipa->deactivateAddress($addressId);
+        $result = $this->ipa->delete($bankId, $accountNumber);
         
         // Assert result
         $this->assertTrue($result);

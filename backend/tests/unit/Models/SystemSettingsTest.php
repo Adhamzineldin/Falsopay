@@ -20,12 +20,15 @@ class SystemSettingsTest extends TestCase
         // Create mock PDO
         $this->pdo = Mockery::mock(PDO::class);
         
-        // Create SystemSettings instance and set PDO using reflection
+        // Mock Database::getInstance()->getConnection()
+        $database = Mockery::mock('overload:App\database\Database');
+        $database->shouldReceive('getInstance')
+            ->andReturnSelf();
+        $database->shouldReceive('getConnection')
+            ->andReturn($this->pdo);
+        
+        // Create SystemSettings instance
         $this->systemSettings = new SystemSettings();
-        $reflection = new \ReflectionClass($this->systemSettings);
-        $property = $reflection->getProperty('pdo');
-        $property->setAccessible(true);
-        $property->setValue($this->systemSettings, $this->pdo);
     }
     
     protected function tearDown(): void
@@ -37,160 +40,219 @@ class SystemSettingsTest extends TestCase
     public function testGetAllReturnsAllSettings()
     {
         // Mock data
-        $expectedSettings = [
-            [
-                'setting_id' => 1,
-                'setting_key' => 'maintenance_mode',
-                'setting_value' => 'false',
-                'description' => 'System maintenance mode'
-            ],
-            [
-                'setting_id' => 2,
-                'setting_key' => 'max_transaction_amount',
-                'setting_value' => '10000',
-                'description' => 'Maximum transaction amount'
-            ],
-            [
-                'setting_id' => 3,
-                'setting_key' => 'transaction_fee',
-                'setting_value' => '0.5',
-                'description' => 'Transaction fee percentage'
-            ]
+        $expectedData = [
+            'transfer_limit_enabled' => false,
+            'transfer_limit_amount' => 5000,
+            'transactions_blocked' => false,
+            'block_message' => '',
+            'maintenance_mode' => false,
+            'maintenance_message' => '',
+            'updated_at' => null,
+            'updated_by' => null
         ];
         
         // Mock statement
         $stmt = Mockery::mock(PDOStatement::class);
-        $stmt->shouldReceive('execute')->once()->andReturn(true);
-        $stmt->shouldReceive('fetchAll')->once()->with(PDO::FETCH_ASSOC)->andReturn($expectedSettings);
+        $stmt->shouldReceive('execute')
+            ->once()
+            ->andReturn(true);
+        $stmt->shouldReceive('fetch')
+            ->once()
+            ->with(PDO::FETCH_ASSOC)
+            ->andReturn(false);
         
         // Mock PDO prepare
         $this->pdo->shouldReceive('prepare')
             ->once()
-            ->with("SELECT * FROM system_settings")
+            ->with("SELECT * FROM system_settings ORDER BY setting_id LIMIT 1")
+            ->andReturn($stmt);
+        
+        // Mock createDefaultSettings
+        $this->pdo->shouldReceive('prepare')
+            ->once()
+            ->with("INSERT INTO system_settings 
+                (transfer_limit_enabled, transfer_limit_amount, transactions_blocked, maintenance_mode) 
+                VALUES 
+                (FALSE, 5000.00, FALSE, FALSE)")
             ->andReturn($stmt);
         
         // Call the method
-        $result = $this->systemSettings->getAll();
+        $result = $this->systemSettings->getSettings();
         
-        // Assert result
-        $this->assertEquals($expectedSettings, $result);
+        // Assert
+        $this->assertEquals($expectedData, $result);
     }
     
     public function testGetByKeyReturnsSettingWhenFound()
     {
         // Mock data
-        $key = 'maintenance_mode';
-        $expectedSetting = [
-            'setting_id' => 1,
-            'setting_key' => $key,
-            'setting_value' => 'false',
-            'description' => 'System maintenance mode'
+        $expectedData = [
+            'transfer_limit_enabled' => false,
+            'transfer_limit_amount' => 5000,
+            'transactions_blocked' => false,
+            'block_message' => '',
+            'maintenance_mode' => false,
+            'maintenance_message' => '',
+            'updated_at' => null,
+            'updated_by' => null
         ];
         
         // Mock statement
         $stmt = Mockery::mock(PDOStatement::class);
         $stmt->shouldReceive('execute')
             ->once()
-            ->with(['setting_key' => $key])
             ->andReturn(true);
-        $stmt->shouldReceive('fetch')->once()->with(PDO::FETCH_ASSOC)->andReturn($expectedSetting);
+        $stmt->shouldReceive('fetch')
+            ->once()
+            ->with(PDO::FETCH_ASSOC)
+            ->andReturn($expectedData);
         
         // Mock PDO prepare
         $this->pdo->shouldReceive('prepare')
             ->once()
-            ->with("SELECT * FROM system_settings WHERE setting_key = :setting_key")
+            ->with("SELECT * FROM system_settings ORDER BY setting_id LIMIT 1")
             ->andReturn($stmt);
         
         // Call the method
-        $result = $this->systemSettings->getByKey($key);
+        $result = $this->systemSettings->getSettings();
         
-        // Assert result
-        $this->assertEquals($expectedSetting, $result);
+        // Assert
+        $this->assertEquals($expectedData['transfer_limit_enabled'], $result['transfer_limit_enabled']);
     }
     
     public function testGetByKeyReturnsNullWhenNotFound()
     {
-        // Mock data
-        $key = 'nonexistent_setting';
-        
         // Mock statement
         $stmt = Mockery::mock(PDOStatement::class);
         $stmt->shouldReceive('execute')
             ->once()
-            ->with(['setting_key' => $key])
             ->andReturn(true);
-        $stmt->shouldReceive('fetch')->once()->with(PDO::FETCH_ASSOC)->andReturn(false);
+        $stmt->shouldReceive('fetch')
+            ->once()
+            ->with(PDO::FETCH_ASSOC)
+            ->andReturn(false);
         
         // Mock PDO prepare
         $this->pdo->shouldReceive('prepare')
             ->once()
-            ->with("SELECT * FROM system_settings WHERE setting_key = :setting_key")
+            ->with("SELECT * FROM system_settings ORDER BY setting_id LIMIT 1")
+            ->andReturn($stmt);
+        
+        // Mock createDefaultSettings
+        $this->pdo->shouldReceive('prepare')
+            ->once()
+            ->with("INSERT INTO system_settings 
+                (transfer_limit_enabled, transfer_limit_amount, transactions_blocked, maintenance_mode) 
+                VALUES 
+                (FALSE, 5000.00, FALSE, FALSE)")
             ->andReturn($stmt);
         
         // Call the method
-        $result = $this->systemSettings->getByKey($key);
+        $result = $this->systemSettings->getSettings();
         
-        // Assert result
-        $this->assertNull($result);
+        // Assert
+        $this->assertEquals([
+            'transfer_limit_enabled' => false,
+            'transfer_limit_amount' => 5000,
+            'transactions_blocked' => false,
+            'block_message' => '',
+            'maintenance_mode' => false,
+            'maintenance_message' => '',
+            'updated_at' => null,
+            'updated_by' => null
+        ], $result);
     }
     
     public function testUpdateSettingUpdatesSuccessfully()
     {
         // Mock data
-        $key = 'maintenance_mode';
-        $value = 'true';
+        $settings = [
+            'transfer_limit_enabled' => true,
+            'transfer_limit_amount' => 10000.00
+        ];
+        $userId = 1;
         
-        // Mock statement
-        $stmt = Mockery::mock(PDOStatement::class);
-        $stmt->shouldReceive('execute')
+        // Mock statement for getSettings
+        $getStmt = Mockery::mock(PDOStatement::class);
+        $getStmt->shouldReceive('execute')
             ->once()
-            ->with([
-                'setting_key' => $key,
-                'setting_value' => $value
-            ])
             ->andReturn(true);
+        $getStmt->shouldReceive('fetch')
+            ->once()
+            ->with(PDO::FETCH_ASSOC)
+            ->andReturn([
+                'setting_id' => 1,
+                'transfer_limit_enabled' => false,
+                'transfer_limit_amount' => 5000.00,
+                'transactions_blocked' => false,
+                'block_message' => '',
+                'maintenance_mode' => false,
+                'maintenance_message' => '',
+                'updated_at' => null,
+                'updated_by' => null
+            ]);
         
-        // Mock PDO prepare
+        // Mock PDO prepare for getSettings
         $this->pdo->shouldReceive('prepare')
             ->once()
-            ->with("UPDATE system_settings SET setting_value = :setting_value WHERE setting_key = :setting_key")
-            ->andReturn($stmt);
+            ->with("SELECT * FROM system_settings ORDER BY setting_id LIMIT 1")
+            ->andReturn($getStmt);
+        
+        // Mock statement for update
+        $updateStmt = Mockery::mock(PDOStatement::class);
+        $updateStmt->shouldReceive('execute')
+            ->once()
+            ->with(Mockery::on(function($params) use ($settings, $userId) {
+                return $params['transfer_limit_enabled'] === 1 &&
+                       $params['transfer_limit_amount'] === 10000.00 &&
+                       $params['updated_by'] === $userId &&
+                       $params['setting_id'] === 1;
+            }))
+            ->andReturn(true);
+        
+        // Mock PDO prepare for update
+        $this->pdo->shouldReceive('prepare')
+            ->once()
+            ->with("UPDATE system_settings SET transfer_limit_enabled = :transfer_limit_enabled, transfer_limit_amount = :transfer_limit_amount, updated_by = :updated_by WHERE setting_id = :setting_id")
+            ->andReturn($updateStmt);
         
         // Call the method
-        $result = $this->systemSettings->updateSetting($key, $value);
+        $result = $this->systemSettings->updateSettings($settings, $userId);
         
-        // Assert result
+        // Assert
         $this->assertTrue($result);
     }
     
-    public function testCreateSettingCreatesSuccessfully()
+    public function testCreateDefaultSettingsCreatesSuccessfully()
     {
-        // Mock data
-        $key = 'new_setting';
-        $value = 'new_value';
-        $description = 'New system setting';
-        
         // Mock statement
         $stmt = Mockery::mock(PDOStatement::class);
         $stmt->shouldReceive('execute')
             ->once()
-            ->with([
-                'setting_key' => $key,
-                'setting_value' => $value,
-                'description' => $description
-            ])
             ->andReturn(true);
         
         // Mock PDO prepare
         $this->pdo->shouldReceive('prepare')
             ->once()
-            ->with("INSERT INTO system_settings (setting_key, setting_value, description) VALUES (:setting_key, :setting_value, :description)")
+            ->with("INSERT INTO system_settings 
+                (transfer_limit_enabled, transfer_limit_amount, transactions_blocked, maintenance_mode) 
+                VALUES 
+                (FALSE, 5000.00, FALSE, FALSE)")
             ->andReturn($stmt);
         
-        // Call the method
-        $result = $this->systemSettings->createSetting($key, $value, $description);
+        // Call getSettings which will trigger createDefaultSettings internally
+        $result = $this->systemSettings->getSettings();
         
-        // Assert result
-        $this->assertTrue($result);
+        // Assert
+        $this->assertEquals([
+            'transfer_limit_enabled' => false,
+            'transfer_limit_amount' => 5000,
+            'transactions_blocked' => false,
+            'block_message' => '',
+            'maintenance_mode' => false,
+            'maintenance_message' => '',
+            'updated_at' => null,
+            'updated_by' => null
+        ], $result);
     }
 } 

@@ -1,2 +1,3 @@
 backend/logs/error.log
 backend/cache/*.json
+node_modules

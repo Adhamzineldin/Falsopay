@@ -1,7 +1,7 @@
 {
   "name": "falsopay",
   "version": "1.0.0",
-  "description": "FalsoPay Payment System",
+  "description": "Modern Banking Platform",
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -10,8 +10,12 @@
   "devDependencies": {
     "concurrently": "^9.1.2"
   },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",
+    "docx": "^8.5.0",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "falsopay": "file:",

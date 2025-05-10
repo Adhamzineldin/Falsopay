@@ -144,21 +144,15 @@ class Router
     private function sendNotFound(): void
     {
         http_response_code(404);
-        header('Content-Type: application/json');
-        echo json_encode([
-            'status' => 'error',
-            'message' => 'Resource not found'
-        ]);
+        header('Content-Type: text/html');
+        readfile(__DIR__ . '/../public/404.html');
     }
 
     private function sendUnauthorized(): void
     {
         http_response_code(401);
-        header('Content-Type: application/json');
-        echo json_encode([
-            'status' => 'error',
-            'message' => 'Unauthorized access'
-        ]);
+        header('Content-Type: text/html');
+        readfile(__DIR__ . '/../public/401.html');
     }
 
     private function convertRouteToRegex(string $path): string

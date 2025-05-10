@@ -35,20 +35,8 @@ class WebSocketService {
         const data = JSON.parse(event.data);
         console.log('WebSocket message received:', data);
 
-        // Handle transaction notifications
-        if (data.type === 'transaction_notification') {
-          this.notifySubscribers('transaction_notification', data);
-        }
-        
-        // Handle money request notifications
-        if (data.type === 'money_request') {
-          this.notifySubscribers('money_request', data);
-        }
-
-        // Handle support ticket notifications
+        // Show toast notifications for specific message types
         if (data.type === 'ticket_notification') {
-          this.notifySubscribers('ticket_notification', data);
-          
           // Show a toast notification
           toast("Support Ticket Update", {
             description: data.message || "You have a new update on your support ticket",
@@ -62,11 +50,9 @@ class WebSocketService {
           });
         }
 
-        // Notify all listeners for this event type
+        // Notify all listeners for this event type (single notification point)
         const eventListeners = this.listeners.get(data.type) || [];
-        console.log(eventListeners)
         eventListeners.forEach(listener => listener(data));
-
       } catch (error) {
         console.error('Error parsing WebSocket message:', error);
       }

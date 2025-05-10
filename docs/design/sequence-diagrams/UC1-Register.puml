@@ -13,10 +13,10 @@ User -> App: Enter registration information
 activate App
 
 App -> App: Validate input format
-App -> Gateway: POST /api/register
+App -> Gateway: POST /api/register/validate
 activate Gateway
 
-Gateway -> UserService: Create user account
+Gateway -> UserService: Validate registration data
 activate UserService
 
 UserService -> UserService: Validate user data
@@ -33,46 +33,49 @@ else Validation fails
     UserService --> Gateway: Error: Invalid data
     Gateway --> App: 400 Bad Request
     App --> User: Display validation errors
-else Success
-    UserService -> DB: Create user record
-    activate DB
-    DB --> UserService: Success
-    deactivate DB
-    
+else Success - Proceed to verification
     UserService -> NotifService: Send verification email/SMS
     activate NotifService
-    NotifService --> UserService: Notification queued
+    NotifService --> UserService: Notification sent
     deactivate NotifService
     
-    UserService --> Gateway: User created successfully
+    UserService --> Gateway: Validation successful
     deactivate UserService
     
-    Gateway --> App: 201 Created with user data
+    Gateway --> App: 200 OK with verification token
     deactivate Gateway
     
-    App --> User: Display success & verification instructions
+    App --> User: Display verification code input
     
     User --> App: Submit verification code
     activate App
     
-    App -> Gateway: POST /api/verify
+    App -> Gateway: POST /api/register/verify
     activate Gateway
     
-    Gateway -> UserService: Verify user
+    Gateway -> UserService: Verify code
     activate UserService
     
-    UserService -> DB: Update verification status
-    activate DB
-    DB --> UserService: Success
-    deactivate DB
+    UserService -> UserService: Validate verification code
     
-    UserService --> Gateway: Verification successful
-    deactivate UserService
-    
-    Gateway --> App: 200 OK
-    deactivate Gateway
-    
-    App --> User: Display registration confirmation
+    alt Verification code invalid
+        UserService --> Gateway: Error: Invalid code
+        Gateway --> App: 400 Bad Request
+        App --> User: Display error message
+    else Verification successful - Create account
+        UserService -> DB: Create user record
+        activate DB
+        DB --> UserService: Success
+        deactivate DB
+        
+        UserService --> Gateway: User created successfully
+        deactivate UserService
+        
+        Gateway --> App: 201 Created with user data
+        deactivate Gateway
+        
+        App --> User: Display registration confirmation
+    end
     deactivate App
 end
 

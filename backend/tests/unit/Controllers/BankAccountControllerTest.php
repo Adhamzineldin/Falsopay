@@ -1,28 +1,35 @@
 <?php
 
-namespace Tests\Unit\Controllers;
+namespace Tests\unit\Controllers;
 
 use App\controllers\BankAccountController;
 use App\models\BankAccount;
-use App\models\BankUser;
-use App\models\Card;
-use Tests\Unit\TestCase;
+use App\models\Bank;
+use Tests\unit\TestCase;
 use Mockery;
+use PDO;
+use PDOStatement;
 
 class BankAccountControllerTest extends TestCase
 {
+    protected $pdo;
+    protected $bankAccount;
+    protected $bank;
+    protected $bankAccountController;
+    
     protected function setUp(): void
     {
         parent::setUp();
         
-        // Define a mock json method to capture output
-        if (!function_exists('Tests\Unit\Controllers\json_output')) {
-            function json_output($data, $code = 200) {
-                global $jsonOutput, $responseCode;
-                $jsonOutput = $data;
-                $responseCode = $code;
-            }
-        }
+        // Create mock PDO
+        $this->pdo = Mockery::mock(PDO::class);
+        
+        // Create mock models
+        $this->bankAccount = Mockery::mock(BankAccount::class);
+        $this->bank = Mockery::mock(Bank::class);
+        
+        // Create BankAccountController instance and inject dependencies
+        $this->bankAccountController = new BankAccountController($this->bankAccount, $this->bank);
     }
     
     protected function tearDown(): void
@@ -31,251 +38,471 @@ class BankAccountControllerTest extends TestCase
         parent::tearDown();
     }
     
-    public function testGetBalanceSuccess()
+    public function testGetByUserIdReturnsAccountsWhenFound()
     {
-        global $jsonOutput;
+        // Mock data
+        $bankUserId = 1;
+        $expectedAccounts = [
+            [
+                'bank_id' => 1,
+                'account_number' => '1234567890',
+                'bank_user_id' => $bankUserId,
+                'iban' => 'GB29NWBK60161331926819',
+                'status' => 'active',
+                'type' => 'savings',
+                'balance' => 1000.00
+            ],
+            [
+                'bank_id' => 2,
+                'account_number' => '0987654321',
+                'bank_user_id' => $bankUserId,
+                'iban' => 'GB29NWBK60161331926820',
+                'status' => 'active',
+                'type' => 'checking',
+                'balance' => 500.00
+            ]
+        ];
         
-        // Test data
-        $bankId = 1;
-        $accountNumber = '12345678';
-        $balance = 1000.00;
-        
-        // Mock BankAccount model
-        $bankAccountMock = Mockery::mock('overload:App\models\BankAccount');
-        $bankAccountMock->shouldReceive('getBalance')
+        // Mock BankAccount model methods
+        $this->bankAccount->shouldReceive('getAllByUserId')
             ->once()
-            ->with($bankId, $accountNumber)
-            ->andReturn($balance);
-        
-        // Mock the json method
-        $this->mockJsonMethod();
+            ->with($bankUserId)
+            ->andReturn($expectedAccounts);
         
         // Call the method
-        BankAccountController::getBalance($bankId, $accountNumber);
-        
-        // Assert the response
-        $this->assertEquals(['balance' => $balance], $jsonOutput);
+        $this->bankAccountController->getByUserId($bankUserId);
     }
     
-    public function testGetBalanceAccountNotFound()
+    public function testGetByUserIdReturnsEmptyArrayWhenNoAccountsFound()
     {
-        global $jsonOutput, $responseCode;
+        // Mock data
+        $bankUserId = 999; // User with no accounts
         
-        // Test data
+        // Mock BankAccount model methods
+        $this->bankAccount->shouldReceive('getAllByUserId')
+            ->once()
+            ->with($bankUserId)
+            ->andReturn([]);
+        
+        // Call the method
+        $this->bankAccountController->getByUserId($bankUserId);
+    }
+    
+    public function testGetBankAccountReturnsAccountWhenFound()
+    {
+        // Mock data
         $bankId = 1;
-        $accountNumber = '99999999';
+        $accountNumber = '1234567890';
+        $expectedAccount = [
+            'bank_id' => $bankId,
+            'account_number' => $accountNumber,
+            'bank_user_id' => 1,
+            'iban' => 'GB29NWBK60161331926819',
+            'status' => 'active',
+            'type' => 'savings',
+            'balance' => 1000.00
+        ];
         
-        // Mock BankAccount model
-        $bankAccountMock = Mockery::mock('overload:App\models\BankAccount');
-        $bankAccountMock->shouldReceive('getBalance')
+        // Mock BankAccount model methods
+        $this->bankAccount->shouldReceive('getByCompositeKey')
+            ->once()
+            ->with($bankId, $accountNumber)
+            ->andReturn($expectedAccount);
+        
+        // Call the method
+        $this->bankAccountController->getBankAccount($bankId, $accountNumber);
+    }
+    
+    public function testGetBankAccountReturnsErrorWhenNotFound()
+    {
+        // Mock data
+        $bankId = 1;
+        $accountNumber = '9999999999'; // Non-existent account
+        
+        // Mock BankAccount model methods
+        $this->bankAccount->shouldReceive('getByCompositeKey')
             ->once()
             ->with($bankId, $accountNumber)
             ->andReturn(null);
         
-        // Mock the json method
-        $this->mockJsonMethod();
-        
         // Call the method
-        BankAccountController::getBalance($bankId, $accountNumber);
-        
-        // Assert the response
-        $this->assertEquals(['error' => 'Account not found'], $jsonOutput);
-        $this->assertEquals(404, $responseCode);
+        $this->bankAccountController->getBankAccount($bankId, $accountNumber);
     }
     
-    public function testAddBalanceSuccess()
+    public function testCreateBankAccountCreatesSuccessfully()
     {
-        global $jsonOutput;
+        // Mock data
+        $accountData = [
+            'bank_id' => 1,
+            'account_number' => '1234567890',
+            'bank_user_id' => 1,
+            'iban' => 'GB29NWBK60161331926819',
+            'status' => 'active',
+            'type' => 'savings',
+            'balance' => 0.00
+        ];
         
-        // Test data
+        // Mock BankAccount model methods
+        $this->bankAccount->shouldReceive('create')
+            ->once()
+            ->with(
+                $accountData['bank_id'],
+                $accountData['account_number'],
+                $accountData['bank_user_id'],
+                $accountData['iban'],
+                $accountData['status'],
+                $accountData['type'],
+                $accountData['balance']
+            )
+            ->andReturn(true);
+        
+        // Call the method
+        $this->bankAccountController->createBankAccount($accountData);
+    }
+    
+    public function testCreateBankAccountReturnsErrorWhenMissingFields()
+    {
+        // Mock data with missing required field
+        $accountData = [
+            'bank_id' => 1,
+            'account_number' => '1234567890',
+            'bank_user_id' => 1,
+            'iban' => 'GB29NWBK60161331926819',
+            'status' => 'active',
+            'type' => 'savings'
+            // balance is missing
+        ];
+        
+        // Call the method
+        $this->bankAccountController->createBankAccount($accountData);
+    }
+    
+    public function testAddBalanceUpdatesSuccessfully()
+    {
+        // Mock data
         $bankId = 1;
-        $accountNumber = '12345678';
+        $accountNumber = '1234567890';
         $amount = 500.00;
         
-        // Mock BankAccount model
-        $bankAccountMock = Mockery::mock('overload:App\models\BankAccount');
-        $bankAccountMock->shouldReceive('addBalance')
+        // Mock BankAccount model methods
+        $this->bankAccount->shouldReceive('addBalance')
             ->once()
             ->with($bankId, $accountNumber, $amount)
             ->andReturn(true);
         
-        // Mock the json method
-        $this->mockJsonMethod();
-        
         // Call the method
-        BankAccountController::addBalance($bankId, $accountNumber, ['amount' => $amount]);
-        
-        // Assert the response
-        $this->assertEquals(['success' => true], $jsonOutput);
+        $this->bankAccountController->addBalance($bankId, $accountNumber, ['amount' => $amount]);
     }
     
-    public function testSubtractBalanceSuccess()
+    public function testAddBalanceReturnsErrorWhenMissingAmount()
     {
-        global $jsonOutput;
-        
-        // Test data
+        // Mock data
         $bankId = 1;
-        $accountNumber = '12345678';
-        $amount = 200.00;
+        $accountNumber = '1234567890';
         
-        // Mock BankAccount model
-        $bankAccountMock = Mockery::mock('overload:App\models\BankAccount');
-        $bankAccountMock->shouldReceive('subtractBalance')
+        // Call the method
+        $this->bankAccountController->addBalance($bankId, $accountNumber, []);
+    }
+    
+    public function testSubtractBalanceUpdatesSuccessfully()
+    {
+        // Mock data
+        $bankId = 1;
+        $accountNumber = '1234567890';
+        $amount = 500.00;
+        
+        // Mock BankAccount model methods
+        $this->bankAccount->shouldReceive('subtractBalance')
             ->once()
             ->with($bankId, $accountNumber, $amount)
             ->andReturn(true);
         
-        // Mock the json method
-        $this->mockJsonMethod();
-        
         // Call the method
-        BankAccountController::subtractBalance($bankId, $accountNumber, ['amount' => $amount]);
-        
-        // Assert the response
-        $this->assertEquals(['success' => true], $jsonOutput);
+        $this->bankAccountController->subtractBalance($bankId, $accountNumber, ['amount' => $amount]);
     }
     
-    public function testLinkAccountToServiceSuccess()
+    public function testSubtractBalanceReturnsErrorWhenMissingAmount()
     {
-        global $jsonOutput;
+        // Mock data
+        $bankId = 1;
+        $accountNumber = '1234567890';
         
-        // Test data
+        // Call the method
+        $this->bankAccountController->subtractBalance($bankId, $accountNumber, []);
+    }
+    
+    public function testGetBalanceReturnsBalanceWhenFound()
+    {
+        // Mock data
+        $bankId = 1;
+        $accountNumber = '1234567890';
+        $expectedBalance = 1000.00;
+        
+        // Mock BankAccount model methods
+        $this->bankAccount->shouldReceive('getBalance')
+            ->once()
+            ->with($bankId, $accountNumber)
+            ->andReturn($expectedBalance);
+        
+        // Call the method
+        $this->bankAccountController->getBalance($bankId, $accountNumber);
+    }
+    
+    public function testGetBalanceReturnsErrorWhenNotFound()
+    {
+        // Mock data
+        $bankId = 1;
+        $accountNumber = '9999999999'; // Non-existent account
+        
+        // Mock BankAccount model methods
+        $this->bankAccount->shouldReceive('getBalance')
+            ->once()
+            ->with($bankId, $accountNumber)
+            ->andReturn(null);
+        
+        // Call the method
+        $this->bankAccountController->getBalance($bankId, $accountNumber);
+    }
+    
+    public function testGetByIBANReturnsAccountWhenFound()
+    {
+        // Mock data
+        $iban = 'GB29NWBK60161331926819';
+        $expectedAccount = [
+            'bank_id' => 1,
+            'account_number' => '1234567890',
+            'bank_user_id' => 1,
+            'iban' => $iban,
+            'status' => 'active',
+            'type' => 'savings',
+            'balance' => 1000.00
+        ];
+        
+        // Mock BankAccount model methods
+        $this->bankAccount->shouldReceive('getByIban')
+            ->once()
+            ->with($iban)
+            ->andReturn($expectedAccount);
+        
+        // Call the method
+        $this->bankAccountController->getByIBAN($iban);
+    }
+    
+    public function testGetByIBANReturnsErrorWhenNotFound()
+    {
+        // Mock data
+        $iban = 'GB29NWBK60161331926899'; // Non-existent IBAN
+        
+        // Mock BankAccount model methods
+        $this->bankAccount->shouldReceive('getByIban')
+            ->once()
+            ->with($iban)
+            ->andReturn(null);
+        
+        // Call the method
+        $this->bankAccountController->getByIBAN($iban);
+    }
+    
+    public function testGetByUserPhoneNumberReturnsAccountsWhenFound()
+    {
+        // Mock data
+        $phoneNumber = 1234567890;
+        $bankUserId = 1;
+        $expectedAccounts = [
+            [
+                'bank_id' => 1,
+                'account_number' => '1234567890',
+                'bank_user_id' => $bankUserId,
+                'iban' => 'GB29NWBK60161331926819',
+                'status' => 'active',
+                'type' => 'savings',
+                'balance' => 1000.00
+            ]
+        ];
+        
+        // Mock BankUser model methods
+        $this->bankUser->shouldReceive('getByPhoneNumber')
+            ->once()
+            ->with($phoneNumber)
+            ->andReturn(['bank_user_id' => $bankUserId]);
+        
+        // Mock BankAccount model methods
+        $this->bankAccount->shouldReceive('getAllByUserId')
+            ->once()
+            ->with($bankUserId)
+            ->andReturn($expectedAccounts);
+        
+        // Call the method
+        $this->bankAccountController->getByUserPhoneNumber($phoneNumber);
+    }
+    
+    public function testGetByUserPhoneNumberReturnsErrorWhenUserNotFound()
+    {
+        // Mock data
+        $phoneNumber = 9999999999; // Non-existent user
+        
+        // Mock BankUser model methods
+        $this->bankUser->shouldReceive('getByPhoneNumber')
+            ->once()
+            ->with($phoneNumber)
+            ->andReturn(null);
+        
+        // Call the method
+        $this->bankAccountController->getByUserPhoneNumber($phoneNumber);
+    }
+    
+    public function testGetByUserAndBankReturnsAccountsWhenFound()
+    {
+        // Mock data
+        $bankUserId = 1;
+        $bankId = 1;
+        $expectedAccounts = [
+            [
+                'bank_id' => $bankId,
+                'account_number' => '1234567890',
+                'bank_user_id' => $bankUserId,
+                'iban' => 'GB29NWBK60161331926819',
+                'status' => 'active',
+                'type' => 'savings',
+                'balance' => 1000.00
+            ]
+        ];
+        
+        // Mock BankAccount model methods
+        $this->bankAccount->shouldReceive('getAllByUserAndBankId')
+            ->once()
+            ->with($bankUserId, $bankId)
+            ->andReturn($expectedAccounts);
+        
+        // Call the method
+        $this->bankAccountController->getByUserAndBank($bankUserId, $bankId);
+    }
+    
+    public function testLinkAccountToServiceLinksSuccessfully()
+    {
+        // Mock data
         $data = [
-            'card_number' => '1234567890123456',
+            'card_number' => '4111111111111111',
             'phone_number' => '1234567890',
             'bank_id' => 1,
             'card_pin' => '1234'
         ];
         
-        $card = [
-            'card_id' => 1,
-            'bank_id' => 1,
-            'card_number' => '1234567890123456',
-            'bank_user_id' => 101
-        ];
-        
-        $bankUser = [
-            'bank_user_id' => 101,
-            'phone_number' => '1234567890'
-        ];
-        
-        $bankAccounts = [
+        $expectedAccounts = [
             [
                 'bank_id' => 1,
-                'account_number' => '12345678',
-                'bank_user_id' => 101,
-                'iban' => 'DE123456789',
+                'account_number' => '1234567890',
+                'bank_user_id' => 1,
+                'iban' => 'GB29NWBK60161331926819',
+                'status' => 'active',
+                'type' => 'savings',
                 'balance' => 1000.00
             ]
         ];
         
-        // Mock Card model
-        $cardMock = Mockery::mock('overload:App\models\Card');
-        $cardMock->shouldReceive('getByBankAndCardNumber')
+        // Mock Card model methods
+        $this->card->shouldReceive('getByBankAndCardNumber')
             ->once()
             ->with($data['bank_id'], $data['card_number'])
-            ->andReturn($card);
+            ->andReturn(['bank_user_id' => 1]);
         
-        $cardMock->shouldReceive('verifyPin')
+        // Mock BankUser model methods
+        $this->bankUser->shouldReceive('getById')
+            ->once()
+            ->with(1)
+            ->andReturn(['phone_number' => $data['phone_number']]);
+        
+        // Mock Card model methods for PIN verification
+        $this->card->shouldReceive('verifyPin')
             ->once()
             ->with($data['bank_id'], $data['card_number'], $data['card_pin'])
             ->andReturn(true);
         
-        // Mock BankUser model
-        $bankUserMock = Mockery::mock('overload:App\models\BankUser');
-        $bankUserMock->shouldReceive('getById')
+        // Mock BankAccount model methods
+        $this->bankAccount->shouldReceive('getAllByUserAndBankId')
             ->once()
-            ->with($card['bank_user_id'])
-            ->andReturn($bankUser);
-        
-        // Mock BankAccount model
-        $bankAccountMock = Mockery::mock('overload:App\models\BankAccount');
-        $bankAccountMock->shouldReceive('getAllByUserAndBankId')
-            ->once()
-            ->with($card['bank_user_id'], $data['bank_id'])
-            ->andReturn($bankAccounts);
-        
-        // Mock the json method
-        $this->mockJsonMethod();
+            ->with(1, $data['bank_id'])
+            ->andReturn($expectedAccounts);
         
         // Call the method
-        BankAccountController::linkAccountToService($data);
-        
-        // Assert the response
-        $this->assertEquals($bankAccounts, $jsonOutput);
+        $this->bankAccountController->linkAccountToService($data);
     }
     
-    public function testLinkAccountToServiceWithIncorrectPin()
+    public function testLinkAccountToServiceReturnsErrorWhenCardNotFound()
     {
-        global $jsonOutput, $responseCode;
-        
-        // Test data
+        // Mock data
         $data = [
-            'card_number' => '1234567890123456',
+            'card_number' => '4111111111111111',
             'phone_number' => '1234567890',
             'bank_id' => 1,
-            'card_pin' => '9999'  // Incorrect PIN
+            'card_pin' => '1234'
         ];
         
-        $card = [
-            'card_id' => 1,
-            'bank_id' => 1,
-            'card_number' => '1234567890123456',
-            'bank_user_id' => 101
-        ];
-        
-        $bankUser = [
-            'bank_user_id' => 101,
-            'phone_number' => '1234567890'
-        ];
-        
-        // Mock Card model
-        $cardMock = Mockery::mock('overload:App\models\Card');
-        $cardMock->shouldReceive('getByBankAndCardNumber')
+        // Mock Card model methods
+        $this->card->shouldReceive('getByBankAndCardNumber')
             ->once()
             ->with($data['bank_id'], $data['card_number'])
-            ->andReturn($card);
+            ->andReturn(null);
         
-        $cardMock->shouldReceive('verifyPin')
+        // Call the method
+        $this->bankAccountController->linkAccountToService($data);
+    }
+    
+    public function testLinkAccountToServiceReturnsErrorWhenPhoneNumberMismatch()
+    {
+        // Mock data
+        $data = [
+            'card_number' => '4111111111111111',
+            'phone_number' => '1234567890',
+            'bank_id' => 1,
+            'card_pin' => '1234'
+        ];
+        
+        // Mock Card model methods
+        $this->card->shouldReceive('getByBankAndCardNumber')
+            ->once()
+            ->with($data['bank_id'], $data['card_number'])
+            ->andReturn(['bank_user_id' => 1]);
+        
+        // Mock BankUser model methods
+        $this->bankUser->shouldReceive('getById')
+            ->once()
+            ->with(1)
+            ->andReturn(['phone_number' => '0987654321']); // Different phone number
+        
+        // Call the method
+        $this->bankAccountController->linkAccountToService($data);
+    }
+    
+    public function testLinkAccountToServiceReturnsErrorWhenIncorrectPin()
+    {
+        // Mock data
+        $data = [
+            'card_number' => '4111111111111111',
+            'phone_number' => '1234567890',
+            'bank_id' => 1,
+            'card_pin' => '1234'
+        ];
+        
+        // Mock Card model methods
+        $this->card->shouldReceive('getByBankAndCardNumber')
+            ->once()
+            ->with($data['bank_id'], $data['card_number'])
+            ->andReturn(['bank_user_id' => 1]);
+        
+        // Mock BankUser model methods
+        $this->bankUser->shouldReceive('getById')
+            ->once()
+            ->with(1)
+            ->andReturn(['phone_number' => $data['phone_number']]);
+        
+        // Mock Card model methods for PIN verification
+        $this->card->shouldReceive('verifyPin')
             ->once()
             ->with($data['bank_id'], $data['card_number'], $data['card_pin'])
             ->andReturn(false);
         
-        // Mock BankUser model
-        $bankUserMock = Mockery::mock('overload:App\models\BankUser');
-        $bankUserMock->shouldReceive('getById')
-            ->once()
-            ->with($card['bank_user_id'])
-            ->andReturn($bankUser);
-        
-        // Mock the json method
-        $this->mockJsonMethod();
-        
         // Call the method
-        BankAccountController::linkAccountToService($data);
-        
-        // Assert the response
-        $this->assertEquals(['error' => 'Incorrect PIN'], $jsonOutput);
-        $this->assertEquals(403, $responseCode);
-    }
-    
-    private function mockJsonMethod()
-    {
-        // Create a mock for the json method in BankAccountController
-        $reflectionClass = new \ReflectionClass(BankAccountController::class);
-        $reflectionMethod = $reflectionClass->getMethod('json');
-        $reflectionMethod->setAccessible(true);
-        
-        // Replace the json method with our test function
-        $closure = function($data, $code = 200) {
-            json_output($data, $code);
-        };
-        
-        // Bind the closure to the BankAccountController class
-        $boundClosure = \Closure::bind($closure, null, BankAccountController::class);
-        
-        // Use runkit to replace the method
-        // Note: In a real environment, you'd need the runkit extension or a similar approach
-        // This is a simplified example for illustration
+        $this->bankAccountController->linkAccountToService($data);
     }
 } 

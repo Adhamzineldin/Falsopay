@@ -7,7 +7,8 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'core\\' => array($baseDir . '/core'),
-    'Tests\\' => array($baseDir . '/test'),
+    'Tests\\unit\\' => array($baseDir . '/tests/unit'),
+    'Tests\\' => array($baseDir . '/tests'),
     'Symfony\\Polyfill\\Php83\\' => array($vendorDir . '/symfony/polyfill-php83'),
     'Symfony\\Polyfill\\Php80\\' => array($vendorDir . '/symfony/polyfill-php80'),
     'Symfony\\Polyfill\\Mbstring\\' => array($vendorDir . '/symfony/polyfill-mbstring'),

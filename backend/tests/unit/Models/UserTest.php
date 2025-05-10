@@ -1,9 +1,9 @@
 <?php
 
-namespace Tests\Unit\Models;
+namespace Tests\unit\Models;
 
 use App\models\User;
-use Tests\Unit\TestCase;
+use Tests\unit\TestCase;
 use Mockery;
 use PDO;
 use PDOStatement;
@@ -17,11 +17,11 @@ class UserTest extends TestCase
     {
         parent::setUp();
         
-        // Create mock PDO and PDOStatement
+        // Create mock PDO
         $this->pdo = Mockery::mock(PDO::class);
-        $this->user = $this->createPartialMock(User::class, ['__construct']);
         
-        // Set the mocked PDO using reflection
+        // Create User instance and set PDO using reflection
+        $this->user = new User();
         $reflection = new \ReflectionClass($this->user);
         $property = $reflection->getProperty('pdo');
         $property->setAccessible(true);

@@ -1,9 +1,9 @@
 <?php
 
-namespace Tests\Unit\Models;
+namespace Tests\unit\Models;
 
 use App\models\Transaction;
-use Tests\Unit\TestCase;
+use Tests\unit\TestCase;
 use Mockery;
 use PDO;
 use PDOStatement;
@@ -19,9 +19,9 @@ class TransactionTest extends TestCase
         
         // Create mock PDO
         $this->pdo = Mockery::mock(PDO::class);
-        $this->transaction = $this->createPartialMock(Transaction::class, ['__construct']);
         
-        // Set the mocked PDO using reflection
+        // Create Transaction instance and set PDO using reflection
+        $this->transaction = new Transaction();
         $reflection = new \ReflectionClass($this->transaction);
         $property = $reflection->getProperty('pdo');
         $property->setAccessible(true);

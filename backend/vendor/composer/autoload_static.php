@@ -28,6 +28,7 @@ class ComposerStaticInit88970a0117c062eed55fa8728fc43833
         ),
         'T' => 
         array (
+            'Tests\\unit\\' => 11,
             'Tests\\' => 6,
         ),
         'S' => 
@@ -95,9 +96,13 @@ class ComposerStaticInit88970a0117c062eed55fa8728fc43833
         array (
             0 => __DIR__ . '/../..' . '/core',
         ),
+        'Tests\\unit\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/tests/unit',
+        ),
         'Tests\\' => 
         array (
-            0 => __DIR__ . '/../..' . '/test',
+            0 => __DIR__ . '/../..' . '/tests',
         ),
         'Symfony\\Polyfill\\Php83\\' => 
         array (
@@ -241,6 +246,7 @@ class ComposerStaticInit88970a0117c062eed55fa8728fc43833
         'App\\controllers\\TransactionController' => __DIR__ . '/../..' . '/App/controllers/TransactionController.php',
         'App\\controllers\\UserAdminController' => __DIR__ . '/../..' . '/App/controllers/UserAdminController.php',
         'App\\controllers\\UserController' => __DIR__ . '/../..' . '/App/controllers/UserController.php',
+        'App\\controllers\\system\\ServerStatusController' => __DIR__ . '/../..' . '/App/controllers/system/ServerStatusController.php',
         'App\\database\\Database' => __DIR__ . '/../..' . '/App/database/Database.php',
         'App\\database\\Migration' => __DIR__ . '/../..' . '/App/database/Migration.php',
         'App\\database\\seeders\\BankAccountSeeder' => __DIR__ . '/../..' . '/App/database/seeders/BankAccountSeeder.php',
@@ -294,6 +300,7 @@ class ComposerStaticInit88970a0117c062eed55fa8728fc43833
         'App\\routes\\api\\UserAdminRoutes' => __DIR__ . '/../..' . '/App/routes/api/UserAdminRoutes.php',
         'App\\routes\\api\\UsersRoute' => __DIR__ . '/../..' . '/App/routes/api/UsersRoute.php',
         'App\\routes\\auth\\AuthRoutes' => __DIR__ . '/../..' . '/App/routes/auth/AuthRoutes.php',
+        'App\\routes\\system\\ServerStatusRoutes' => __DIR__ . '/../..' . '/App/routes/system/ServerStatusRoutes.php',
         'App\\services\\EmailService' => __DIR__ . '/../..' . '/App/services/EmailService.php',
         'App\\services\\SocketService' => __DIR__ . '/../..' . '/App/services/SocketService.php',
         'App\\services\\WhatsAppAPI' => __DIR__ . '/../..' . '/App/services/WhatsAppAPI.php',
@@ -2492,6 +2499,11 @@ class ComposerStaticInit88970a0117c062eed55fa8728fc43833
         'Symfony\\Polyfill\\Php80\\Php80' => __DIR__ . '/..' . '/symfony/polyfill-php80/Php80.php',
         'Symfony\\Polyfill\\Php80\\PhpToken' => __DIR__ . '/..' . '/symfony/polyfill-php80/PhpToken.php',
         'Symfony\\Polyfill\\Php83\\Php83' => __DIR__ . '/..' . '/symfony/polyfill-php83/Php83.php',
+        'Tests\\Unit\\Models\\TransactionTest' => __DIR__ . '/../..' . '/tests/unit/Models/TransactionTest.php',
+        'Tests\\Unit\\Models\\UserTest' => __DIR__ . '/../..' . '/tests/unit/Models/UserTest.php',
+        'Tests\\unit\\Controllers\\AuthControllerTest' => __DIR__ . '/../..' . '/tests/unit/Controllers/AuthControllerTest.php',
+        'Tests\\unit\\Controllers\\BankAccountControllerTest' => __DIR__ . '/../..' . '/tests/unit/Controllers/BankAccountControllerTest.php',
+        'Tests\\unit\\TestCase' => __DIR__ . '/../..' . '/tests/unit/TestCase.php',
         'TheSeer\\Tokenizer\\Exception' => __DIR__ . '/..' . '/theseer/tokenizer/src/Exception.php',
         'TheSeer\\Tokenizer\\NamespaceUri' => __DIR__ . '/..' . '/theseer/tokenizer/src/NamespaceUri.php',
         'TheSeer\\Tokenizer\\NamespaceUriException' => __DIR__ . '/..' . '/theseer/tokenizer/src/NamespaceUriException.php',

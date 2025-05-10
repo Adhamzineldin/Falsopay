@@ -34,23 +34,27 @@ class BankAccountTest extends TestCase
         parent::tearDown();
     }
     
-    public function testGetByUserIdReturnsAccountsWhenFound()
+    public function testGetAllByUserIdReturnsAccountsWhenFound()
     {
         // Mock data
         $userId = 1;
         $expectedAccounts = [
             [
-                'account_id' => 1,
-                'user_id' => $userId,
                 'bank_id' => 1,
                 'account_number' => '1234567890',
+                'bank_user_id' => $userId,
+                'iban' => 'GB29NWBK60161331926819',
+                'status' => 'active',
+                'type' => 'savings',
                 'balance' => 1000.00
             ],
             [
-                'account_id' => 2,
-                'user_id' => $userId,
                 'bank_id' => 2,
                 'account_number' => '0987654321',
+                'bank_user_id' => $userId,
+                'iban' => 'GB29NWBK60161331926820',
+                'status' => 'active',
+                'type' => 'checking',
                 'balance' => 500.00
             ]
         ];
@@ -66,17 +70,17 @@ class BankAccountTest extends TestCase
         // Mock PDO prepare
         $this->pdo->shouldReceive('prepare')
             ->once()
-            ->with("SELECT * FROM bank_accounts WHERE user_id = :user_id")
+            ->with("SELECT * FROM bank_accounts WHERE bank_user_id = :user_id")
             ->andReturn($stmt);
         
         // Call the method
-        $result = $this->bankAccount->getByUserId($userId);
+        $result = $this->bankAccount->getAllByUserId($userId);
         
         // Assert result
         $this->assertEquals($expectedAccounts, $result);
     }
     
-    public function testGetByUserIdReturnsEmptyArrayWhenNoAccountsFound()
+    public function testGetAllByUserIdReturnsEmptyArrayWhenNoAccountsFound()
     {
         // Mock data
         $userId = 999; // Non-existent user
@@ -92,25 +96,28 @@ class BankAccountTest extends TestCase
         // Mock PDO prepare
         $this->pdo->shouldReceive('prepare')
             ->once()
-            ->with("SELECT * FROM bank_accounts WHERE user_id = :user_id")
+            ->with("SELECT * FROM bank_accounts WHERE bank_user_id = :user_id")
             ->andReturn($stmt);
         
         // Call the method
-        $result = $this->bankAccount->getByUserId($userId);
+        $result = $this->bankAccount->getAllByUserId($userId);
         
         // Assert result
         $this->assertEmpty($result);
     }
     
-    public function testGetByIdReturnsAccountWhenFound()
+    public function testGetByCompositeKeyReturnsAccountWhenFound()
     {
         // Mock data
-        $accountId = 1;
+        $bankId = 1;
+        $accountNumber = '1234567890';
         $expectedAccount = [
-            'account_id' => $accountId,
-            'user_id' => 1,
-            'bank_id' => 1,
-            'account_number' => '1234567890',
+            'bank_id' => $bankId,
+            'account_number' => $accountNumber,
+            'bank_user_id' => 1,
+            'iban' => 'GB29NWBK60161331926819',
+            'status' => 'active',
+            'type' => 'savings',
             'balance' => 1000.00
         ];
         
@@ -118,70 +125,99 @@ class BankAccountTest extends TestCase
         $stmt = Mockery::mock(PDOStatement::class);
         $stmt->shouldReceive('execute')
             ->once()
-            ->with(['account_id' => $accountId])
+            ->with(['bank_id' => $bankId, 'account_number' => $accountNumber])
             ->andReturn(true);
         $stmt->shouldReceive('fetch')->once()->with(PDO::FETCH_ASSOC)->andReturn($expectedAccount);
         
         // Mock PDO prepare
         $this->pdo->shouldReceive('prepare')
             ->once()
-            ->with("SELECT * FROM bank_accounts WHERE account_id = :account_id")
+            ->with("SELECT * FROM bank_accounts WHERE bank_id = :bank_id AND account_number = :account_number")
             ->andReturn($stmt);
         
         // Call the method
-        $result = $this->bankAccount->getById($accountId);
+        $result = $this->bankAccount->getByCompositeKey($bankId, $accountNumber);
         
         // Assert result
         $this->assertEquals($expectedAccount, $result);
     }
     
-    public function testGetByIdReturnsNullWhenNotFound()
+    public function testGetByCompositeKeyReturnsNullWhenNotFound()
     {
         // Mock data
-        $accountId = 999; // Non-existent account
+        $bankId = 1;
+        $accountNumber = '9999999999'; // Non-existent account
         
         // Mock statement
         $stmt = Mockery::mock(PDOStatement::class);
         $stmt->shouldReceive('execute')
             ->once()
-            ->with(['account_id' => $accountId])
+            ->with(['bank_id' => $bankId, 'account_number' => $accountNumber])
             ->andReturn(true);
         $stmt->shouldReceive('fetch')->once()->with(PDO::FETCH_ASSOC)->andReturn(false);
         
         // Mock PDO prepare
         $this->pdo->shouldReceive('prepare')
             ->once()
-            ->with("SELECT * FROM bank_accounts WHERE account_id = :account_id")
+            ->with("SELECT * FROM bank_accounts WHERE bank_id = :bank_id AND account_number = :account_number")
             ->andReturn($stmt);
         
         // Call the method
-        $result = $this->bankAccount->getById($accountId);
+        $result = $this->bankAccount->getByCompositeKey($bankId, $accountNumber);
         
         // Assert result
         $this->assertNull($result);
     }
     
-    public function testUpdateBalanceUpdatesSuccessfully()
+    public function testAddBalanceUpdatesSuccessfully()
     {
         // Mock data
-        $accountId = 1;
-        $newBalance = 1500.00;
+        $bankId = 1;
+        $accountNumber = '1234567890';
+        $amount = 500.00;
         
         // Mock statement
         $stmt = Mockery::mock(PDOStatement::class);
         $stmt->shouldReceive('execute')
             ->once()
-            ->with(['account_id' => $accountId, 'balance' => $newBalance])
+            ->with(['bank_id' => $bankId, 'account_number' => $accountNumber, 'amount' => $amount])
             ->andReturn(true);
         
         // Mock PDO prepare
         $this->pdo->shouldReceive('prepare')
             ->once()
-            ->with("UPDATE bank_accounts SET balance = :balance WHERE account_id = :account_id")
+            ->with("UPDATE bank_accounts SET balance = balance + :amount WHERE bank_id = :bank_id AND account_number = :account_number")
             ->andReturn($stmt);
         
         // Call the method
-        $result = $this->bankAccount->updateBalance($accountId, $newBalance);
+        $result = $this->bankAccount->addBalance($bankId, $accountNumber, $amount);
+        
+        // Assert result
+        $this->assertTrue($result);
+    }
+    
+    public function testSubtractBalanceUpdatesSuccessfully()
+    {
+        // Mock data
+        $bankId = 1;
+        $accountNumber = '1234567890';
+        $amount = 500.00;
+        
+        // Mock statement
+        $stmt = Mockery::mock(PDOStatement::class);
+        $stmt->shouldReceive('execute')
+            ->once()
+            ->with(['bank_id' => $bankId, 'account_number' => $accountNumber, 'amount' => $amount])
+            ->andReturn(true);
+        
+        // Mock PDO prepare
+        $this->pdo->shouldReceive('prepare')
+            ->once()
+            ->with("UPDATE bank_accounts SET balance = balance - :amount WHERE bank_id = :bank_id AND account_number = :account_number")
+            ->andReturn($stmt);
+        
+        // Call the method
+        $result = $this->bankAccount->subtractBalance($bankId, $accountNumber, $amount);
         
         // Assert result
         $this->assertTrue($result);

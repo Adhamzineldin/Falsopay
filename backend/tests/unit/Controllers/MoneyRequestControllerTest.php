@@ -114,7 +114,7 @@ class MoneyRequestControllerTest extends TestCase
             ->andReturn($expectedRequest);
         
         // Call the method
-        $result = $this->moneyRequestController->getById($requestId);
+        $result = $this->moneyRequestController->getRequestById($requestId);
         
         // Assert result
         $this->assertTrue($result['success']);
@@ -133,7 +133,7 @@ class MoneyRequestControllerTest extends TestCase
             ->andReturn(null);
         
         // Call the method
-        $result = $this->moneyRequestController->getById($requestId);
+        $result = $this->moneyRequestController->getRequestById($requestId);
         
         // Assert result
         $this->assertFalse($result['success']);

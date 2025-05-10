@@ -123,8 +123,10 @@ export const AuthService = {
       }
       
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Auth service login error:', error);
+      console.error('Error response data:', error.response?.data);
+      console.error('Error response status:', error.response?.status);
       // Re-throw to let the calling function handle it
       throw error;
     }

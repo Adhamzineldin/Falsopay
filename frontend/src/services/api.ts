@@ -71,6 +71,17 @@ api.interceptors.response.use(
         // Get token expiry time from localStorage
         const expiry = localStorage.getItem('falsopay_token_expiry');
 
+        // Special handling for 'Invalid IPA' errors
+        if (
+            error.response && 
+            error.response.status === 401 && 
+            error.response.data && 
+            error.response.data.error === 'Invalid IPA'
+        ) {
+            // Don't redirect - let the component handle this specific error
+            return Promise.reject(error);
+        }
+
         if (!expiry) {
             return Promise.reject(error);
         }

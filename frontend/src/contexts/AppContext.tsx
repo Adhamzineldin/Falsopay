@@ -244,17 +244,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         
         // Show specific error message for IPA address issues
         if (ipa) {
+          console.log('IPA login error response:', loginError?.response?.data);
           toast({
             title: "IPA Verification Failed",
-            description: loginError?.response?.status === 401 
-              ? "Invalid IPA address or PIN. Please check and try again." 
-              : (loginError?.response?.data?.message || "The IPA address you entered is invalid. Please try again."),
+            description: loginError?.response?.data?.error || "Invalid IPA address or PIN. Please check and try again.",
             variant: "destructive",
           });
         } else {
           toast({
             title: "Login Failed",
-            description: loginError?.response?.data?.message || "Failed to login with phone number",
+            description: loginError?.response?.data?.error || loginError?.response?.data?.message || "Failed to login with phone number",
             variant: "destructive",
           });
         }
@@ -284,8 +283,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       toast({
         title: "Login Failed",
         description: ipa 
-          ? "Failed to verify your IPA address. Please try again." 
-          : (error.response?.data?.message || "Please check your credentials and try again"),
+          ? (error.response?.data?.error || "Failed to verify your IPA address. Please try again.")
+          : (error.response?.data?.error || error.response?.data?.message || "Please check your credentials and try again"),
         variant: "destructive",
       });
       

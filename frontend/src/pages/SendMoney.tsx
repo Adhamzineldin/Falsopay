@@ -523,10 +523,12 @@ const SendMoney = () => {
             let errorMessage = "Could not complete the transaction. Please try again.";
             
             // Check for transfer limit error in the response
+            console.log(error)
             if (error.response?.data?.code === 'TRANSFER_LIMIT_EXCEEDED') {
                 const limit = error.response.data.limit || systemStatus?.transfer_limit;
                 errorMessage = `Transaction amount exceeds the current transfer limit of ${formatCurrency(limit || 0)}.`;
-            } else if (error.message == "Invalid PIN") {
+            } 
+            else if (error.response.data.error == "Invalid PIN") {
                 errorMessage = "Invalid PIN. Please try again.";
             } 
             else if (error.message) {

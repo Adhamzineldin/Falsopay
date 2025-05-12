@@ -10,7 +10,7 @@ interface SystemStatusMonitorProps {
  * Automatically detects when backend is down and activates maintenance mode
  */
 const SystemStatusMonitor = ({ 
-  checkInterval = 60000 // Default: check every minute
+  checkInterval = 3600000 // Default: check every hour
 }: SystemStatusMonitorProps) => {
   const { checkMaintenanceStatus, maintenance } = useApp();
   const timerRef = useRef<NodeJS.Timeout | null>(null);

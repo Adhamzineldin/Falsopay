@@ -24,10 +24,10 @@ const AdminSystemStatus = () => {
   useEffect(() => {
     fetchSystemStatus();
     
-    // Set up interval to refresh every 60 seconds
+    // Set up interval to refresh every hour
     const interval = setInterval(() => {
       fetchSystemStatus();
-    }, 60000);
+    }, 3600000);
     
     // Clean up interval on component unmount
     return () => clearInterval(interval);

@@ -49,7 +49,7 @@ const AppContent = () => {
 
   return (
     <>
-      <SystemStatusMonitor checkInterval={30000} />
+      <SystemStatusMonitor checkInterval={3600000} />
       <Suspense fallback={<LoadingSpinner />}>
         <Routes>
           {/* Public Routes */}

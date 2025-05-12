@@ -14,5 +14,8 @@ class DatabaseSeeder {
         InstantPaymentAddressSeeder::run();
         DefaultIpaAccountSeeder::run();
         TransactionSeeder::run();
+        MoneyRequestSeeder::run();
+        FavoriteSeeder::run();
+        SupportTicketSeeder::run();
     }
 }

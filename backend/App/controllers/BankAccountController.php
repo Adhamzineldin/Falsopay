@@ -144,7 +144,8 @@ class BankAccountController
         $bankUserModel = new BankUser();
         $bankAccountModel = new BankAccount();
         
-        $card = $cardModel->getByBankAndCardNumber($data['bank_id'], $data['card_number']);
+        
+        $card = $cardModel->getByBankAndCardNumber($data['bank_id'], ($data['card_number']));
         
         if (!$card) {
             self::json(['error' => 'Card not found'], 404);

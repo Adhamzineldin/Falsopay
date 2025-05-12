@@ -97,7 +97,7 @@ const LinkAccount = () => {
     try {
       // Call the backend service with the required fields
       const response = await BankAccountService.linkAccountToService({
-        card_number: cardNumber,
+          card_number: String(cardNumber),
         phone_number: user.phone_number,
         bank_id: selectedBank.bank_id,
         card_pin: pin,

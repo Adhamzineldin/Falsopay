@@ -119,11 +119,14 @@ class FavoriteSeeder {
                         // Calculate dates
                         $createdAt = date('Y-m-d H:i:s', strtotime('-' . mt_rand(0, 30) . ' days'));
 
+                        // Format the recipient name to include the method
+                        $recipientName = $favoriteUser['name'] . ' ' . strtoupper($method);
+
                         // Prepare favorite data
                         $favoriteData = [
                             'user_id' => $userId,
                             'recipient_identifier' => $identifier,
-                            'recipient_name' => $favoriteUser['name'],
+                            'recipient_name' => $recipientName,
                             'method' => $method,
                             'bank_id' => $favoriteUser['bank_id'],
                             'created_at' => $createdAt

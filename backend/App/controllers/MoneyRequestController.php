@@ -253,6 +253,32 @@ class MoneyRequestController {
                     return ['success' => false, 'message' => 'PIN and sender IPA address are required to accept a request'];
                 }
                 
+                // Check system settings for transaction status
+                $systemSettings = (new \App\models\SystemSettings())->getSettings();
+                
+                // Check if transactions are blocked
+                if (isset($systemSettings['transactions_blocked']) && $systemSettings['transactions_blocked']) {
+                    $message = $systemSettings['block_message'] ?: 'Transactions are temporarily disabled by the administrator';
+                    return [
+                        'success' => false,
+                        'message' => $message,
+                        'code' => 'TRANSACTIONS_BLOCKED'
+                    ];
+                }
+                
+                // Check transfer limit if enabled
+                if (isset($systemSettings['transfer_limit_enabled']) && 
+                    $systemSettings['transfer_limit_enabled'] && 
+                    $request['amount'] > $systemSettings['transfer_limit_amount']) {
+                    
+                    return [
+                        'success' => false,
+                        'message' => "Transaction amount exceeds the current transfer limit of {$systemSettings['transfer_limit_amount']}",
+                        'code' => 'TRANSFER_LIMIT_EXCEEDED',
+                        'limit' => $systemSettings['transfer_limit_amount']
+                    ];
+                }
+                
                 // Verify the PIN for the sender's IPA address
                 $ipaVerified = $this->ipaModel->verifyPin($senderIpaAddress, $pin);
                 if (!$ipaVerified) {

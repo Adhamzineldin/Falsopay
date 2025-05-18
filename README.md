@@ -136,13 +136,13 @@ php artisan db:seed
 #### Start Backend Server
 ```bash
 cd backend
-php artisan serve
+php -S 0.0.0.0:4000 -t . server.php 
 ```
 
 #### Start WebSocket Server
 ```bash
 cd backend
-php artisan websocket:serve
+php WebSocketServer.php
 ```
 
 #### Start Frontend Dev Server
